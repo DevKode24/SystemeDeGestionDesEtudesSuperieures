@@ -1,0 +1,119 @@
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-circle">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <h3>Gestion des Utilisateurs</h3>
+      <p>Comptes & rôles</p>
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <!-- FORMULAIRE -->
+      <!-- FORMULAIRE -->
+<form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
+  <div class="form-grid">
+
+    <div class="form-group">
+      <label>Nom</label>
+      <input formControlName="nom" placeholder="Ex: ADA">
+    </div>
+
+    <div class="form-group">
+      <label>Prénom</label>
+      <input formControlName="prenom" placeholder="Ex: Ali">
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" formControlName="email" placeholder="Ex: adali@sges.com">
+    </div>
+
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" formControlName="password" placeholder="********">
+    </div>
+
+    <div class="form-group">
+      <label>Rôle</label>
+      <select formControlName="roles">
+        <option *ngFor="let r of rolesDisponibles" [value]="r">{{ r }}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <!-- Case vide pour garder la grille 2 colonnes -->
+    </div>
+
+  </div>
+
+  <div class="btn-center">
+    <button type="submit" class="btn btn-gradient" [disabled]="form.invalid || !canAdmin()">
+      <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+      {{ editingId ? 'Modifier' : 'Ajouter' }}
+    </button>
+  </div>
+</form>
+
+
+      <!-- FILTRES -->
+      <div class="filter-panel">
+        <input placeholder="Nom" [(ngModel)]="filterNom" (input)="applyFilters()" [ngModelOptions]="{standalone:true}">
+        <input placeholder="Email" [(ngModel)]="filterEmail" (input)="applyFilters()" [ngModelOptions]="{standalone:true}">
+        <select [(ngModel)]="filterRole" (change)="applyFilters()">
+          <option [ngValue]="null">Tous</option>
+          <option *ngFor="let r of rolesDisponibles" [ngValue]="r">{{ r }}</option>
+        </select>
+      </div>
+
+      <!-- TABLEAU -->
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nom & Prénom</th>
+              <th>Email</th>
+              <th>Rôle</th>
+              <th *ngIf="canAdmin()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUsers; let i=index" class="table-row">
+              <td>{{ i + 1 }}</td>
+              <td>{{ u.nom }} {{ u.prenom }}</td>
+              <td>{{ u.email }}</td>
+              <td><span class="badge-role">{{ u.roles[0] }}</span></td>
+              <td *ngIf="canAdmin()">
+                <button class="btn-edit" (click)="edit(u)" title="Modifier"><i class="bi bi-pencil-square"></i></button>
+                <button class="btn-password" (click)="openPasswordModal(u)" title="Changer mot de passe"><i class="bi bi-key-fill"></i></button>
+                <button class="btn-disable" (click)="desactiver(u)" title="Désactiver"><i class="bi bi-slash-circle-fill"></i></button>
+                <button class="btn-enable" (click)="activer(u)" title="Activer"><i class="bi bi-check-circle-fill"></i></button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUsers.length === 0">
+              <td colspan="5" class="text-center">Aucun utilisateur trouvé</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOT DE PASSE -->
+<div class="modal" *ngIf="showPasswordModal">
+  <div class="modal-card">
+    <h4>Nouveau mot de passe</h4>
+    <input type="password" [(ngModel)]="newPassword" placeholder="Entrez le nouveau mot de passe">
+    <div class="modal-buttons">
+      <button (click)="changePassword()" class="btn btn-gradient">Valider</button>
+      <button (click)="showPasswordModal=false" class="btn btn-outline">Annuler</button>
+    </div>
+  </div>
+</div>

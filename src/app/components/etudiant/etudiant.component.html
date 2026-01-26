@@ -1,0 +1,181 @@
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-circle">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <h3>Gestion des étudiants</h3>
+      <p>Création, modification et consultation</p>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ================= FORM ================= -->
+      <div class="etudiant-container">
+        <form [formGroup]="form" (ngSubmit)="save()" class="etudiant-form">
+
+          <!-- GRID 4 COLONNES -->
+          <div class="form-grid">
+
+            <!-- Ligne 1 -->
+            <div class="form-group">
+              <label>Nom *</label>
+              <input type="text" formControlName="nom">
+            </div>
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input type="text" formControlName="prenom">
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" formControlName="email">
+            </div>
+            <div class="form-group">
+              <label>Mot de passe *</label>
+              <input type="password" formControlName="password">
+            </div>
+
+            <!-- Ligne 2 -->
+            <div class="form-group">
+              <label>Matricule *</label>
+              <input type="text" formControlName="matricule">
+            </div>
+            <div class="form-group">
+              <label>Date de naissance</label>
+              <input type="date" formControlName="dateNaissance">
+            </div>
+            <div class="form-group">
+              <label>Date d'inscription</label>
+              <input type="date" formControlName="dateInscription">
+            </div>
+            <div class="form-group">
+              <label>Sexe *</label>
+              <select formControlName="sexe">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let s of sexes" [value]="s">{{ s }}</option>
+              </select>
+            </div>
+
+            <!-- Ligne 3 -->
+            <div class="form-group">
+              <label>Nationalité *</label>
+              <select formControlName="nationalite">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let n of nationalites" [value]="n">{{ n }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>État civil *</label>
+              <select formControlName="etatCivil">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let e of etatsCivils" [value]="e">{{ e }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Lieu de naissance</label>
+              <input type="text" formControlName="lieuNaissance">
+            </div>
+            <div class="form-group">
+              <label>Contact étudiant</label>
+              <input type="text" formControlName="contactEtudiant">
+            </div>
+
+            <!-- Ligne 4 -->
+            <div class="form-group">
+              <label>Contact urgence</label>
+              <input type="text" formControlName="contactUrgence">
+            </div>
+            <div class="form-group">
+              <label>Nom du tuteur</label>
+              <input type="text" formControlName="nomTuteur">
+            </div>
+            <div class="form-group">
+              <label>Classe *</label>
+              <select formControlName="classeId" (change)="onClasseChange()">
+                <option value="">-- Sélectionner --</option>
+                <option *ngFor="let c of classes" [value]="c.id">
+                  {{ c.code }} | {{ c.filiereNom }} | {{ c.niveauLibelle }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Champs dérivés -->
+            <div class="form-group">
+              <label>Filière</label>
+              <input type="text" [value]="selectedClasse ? selectedClasse.filiereNom : ''" disabled>
+            </div>
+            <div class="form-group">
+              <label>Niveau</label>
+              <input type="text" [value]="selectedClasse ? selectedClasse.niveauLibelle : ''" disabled>
+            </div>
+
+            <!-- Année académique -->
+            <div class="form-group">
+              <label>Année académique</label>
+              <select formControlName="anneeAcademiqueId">
+                <option [ngValue]="null">-- Sélectionner --</option>
+                <option *ngFor="let a of anneesAcademiques" [ngValue]="a.id">
+                  {{ a.libelle }}
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="form-actions">
+            <button type="submit" [disabled]="loading">
+              <i class="bi bi-save"></i>
+              {{ editingId ? 'Modifier' : 'Ajouter' }}
+            </button>
+            <button type="button" (click)="resetForm()">
+              <i class="bi bi-x-circle"></i>
+              Annuler
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- ================= TABLE ================= -->
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Matricule</th>
+              <th>Email</th>
+              <th>Filière</th>
+              <th>Niveau</th>
+              <th>Classe</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of filteredEtudiants">
+              <td>{{ e.nom }}</td>
+              <td>{{ e.prenom }}</td>
+              <td>{{ e.matricule }}</td>
+              <td>{{ e.email }}</td>
+              <td>{{ e.classe ? e.classe.filiereNom : '' }}</td>
+              <td>{{ e.classe ? e.classe.niveauLibelle : '' }}</td>
+              <td>{{ e.classe ? e.classe.code : '' }}</td>
+              <td>
+                <button class="btn-edit" (click)="edit(e)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredEtudiants.length === 0">
+              <td colspan="8" class="text-center">Aucun étudiant trouvé</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

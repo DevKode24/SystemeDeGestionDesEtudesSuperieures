@@ -1,0 +1,57 @@
+.page-wrapper {
+  padding: 2rem;
+
+  .modern-card {
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+
+    .card-header {
+      .icon-circle {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: #fff;
+        font-size: 1.5rem;
+      }
+    }
+
+    .modern-form {
+      .form-floating {
+        select.form-select {
+          height: 3rem;
+        }
+      }
+
+      .btn-gradient {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: #fff;
+        font-weight: 600;
+      }
+    }
+
+    .modern-table {
+      margin-top: 1.5rem;
+
+      table {
+        th, td {
+          vertical-align: middle;
+        }
+
+        .btn-action {
+          &.edit {
+            color: #2575fc;
+            margin-right: 0.5rem;
+          }
+
+          &.delete {
+            color: #f03e3e;
+          }
+        }
+      }
+    }
+  }
+}

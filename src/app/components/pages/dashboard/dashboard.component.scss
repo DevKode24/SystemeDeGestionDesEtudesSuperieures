@@ -1,0 +1,23 @@
+/* Conteneur principal */
+.dashboard-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 🔒 empêche le scroll global */
+}
+
+/* Zone sous la navbar */
+.dashboard-body {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* ⚠️ CRUCIAL pour le scroll interne */
+  background-color: #f4f6f9;
+}
+
+/* Contenu principal */
+.dashboard-content {
+  flex: 1;
+  padding: 1 rem;
+  overflow-y: auto; /* ✅ scroll ici */
+  min-width: 0;     /* ⚠️ empêche le débordement horizontal */
+}

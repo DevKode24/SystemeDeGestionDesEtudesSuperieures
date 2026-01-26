@@ -1,0 +1,80 @@
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <div class="card-header">
+      <div class="icon-circle">
+        <i class="bi bi-calendar-range-fill"></i>
+      </div>
+      <h3>Gestion des Années Académiques</h3>
+      <p>Création et administration</p>
+    </div>
+
+    <div class="card-body">
+
+      <!-- FORMULAIRE -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
+        <div class="form-group">
+          <label>Libellé</label>
+          <input
+            class="form-control"
+            formControlName="libelle"
+            placeholder="Ex: 2026 - 2027">
+        </div>
+
+        <div class="btn-center">
+          <button
+            class="btn btn-gradient"
+            type="submit"
+            [disabled]="form.invalid || loading">
+            <i class="bi"
+               [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+            {{ editingId ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- TABLEAU -->
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>
+                Libellé
+                <input
+                  class="table-filter"
+                  [(ngModel)]="filterLibelle"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="applyFilters()"
+                  placeholder="Filtrer...">
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let a of filteredAnnees; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ a.libelle }}</td>
+              <td>
+                <button class="btn-edit" (click)="edit(a)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn-delete" (click)="supprimer(a.id!)">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="filteredAnnees.length === 0">
+              <td colspan="3" class="text-center">
+                Aucune année académique trouvée
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

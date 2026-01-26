@@ -1,0 +1,236 @@
+/* ===============================
+   PAGE WRAPPER
+================================ */
+.page-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eef2f7, #f9fbfd);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+/* ===============================
+   CARD
+================================ */
+.modern-card {
+  width: 100%;
+  max-width: 1000px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* ===============================
+   CARD HEADER
+================================ */
+.card-header {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #ffffff;
+  padding: 2rem;
+  text-align: center;
+
+  .icon-circle {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.8rem;
+    }
+  }
+
+  h3 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+
+  p {
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+}
+
+/* ===============================
+   CARD BODY
+================================ */
+.card-body {
+  padding: 2rem;
+}
+
+/* ===============================
+   FORM
+================================ */
+.modern-form {
+  margin-bottom: 2.5rem;
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: #374151;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+    }
+  }
+}
+
+/* ===============================
+   BUTTONS
+================================ */
+.btn-center {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 0.6rem 1.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.25s ease;
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+  }
+
+  &:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+/* ===============================
+   TABLE
+================================ */
+.table-container {
+  overflow-x: auto;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: #f3f4f6;
+
+    th {
+      padding: 0.8rem;
+      text-align: left;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+
+    td {
+      padding: 0.8rem;
+      font-size: 0.9rem;
+      color: #374151;
+      vertical-align: middle;
+    }
+  }
+}
+
+/* ===============================
+   TABLE FILTER
+================================ */
+.table-filter {
+  margin-top: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.8rem;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+.btn-edit,
+.btn-delete {
+  border: none;
+  background: none;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-edit {
+  color: #2563eb;
+
+  &:hover {
+    transform: scale(1.15);
+    color: #1d4ed8;
+  }
+}
+
+.btn-delete {
+  color: #dc2626;
+
+  &:hover {
+    transform: scale(1.15);
+    color: #b91c1c;
+  }
+}
+
+/* ===============================
+   EMPTY STATE
+================================ */
+.text-center {
+  text-align: center;
+  font-style: italic;
+  color: #6b7280;
+  padding: 1.5rem;
+}

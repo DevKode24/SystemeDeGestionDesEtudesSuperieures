@@ -1,0 +1,16 @@
+<!-- navbar.component.html -->
+<nav class="navbar-custom">
+  <!-- Partie gauche : nom du système -->
+  <div class="navbar-left">
+    <span class="system-name">SGES</span>
+  </div>
+
+  <!-- Partie droite : utilisateur et logout -->
+  <div class="navbar-right">
+    <span class="user-name">{{ user?.username || 'Utilisateur' }}</span>
+    <i class="bi bi-person-circle user-icon"></i>
+    <button class="btn-logout" (click)="logout()">
+      <i class="bi bi-box-arrow-right"></i>
+    </button>
+  </div>
+</nav>

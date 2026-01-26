@@ -1,0 +1,108 @@
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-circle">
+        <i class="bi bi-person-badge-fill"></i>
+      </div>
+      <h3>Gestion des Enseignants</h3>
+      <p>Création, modification et consultation</p>
+    </div>
+
+    <div class="card-body">
+
+      <!-- FORMULAIRE -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nom</label>
+            <input class="form-control" formControlName="nom" placeholder="Ex: ADA">
+          </div>
+          <div class="form-group">
+            <label>Prénom</label>
+            <input class="form-control" formControlName="prenom" placeholder="Ex: Ali">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input class="form-control" type="email" formControlName="email" placeholder="Ex: adali@sges.com">
+          </div>
+          <div class="form-group">
+            <label>Mot de passe</label>
+            <input class="form-control" type="password" formControlName="password" placeholder="********">
+          </div>
+          <div class="form-group">
+            <label>Spécialité</label>
+            <input class="form-control" formControlName="specialite" placeholder="Ex: Informatique">
+          </div>
+          <div class="form-group">
+            <label>Grade</label>
+            <input class="form-control" formControlName="grade" placeholder="Ex: Master">
+          </div>
+          <div class="form-group">
+            <label>Rôle</label>
+            <select class="form-control" formControlName="roles">
+              <option *ngFor="let r of rolesDisponibles" [value]="r">{{ r }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-center">
+          <button class="btn btn-gradient" type="submit" [disabled]="form.invalid || loading || !canEdit()">
+            <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+            {{ editingId ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- TABLEAU MODERNE AVEC FILTRES -->
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>
+                Nom
+                <input class="table-filter" [(ngModel)]="filterNom" [ngModelOptions]="{standalone:true}" (input)="applyFilters()" placeholder="Filtrer...">
+              </th>
+              <th>
+                Prénom
+                <input class="table-filter" [(ngModel)]="filterPrenom" [ngModelOptions]="{standalone:true}" (input)="applyFilters()" placeholder="Filtrer...">
+              </th>
+              <th>Email</th>
+              <th>Spécialité</th>
+              <th>Grade</th>
+              <th>
+                Rôle
+                <select class="table-filter" [(ngModel)]="filterRole" [ngModelOptions]="{standalone:true}" (change)="applyFilters()">
+                  <option [ngValue]="null">Tous</option>
+                  <option *ngFor="let r of rolesDisponibles" [ngValue]="r">{{ r }}</option>
+                </select>
+              </th>
+              <th *ngIf="canEdit()">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of filteredEnseignants; let i = index" class="table-row">
+              <td>{{ i + 1 }}</td>
+              <td>{{ e.nom }}</td>
+              <td>{{ e.prenom }}</td>
+              <td>{{ e.email }}</td>
+              <td>{{ e.specialite }}</td>
+              <td>{{ e.grade }}</td>
+              <td><span class="badge-role">{{ e.roles[0] }}</span></td>
+              <td *ngIf="canEdit()">
+                <button class="btn-edit" (click)="edit(e)" title="Modifier"><i class="bi bi-pencil-square"></i></button>
+                <button class="btn-delete" (click)="supprimerEnseignant(e.id!)" title="Supprimer"><i class="bi bi-trash-fill"></i></button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredEnseignants.length === 0">
+              <td colspan="8" class="text-center">Aucun enseignant trouvé</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

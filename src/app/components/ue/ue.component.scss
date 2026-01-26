@@ -1,0 +1,92 @@
+.page-wrapper {
+  min-height: 100vh;
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #e0f2fe, #fce7f3, #ede9fe);
+  display: flex;
+  justify-content: center;
+}
+
+.modern-card {
+  width: 100%;
+  max-width: 1100px;
+  border-radius: 2rem;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+
+.icon-circle {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #6366f1, #ec4899, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2.3rem;
+}
+
+.modern-form {
+  .form-control, .form-select {
+    border-radius: 1rem;
+    border: 1px solid #d1d5db;
+    &:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.25);
+    }
+  }
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #6366f1, #22c55e, #f59e0b);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+}
+
+.filter-panel {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  .filter-input {
+    flex: 1;
+    border-radius: 0.8rem;
+  }
+}
+
+.modern-table {
+  table {
+    border-spacing: 0 0.7rem;
+    border-collapse: separate;
+
+    tbody tr {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      transition: all 0.25s;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+      }
+    }
+  }
+}
+
+.btn-action {
+  border-radius: 0.7rem;
+  padding: 0.45rem 0.6rem;
+
+  &.edit {
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    color: #fff;
+  }
+
+  &.delete {
+    background: linear-gradient(135deg, #fca5a5, #dc2626);
+    color: #fff;
+  }
+}

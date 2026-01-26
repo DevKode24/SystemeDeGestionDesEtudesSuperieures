@@ -1,0 +1,108 @@
+<div class="container">
+
+  <h3>📝 Saisie des notes par classe et matière</h3>
+
+  <!-- =========================
+       FILTRES
+       ========================= -->
+  <form [formGroup]="form" class="row g-3 mb-4 filter-form">
+
+    <div class="col-md-4">
+      <label>Classe</label>
+      <select class="form-select" formControlName="classeId">
+        <option value="">-- Sélectionner --</option>
+        <option *ngFor="let c of classes()" [value]="c.id">
+          {{ c.code }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label>Matière</label>
+      <select class="form-select" formControlName="matiereId">
+        <option value="">-- Sélectionner --</option>
+        <option *ngFor="let m of matieres()" [value]="m.id">
+          {{ m.intitule }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label>Année académique</label>
+      <select class="form-select" formControlName="anneeAcademiqueId">
+        <option value="">-- Sélectionner --</option>
+        <option *ngFor="let a of annees()" [value]="a.id">
+          {{ a.libelle }}
+        </option>
+      </select>
+    </div>
+
+  </form>
+
+  <!-- =========================
+       LOADER
+       ========================= -->
+  <div *ngIf="loading()" class="text-center my-5 loader-container">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 fw-semibold">Chargement des données...</div>
+  </div>
+
+  <!-- =========================
+       TABLEAU DES NOTES
+       ========================= -->
+  <div *ngIf="hasLignes() && !loading()" class="card shadow-sm">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">📘 Saisie des notes</h5>
+    </div>
+
+    <div class="card-body p-0">
+
+      <form [formGroup]="form">
+
+        <table class="table table-bordered table-hover mb-0">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>#</th>
+              <th>Nom et Prénoms</th>
+              <th>CC /20</th>
+              <th>DST /20</th>
+              <th>Session /20</th>
+            </tr>
+          </thead>
+
+          <tbody formArrayName="lignes">
+            <tr *ngFor="let ligne of lignes(); let i = index" [formGroupName]="i">
+              <td class="text-center fw-bold">{{ i + 1 }}</td>
+              <td class="text-start">{{ ligne.nomPrenom }}</td>
+              <td>
+                <input type="number" class="form-control" formControlName="noteCC" min="0" max="20">
+              </td>
+              <td>
+                <input type="number" class="form-control" formControlName="noteDST" min="0" max="20">
+              </td>
+              <td>
+                <input type="number" class="form-control" formControlName="noteSession" min="0" max="20">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+      </form>
+
+      <div class="d-flex justify-content-end gap-2 m-3">
+        <button class="btn btn-success" type="button" (click)="enregistrer()">💾 Enregistrer</button>
+        <button class="btn btn-secondary" type="button" (click)="imprimer()">🖨️ Imprimer</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================
+       AUCUNE DONNÉE
+       ========================= -->
+  <div *ngIf="!loading() && !hasLignes()" class="alert alert-info text-center mt-4">
+    ℹ️ Sélectionnez une classe, une matière et une année académique pour afficher les étudiants.
+  </div>
+
+</div>

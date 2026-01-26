@@ -1,0 +1,129 @@
+<div class="page-wrapper">
+  <div class="card modern-card">
+
+    <!-- HEADER -->
+    <div class="card-header text-center">
+      <div class="icon-circle mb-1">
+        <i class="bi bi-layers-fill"></i>
+      </div>
+      <h3 class="fw-bold mb-1">Gestion des Niveaux</h3>
+      <p class="text-muted small">Créez, modifiez et filtrez vos niveaux académiques</p>
+    </div>
+
+    <!-- FORMULAIRE -->
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="save()" class="mb-2 modern-form">
+
+        <!-- GRID 2 COLONNES -->
+        <div class="row g-2">
+              <div class="col-md-6">
+            <div class="form-floating">
+              <textarea class="form-control" formControlName="libelle" placeholder="Description" rows="2"></textarea>
+              <label>Description</label>
+            </div>
+          </div>
+           <div class="col-md-6">
+            <div class="form-floating">
+              <select class="form-select" formControlName="filiereId">
+                <option [ngValue]="null">Sélectionner une filière</option>
+                <option *ngFor="let f of filieres" [ngValue]="f.id">{{ f.nom }}</option>
+              </select>
+              <label>Filière</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating">
+              <input type="text" class="form-control" formControlName="code" placeholder="Code du niveau" />
+              <label>Code du niveau</label>
+            </div>
+          </div>
+         
+        
+        </div>
+
+        <!-- BOUTON REDUIT -->
+        <div class="mt-1 text-end">
+          <button class="btn btn-gradient btn-lg" type="submit" [disabled]="loading || !canEdit()">
+            <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+            {{ editingId ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- FILTRES -->
+      <div class="filter-panel mb-2 d-flex gap-2 flex-wrap">
+        <input type="text" class="form-control filter-input" placeholder="Filtrer par Description"
+               [(ngModel)]="filterLibelle" (input)="applyFilters()" name="filterLibelle"/>
+        <select class="form-select filter-input" [(ngModel)]="filterFiliereId" (change)="applyFilters()" name="filterFiliereId">
+          <option [ngValue]="null">Toutes les filières</option>
+          <option *ngFor="let f of filieres" [ngValue]="f.id">{{ f.nom }}</option>
+        </select>
+      </div>
+
+      <!-- TABLEAU -->
+     <div class="modern-table fixed-table">
+
+  <table class="table align-middle">
+    <thead>
+      <!-- TITRES -->
+      <tr class="table-head">
+        <th>#</th>
+        <th>Filière</th>
+        <th>Description</th>
+        <th>Code</th>
+        <th class="text-end">Actions</th>
+      </tr>
+
+      <!-- FILTRES DANS LE TABLEAU -->
+      <tr class="table-filters">
+        <th></th>
+        <th>
+          <select class="form-select filter-input"
+                  [(ngModel)]="filterFiliereId"
+                  (change)="applyFilters()">
+            <option [ngValue]="null">Toutes</option>
+            <option *ngFor="let f of filieres" [ngValue]="f.id">{{ f.nom }}</option>
+          </select>
+        </th>
+        <th>
+          <input type="text"
+                 class="form-control filter-input"
+                 placeholder="Filtrer description"
+                 [(ngModel)]="filterLibelle"
+                 (input)="applyFilters()" />
+        </th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let n of filteredNiveaux; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ getFiliereNom(n.filiereId) }}</td>
+        <td>{{ n.libelle || '-' }}</td>
+        <td>{{ n.code }}</td>
+        <td class="text-end">
+          <button class="btn btn-action edit" (click)="edit(n)" [disabled]="!canEdit()">
+            <i class="bi bi-pencil-fill"></i>
+          </button>
+          <button class="btn btn-action delete" (click)="delete(n.id!)" [disabled]="!canEdit()">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="filteredNiveaux.length === 0">
+        <td colspan="5" class="text-center text-muted py-5">
+          <i class="bi bi-inbox-fill me-2"></i> Aucun niveau trouvé
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+
+    </div>
+  </div>
+</div>

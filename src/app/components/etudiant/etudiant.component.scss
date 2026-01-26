@@ -1,0 +1,240 @@
+/* ================= BASE ================= */
+.page-wrapper {
+  padding: 2rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(180deg, #f5f6fa, #eef0f6);
+  min-height: 100vh;
+}
+
+/* ================= CARD ================= */
+.modern-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+/* ================= HEADER ================= */
+.card-header {
+  text-align: center;
+  padding: 2.4rem 1.5rem 2rem;
+  background: linear-gradient(
+    135deg,
+    rgba(108, 92, 231, 0.08),
+    rgba(162, 155, 254, 0.08)
+  );
+
+  .icon-circle {
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 0.8rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 12px 22px rgba(108, 92, 231, 0.35);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3436;
+  }
+
+  p {
+    margin-top: 0.45rem;
+    font-size: 0.95rem;
+    color: #636e72;
+  }
+}
+
+.card-body {
+  padding: 2.2rem;
+}
+
+/* ================= FORM ================= */
+.etudiant-container {
+  margin-bottom: 2.5rem;
+}
+
+.etudiant-form {
+  width: 100%;
+}
+
+/* GRID 4 COLONNES */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.3rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* GROUP */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #636e72;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  input,
+  select {
+    height: 42px;
+    padding: 0 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #dfe6e9;
+    background: #ffffff;
+    font-size: 0.9rem;
+    color: #2d3436;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: #6c5ce7;
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.18);
+    }
+
+    &:disabled {
+      background: #f1f2f6;
+      color: #636e72;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* ================= ACTIONS ================= */
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2.2rem;
+}
+
+.form-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 2.2rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+/* PRIMARY */
+.form-actions button[type='submit'] {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(108, 92, 231, 0.35);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 26px rgba(108, 92, 231, 0.45);
+  }
+
+  &:disabled {
+    background: #dcdde1;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+/* SECONDARY */
+.form-actions button[type='button'] {
+  background: #f1f2f6;
+  color: #2d3436;
+
+  &:hover {
+    background: #e5e6eb;
+  }
+}
+
+/* ================= TABLE ================= */
+.table-container {
+  margin-top: 3rem;
+  overflow-x: auto;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 14px;
+  overflow: hidden;
+
+  thead {
+    background: #f1f2f6;
+  }
+
+  th,
+  td {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.88rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    font-weight: 700;
+    color: #2d3436;
+  }
+
+  tbody tr {
+    transition: background 0.2s;
+  }
+
+  tbody tr:hover {
+    background: #fafafa;
+  }
+
+  tbody td {
+    color: #2d3436;
+  }
+}
+
+/* ================= ACTIONS TABLE ================= */
+.btn-edit {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: #6c5ce7;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+
+  &:hover {
+    color: #4834d4;
+    transform: scale(1.15);
+  }
+}
+
+/* ================= EMPTY STATE ================= */
+.text-center {
+  text-align: center;
+  color: #636e72;
+  font-style: italic;
+  padding: 1.2rem;
+}

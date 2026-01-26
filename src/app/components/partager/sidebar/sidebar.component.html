@@ -1,0 +1,30 @@
+<aside class="sidebar">
+  <ng-container *ngFor="let menu of menus">
+    <!-- Menu simple -->
+    <a
+      *ngIf="!menu.subMenus && canView(menu)"
+      [routerLink]="menu.path"
+      routerLinkActive="active"
+      class="menu-link"
+    >
+      <i class="bi" [ngClass]="menu.icon"></i>
+      {{ menu.label }}
+    </a>
+
+    <!-- Menu avec sous-menus (accordéon) -->
+    <div *ngIf="menu.subMenus && canView(menu)" class="menu-accordion">
+      <div class="menu-title" (click)="toggleMenu(menu)">
+        <i class="bi" [ngClass]="menu.icon"></i>
+        {{ menu.label }}
+        <i class="bi" [ngClass]="menu.expanded ? 'bi-caret-down-fill' : 'bi-caret-right-fill'" style="margin-left:auto;"></i>
+      </div>
+      <div class="submenu" *ngIf="menu.expanded">
+        <ng-container *ngFor="let sub of menu.subMenus">
+          <a *ngIf="canView(sub)" [routerLink]="sub.path" routerLinkActive="active" class="submenu-link">
+            {{ sub.label }}
+          </a>
+        </ng-container>
+      </div>
+    </div>
+  </ng-container>
+</aside>
