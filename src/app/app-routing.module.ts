@@ -1,16 +1,23 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-/* =======================
-   AUTH
-======================= */
+/* ================= AUTH ================= */
 import { LoginComponent } from './auth/login/login.component';
 
-/* =======================
-   LAYOUT
-======================= */
+/* ================= LAYOUT ================= */
+import { DashboardComponent } from './components/pages/dashboard/dashboard.component';
+
+/* ================= MÉTIER ================= */
 import { EnseignantComponent } from './components/enseignant/enseignant.component';
 import { AnneeAcademiqueComponent } from './components/anneeAcademique/annee-academique-list/annee-academique-list.component';
+
+/* ================= GUARDS ================= */
+import { authGuard } from './auth/auth.guard';
+import { roleGuard } from './auth/role.guard';
+import { SemestreComponent } from './components/semestre/semestre/semestre.component';
+import { FiliereComponent } from './components/filiere/filiere/filiere.component';
+import { NiveauComponent } from './components/niveau/niveau/niveau.component';
+import { ClasseComponent } from './components/classe/classe/classe.component';
 
 const routes: Routes = [
 
@@ -19,34 +26,90 @@ const routes: Routes = [
     path: 'login',
     component: LoginComponent
   },
+   {
+    path: '',
+    component: LoginComponent
+  },
 
   /* ========= DASHBOARD ========= */
   {
     path: 'dashboard',
+    component: DashboardComponent,
+    canActivate: [authGuard],
     children: [
-      {
-        path: 'enseignants',
-        component: EnseignantComponent
-      },
-      {
-        path: 'annee-academique',
-        component: AnneeAcademiqueComponent
-      },
+
+      /* ----- DEFAULT ----- */
       {
         path: '',
-        redirectTo: 'enseignants',
+        redirectTo: '/dashboard',
         pathMatch: 'full'
+      },
+
+      /* ========= SCOLARITÉ ========= */
+      {
+        path: 'scolarite',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SCOLARITE'] },
+        children: [
+          {
+            path: 'Anneeacademique',
+            component: AnneeAcademiqueComponent
+          },{
+            path: 'semestres',
+            component: SemestreComponent
+          },
+          {
+            path: 'filiere',
+            component: FiliereComponent
+          },
+          {
+            path: 'niveau',
+            component: NiveauComponent
+          },
+          {
+            path: 'salles',
+            component: ClasseComponent
+          },
+          {
+            path: 'Anneeacademique',
+            component: AnneeAcademiqueComponent
+          },
+          {
+            path: 'enseignant',
+            component: EnseignantComponent
+          }
+        ]
+      },
+
+      /* ========= ENSEIGNANT ========= */
+      {
+        path: 'enseignant',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'ENSEIGNANT'] },
+        children: [
+          // exemple futur
+          // { path: 'ReleveNotes', component: ReleveNotesComponent }
+        ]
+      },
+
+      /* ========= ETUDIANT ========= */
+      {
+        path: 'etudiant',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'ETUDIANT'] },
+        children: [
+          // consultation notes, inscription, emploi du temps…
+        ]
       }
     ]
   },
 
-  /* ========= DEFAULT ========= */
+  /* ========= REDIRECTIONS ========= */
   {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'
   },
-
   {
     path: '**',
     redirectTo: 'login'
