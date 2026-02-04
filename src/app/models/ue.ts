@@ -6,8 +6,12 @@ export interface Ue {
   intitule: string;
   credit: number;
   coefficient: number;
+
+  // pour affichage
   semestre?: Semestre;
-  semestreId?: Semestre; // utile pour création / édition
+
+  // pour formulaire uniquement
+  semestreId?: number;
 }
 
 
