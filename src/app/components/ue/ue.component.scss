@@ -1,48 +1,72 @@
 .page-wrapper {
   min-height: 100vh;
+  background: linear-gradient(135deg, #fef3c7, #fbcfe8, #c7d2fe);
   padding: 3rem 1rem;
-  background: linear-gradient(135deg, #e0f2fe, #fce7f3, #ede9fe);
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  transition: background 0.5s;
 }
 
 .modern-card {
   width: 100%;
-  max-width: 1100px;
-  border-radius: 2rem;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+  max-width: 1000px;
+  border-radius: 1.8rem;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.1);
   overflow: hidden;
+  transition: transform 0.3s;
+  &:hover { transform: translateY(-5px); }
+}
+
+.card-header {
+  background: transparent;
+  border-bottom: none;
+  padding: 2rem 2rem;
 }
 
 .icon-circle {
-  width: 85px;
-  height: 85px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: linear-gradient(45deg, #6366f1, #ec4899, #22c55e);
+  margin: auto;
+  background: linear-gradient(45deg, #ec4899, #3b82f6, #facc15);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 2.3rem;
+  font-size: 2.2rem;
+  animation: rotate 5s linear infinite;
 }
 
-.modern-form {
-  .form-control, .form-select {
-    border-radius: 1rem;
-    border: 1px solid #d1d5db;
-    &:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.25);
-    }
+@keyframes rotate {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+.modern-form .form-control, .modern-form .form-select, .modern-form textarea {
+  border-radius: 0.9rem;
+  border: 1px solid #d1d5db;
+  padding: 1rem;
+  &:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 4px rgba(236,72,153,0.2);
   }
 }
 
 .btn-gradient {
-  background: linear-gradient(135deg, #6366f1, #22c55e, #f59e0b);
+  background: linear-gradient(45deg, #3b82f6, #1810b9, #8343ad);
   color: #fff;
-  border-radius: 1rem;
-  padding: 0.75rem 1.5rem;
   font-weight: 600;
+  border: none;
+  border-radius: 0.9rem;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+  &:hover { opacity: 0.95; transform: translateY(-2px); }
 }
 
 .filter-panel {
@@ -52,41 +76,65 @@
   flex-wrap: wrap;
 
   .filter-input {
-    flex: 1;
-    border-radius: 0.8rem;
+    flex: 1 1 200px;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #d1d5db;
+    &:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
   }
 }
 
 .modern-table {
   table {
-    border-spacing: 0 0.7rem;
+    width: 100%;
     border-collapse: separate;
+    border-spacing: 0 0.6rem;
+
+    thead th {
+      background: #e0f2fe;
+      border: none;
+      padding: 1rem 0.75rem;
+      border-radius: 0.6rem;
+    }
 
     tbody tr {
-      background: #fff;
-      border-radius: 1rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      transition: all 0.25s;
-
+      background: #ffffff;
+      border-radius: 0.8rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.3s;
       &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
       }
+
+      td { padding: 1rem 0.75rem; vertical-align: middle; }
     }
   }
 }
 
 .btn-action {
-  border-radius: 0.7rem;
+  border: none;
+  border-radius: 0.6rem;
   padding: 0.45rem 0.6rem;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
 
   &.edit {
-    background: linear-gradient(135deg, #60a5fa, #2563eb);
+    background: linear-gradient(135deg, #93c5fd, #3b82f6);
     color: #fff;
+    &:hover { background: linear-gradient(135deg, #3b82f6, #93c5fd); }
   }
 
   &.delete {
-    background: linear-gradient(135deg, #fca5a5, #dc2626);
+    background: linear-gradient(135deg, #fecaca, #dc2626);
     color: #fff;
+    &:hover { background: linear-gradient(135deg, #dc2626, #fecaca); }
   }
 }

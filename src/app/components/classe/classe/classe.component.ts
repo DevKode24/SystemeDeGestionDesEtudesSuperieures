@@ -6,7 +6,6 @@ import { Classe } from 'src/app/models/classe';
 import { Filiere } from 'src/app/models/filiere';
 import { Niveau } from 'src/app/models/niveau';
 import { ClasseService } from 'src/app/services/classe.service';
-
 @Component({
   selector: 'app-classe',
   templateUrl: './classe.component.html',
@@ -14,18 +13,20 @@ import { ClasseService } from 'src/app/services/classe.service';
 })
 export class ClasseComponent implements OnInit {
 
-  form!: FormGroup;
   classes: Classe[] = [];
   filteredClasses: Classe[] = [];
+
   filieres: Filiere[] = [];
   niveaux: Niveau[] = [];
-  editingId?: number;
+
+  form!: FormGroup;
+  editingId: number | null = null;
   loading = false;
 
-  // filtres
-  filterCode = '';
-  filterFiliere = '';
-  filterNiveau = '';
+  // 🔍 Recherche + pagination
+  searchTerm = '';
+  page = 1;
+  pageSize = 5;
 
   constructor(
     private fb: FormBuilder,
@@ -47,80 +48,110 @@ export class ClasseComponent implements OnInit {
     });
   }
 
+  /* ==========================
+     CHARGEMENT
+  ========================== */
   loadOptions(): void {
-    this.classeService.getFilieres().subscribe({
-      next: (res) => this.filieres = res,
-      error: (err) => console.error(err)
-    });
-
-    this.classeService.getNiveaux().subscribe({
-      next: (res) => this.niveaux = res,
-      error: (err) => console.error(err)
-    });
+    this.classeService.getFilieres().subscribe(r => this.filieres = r);
+    this.classeService.getNiveaux().subscribe(r => this.niveaux = r);
   }
 
   loadClasses(): void {
-    this.classeService.getAll().subscribe({
-      next: (res) => {
-        this.classes = res;
-        this.applyFilters();
-      },
-      error: (err) => console.error(err)  
+    this.classeService.getAll().subscribe(data => {
+      this.classes = data;
+      this.applyFilter();
     });
   }
 
-  save(): void {
-    if (this.form.invalid) return;
-    this.loading = true;
-    const payload: Classe = this.form.value;
+  /* ==========================
+     FILTRE + PAGINATION
+  ========================== */
+  applyFilter(): void {
+    const term = this.searchTerm.toLowerCase().trim();
 
-    const obs = this.editingId
-      ? this.classeService.modifier(this.editingId, payload)
-      : this.classeService.creer(payload);
-
-    obs.subscribe({
-      next: () => {
-        this.loadClasses();
-        this.resetForm();
-      },
-      error: (err) => console.error(err),
-      complete: () => (this.loading = false)
-    });
+    this.filteredClasses = this.classes.filter(c =>
+      c.code.toLowerCase().includes(term) ||
+      c.filiere.nom.toLowerCase().includes(term) ||
+      c.niveau.code.toLowerCase().includes(term)
+    );
   }
 
-  edit(classe: Classe): void {
-    this.editingId = classe.id;
-    this.form.patchValue(classe);
-    window.scroll({ top: 0, behavior: 'smooth' });
+  onSearchChange(): void {
+    this.applyFilter();
+    this.page = 1;
   }
+
+  get pagedClasses(): Classe[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredClasses.slice(start, start + this.pageSize);
+  }
+
+  /* ==========================
+     SAVE (MAPPING DTO)
+  ========================== */
+save(): void {
+  if (this.form.invalid) return;
+
+  this.loading = true;
+
+  const { code, filiereId, niveauId, active } = this.form.value;
+
+  const filiere = this.filieres.find(f => f.id === filiereId);
+  const niveau = this.niveaux.find(n => n.id === niveauId);
+
+  if (!filiere || !niveau) {
+    alert('Filière ou niveau invalide');
+    this.loading = false;
+    return;
+  }
+
+  const payload: Classe = {
+    code,
+    active,
+    filiere: { id: filiere.id } as any,
+    niveau: { id: niveau.id } as any,
+    matiere: null
+  };
+
+  const action$ = this.editingId
+    ? this.classeService.modifier(this.editingId, payload)
+    : this.classeService.creer(payload);
+
+  action$.subscribe({
+    next: () => {
+      this.resetForm();
+      this.loadClasses();
+    },
+    error: (err: HttpErrorResponse) => {
+      console.error('Erreur backend', err);
+    },
+    complete: () => this.loading = false
+  });
+}
+
+
+  edit(c: Classe): void {
+  this.editingId = c.id!;
+
+  this.form.patchValue({
+    code: c.code,
+    filiereId: c.filiere.id,
+    niveauId: c.niveau.id,
+    active: c.active
+  });
+
+  window.scroll({ top: 0, behavior: 'smooth' });
+}
+
 
   desactiverClasse(id: number): void {
-    if (!confirm('Voulez-vous vraiment désactiver cette classe ?')) return;
-    this.classeService.desactiver(id).subscribe({
-      next: () => this.loadClasses(),
-      error: (err) => console.error(err)
-    });
+    if (!confirm('Désactiver cette classe ?')) return;
+    this.classeService.desactiver(id).subscribe(() => this.loadClasses());
   }
 
   resetForm(): void {
-    this.editingId = undefined;
-    this.form.reset({ active: true, anneeAcademiqueId: null });
-  }
-
-  applyFilters(): void {
-  this.filteredClasses = this.classes.filter(c =>
-    c.code.toLowerCase().includes(this.filterCode.toLowerCase()) &&
-    (this.filterFiliere === '' || (this.filieres.find(f => f.id === c.filiereId)?.nom ?? '').toLowerCase().includes(this.filterFiliere.toLowerCase())) &&
-    (this.filterNiveau === '' || (this.niveaux.find(n => n.id === c.niveauId)?.libelle ?? '').toLowerCase().includes(this.filterNiveau.toLowerCase()))
-  );
-}
-
-  // Helpers pour le template
-  getFiliereNom(filiereId: number): string {
-    return this.filieres.find(f => f.id === filiereId)?.nom || '';
-  }
-
-  getNiveauLibelle(niveauId: number): string {
-    return this.niveaux.find(n => n.id === niveauId)?.libelle || '';
+    this.form.reset({ active: true });
+    this.editingId = null;
+    this.loading = false;
   }
 }

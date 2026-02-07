@@ -3,8 +3,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Role, TokenStorageService } from 'src/app/auth/token-storage.service';
 import { Ue } from 'src/app/models/ue';
 import { UeService } from 'src/app/services/ue.service';
-import { Semestre } from 'src/app/models/semestre';
 import { SemestreService } from 'src/app/services/semestre.service';
+import { FiliereService } from 'src/app/services/filiere.service';
+import { NiveauService } from 'src/app/services/niveau.service';
 
 @Component({
   selector: 'app-ue',
@@ -13,16 +14,24 @@ import { SemestreService } from 'src/app/services/semestre.service';
 })
 export class UeComponent implements OnInit {
 
+  /* ==========================
+     DONNÉES
+  ========================== */
   ues: Ue[] = [];
   filteredUes: Ue[] = [];
-  semestres: Semestre[] = [];
+
+  semestres: any[] = [];
+  filieres: any[] = [];
+  niveaux: any[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
   loading = false;
 
-  filterIntitule = '';
-  filterSemestreId: number | null = null;
+  // 🔹 Pagination + recherche (CLONE Filière)
+  searchTerm = '';
+  page = 1;
+  pageSize = 5;
 
   role: Role | Role[] | null = null;
 
@@ -30,23 +39,44 @@ export class UeComponent implements OnInit {
     private fb: FormBuilder,
     private ueService: UeService,
     private semestreService: SemestreService,
+    private filiereService: FiliereService,
+    private niveauService: NiveauService,
     private tokenStorage: TokenStorageService
   ) {}
 
+  /* ==========================
+     INIT
+  ========================== */
   ngOnInit(): void {
     this.role = this.tokenStorage.getUserRole();
     this.initForm();
-    this.loadSemestres();
     this.loadUes();
+    this.loadSemestres();
+    this.loadFilieres();
+    this.loadNiveaux();
   }
 
   private initForm(): void {
     this.form = this.fb.group({
       code: ['', Validators.required],
       intitule: ['', Validators.required],
-      credit: [null, [Validators.required, Validators.min(1)]],
-      coefficient: [null, [Validators.required, Validators.min(1)]],
-      semestreId: [null, Validators.required] // 🔹 obligatoire
+      credit: [0, [Validators.required, Validators.min(1)]],
+      semestreId: [null, Validators.required],
+      filiereId: [null, Validators.required],
+      niveauId: [null, Validators.required]
+    });
+  }
+
+  /* ==========================
+     LOAD DATA
+  ========================== */
+  loadUes(): void {
+    this.ueService.getAll().subscribe({
+      next: data => {
+        this.ues = data;
+        this.applyFilter();
+      },
+      error: err => console.error('Erreur chargement UE', err)
     });
   }
 
@@ -54,91 +84,92 @@ export class UeComponent implements OnInit {
     this.semestreService.getAll().subscribe(data => this.semestres = data);
   }
 
- loadUes(): void {
-  if (this.filterSemestreId) {
-    // 🔹 Charger uniquement les UE du semestre filtré
-    this.ueService.getBySemestre(this.filterSemestreId).subscribe({
-      next: (data: Ue[]) => {
-        this.ues = data;
-        this.applyFilters(); // si tu as d'autres filtres
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des UE par semestre :', err);
-        this.ues = [];
-        this.filteredUes = [];
-      }
-    });
-  } else {
-    // 🔹 Charger toutes les UE
-    this.ueService.getAll().subscribe({
-      next: (data: Ue[]) => {
-        this.ues = data;
-        this.filteredUes = [...data]; // initialiser filteredUes
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement de toutes les UE :', err);
-        this.ues = [];
-        this.filteredUes = [];
-      }
-    });
+  loadFilieres(): void {
+    this.filiereService.getAll().subscribe(data => this.filieres = data);
   }
-}
 
+  loadNiveaux(): void {
+    this.niveauService.getAll().subscribe(data => this.niveaux = data);
+  }
 
-  applyFilters(): void {
-    const term = this.filterIntitule.toLowerCase().trim();
+  /* ==========================
+     FILTRE + PAGINATION
+  ========================== */
+  applyFilter(): void {
+    const term = this.searchTerm.toLowerCase().trim();
+
     this.filteredUes = this.ues.filter(u =>
-      !term ||
       u.code.toLowerCase().includes(term) ||
       u.intitule.toLowerCase().includes(term)
     );
   }
 
+  onSearchChange(): void {
+    this.applyFilter();
+    this.page = 1;
+  }
+
+  get pagedUes(): Ue[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredUes.slice(start, start + this.pageSize);
+  }
+
+  /* ==========================
+     CRUD
+  ========================== */
   save(): void {
     if (this.form.invalid) return;
 
     this.loading = true;
 
-    // 🔹 Créer l'objet DTO complet pour le backend
-    const ueDto: Ue = {
+    const payload: Ue = {
       code: this.form.value.code,
       intitule: this.form.value.intitule,
       credit: this.form.value.credit,
-      coefficient: this.form.value.coefficient,
-      semestre: { id: this.form.value.semestreId } // 🔹 Transformation clé
+      semestreId: this.form.value.semestreId,
+      filiereId: this.form.value.filiereId,
+      niveauId: this.form.value.niveauId
     };
 
     const action$ = this.editingId
-      ? this.ueService.update(this.editingId, ueDto)
-      : this.ueService.create(ueDto);
+      ? this.ueService.modifier(this.editingId, payload)
+      : this.ueService.creer(payload);
 
     action$.subscribe({
       next: () => {
         this.resetForm();
         this.loadUes();
       },
-      error: (err) => {
-        console.error('Erreur création / modification UE', err);
-        alert('Erreur lors de l’enregistrement de l’UE !');
+      error: err => {
+        console.error('Erreur enregistrement UE', err);
+        alert('Erreur lors de l’enregistrement');
       },
       complete: () => this.loading = false
     });
   }
 
-  edit(u: Ue): void {
-    this.editingId = u.id ?? null;
+  edit(ue: Ue): void {
+    this.editingId = ue.id ?? null;
+
     this.form.patchValue({
-      code: u.code,
-      intitule: u.intitule,
-      credit: u.credit,
-      coefficient: u.coefficient,
-      semestreId: u.semestre?.id ?? null
+      code: ue.code,
+      intitule: ue.intitule,
+      credit: ue.credit,
+      semestreId: ue.semestreId,
+      filiereId: ue.filiereId,
+      niveauId: ue.niveauId
     });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   delete(id: number): void {
     if (!confirm('Supprimer cette UE ?')) return;
-    this.ueService.delete(id).subscribe(() => this.loadUes());
+
+    this.ueService.supprimer(id).subscribe({
+      next: () => this.loadUes(),
+      error: err => console.error('Erreur suppression UE', err)
+    });
   }
 
   resetForm(): void {
@@ -147,11 +178,9 @@ export class UeComponent implements OnInit {
     this.loading = false;
   }
 
- getSemestreNumero(semestre?: Semestre): number | string {
-  return semestre?.numero ?? '-';
-}
-  
-
+  /* ==========================
+     DROITS (OPTIONNEL)
+  ========================== */
   canEdit(): boolean {
     if (!this.role) return false;
     return Array.isArray(this.role)

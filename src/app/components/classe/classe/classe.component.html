@@ -22,23 +22,22 @@
             <input class="form-control" formControlName="code" placeholder="Ex: CS101">
           </div>
 
-          <!-- FILIERE -->
-          <div class="form-group">
-            <label>Filière</label>
-            <select class="form-control" formControlName="filiereId">
-              <option [ngValue]="null" disabled>-- Sélectionner une filière --</option>
-              <option *ngFor="let f of filieres" [value]="f.id">{{ f.nom }}</option>
-            </select>
-          </div>
+       <!-- FILIERE -->
+<select class="form-control" formControlName="filiereId">
+  <option [ngValue]="null" disabled>-- Sélectionner une filière --</option>
+  <option *ngFor="let f of filieres" [ngValue]="f.id">
+    {{ f.nom }}
+  </option>
+</select>
 
-          <!-- NIVEAU -->
-          <div class="form-group">
-            <label>Niveau</label>
-            <select class="form-control" formControlName="niveauId">
-              <option [ngValue]="null" disabled>-- Sélectionner un niveau --</option>
-              <option *ngFor="let n of niveaux" [value]="n.id">{{ n.libelle }}</option>
-            </select>
-          </div>
+<!-- NIVEAU -->
+<select class="form-control" formControlName="niveauId">
+  <option [ngValue]="null" disabled>-- Sélectionner un niveau --</option>
+  <option *ngFor="let n of niveaux" [ngValue]="n.id">
+    {{ n.libelle }}
+  </option>
+</select>
+
 
 
         </div>
@@ -50,7 +49,16 @@
           </button>
         </div>
       </form>
-
+<div class="mb-3">
+  <input
+    type="text"
+    class="form-control"
+    placeholder="Rechercher une classe..."
+    [(ngModel)]="searchTerm"
+    (ngModelChange)="onSearchChange()"
+    [ngModelOptions]="{standalone:true}"
+  />
+</div>
       <!-- TABLEAU AVEC FILTRES -->
       <div class="table-container">
         <table class="modern-table">
@@ -59,38 +67,75 @@
               <th>#</th>
               <th>
                 Code
-                <input class="table-filter" [(ngModel)]="filterCode" [ngModelOptions]="{standalone:true}" (input)="applyFilters()" placeholder="Filtrer...">
+          
               </th>
               <th>
                 Filière
-                <input class="table-filter" [(ngModel)]="filterFiliere" [ngModelOptions]="{standalone:true}" (input)="applyFilters()" placeholder="Filtrer...">
+          
               </th>
               <th>
                 Niveau
-                <input class="table-filter" [(ngModel)]="filterNiveau" [ngModelOptions]="{standalone:true}" (input)="applyFilters()" placeholder="Filtrer...">
+            
               </th>
         
               <th>Actions</th>
             </tr>
           </thead>
-     <tbody>
-  <tr *ngFor="let c of filteredClasses; let i = index" class="table-row">
-    <td>{{ i + 1 }}</td>
+   <tbody>
+  <tr *ngFor="let c of pagedClasses; let i = index">
+    <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+
     <td>{{ c.code }}</td>
-    <td>{{ getFiliereNom(c.filiereId) }}</td>
-    <td>{{ getNiveauLibelle(c.niveauId) }}</td>
+
+    <td>{{ c.filiere?.nom }}</td>
+
+    <td>{{ c.niveau?.libelle }}</td>
+
     <td>
-      <button class="btn-edit" (click)="edit(c)" title="Modifier"><i class="bi bi-pencil-square"></i></button>
-      <button class="btn-delete" (click)="desactiverClasse(c.id!)" title="Désactiver"><i class="bi bi-trash-fill"></i></button>
+      <button class="btn-edit" (click)="edit(c)">
+        <i class="bi bi-pencil-square"></i>
+      </button>
+
+      <button class="btn-delete" (click)="desactiverClasse(c.id!)">
+        <i class="bi bi-trash-fill"></i>
+      </button>
     </td>
   </tr>
+
   <tr *ngIf="filteredClasses.length === 0">
-    <td colspan="6" class="text-center">Aucune classe trouvée</td>
+    <td colspan="5" class="text-center">Aucune classe trouvée</td>
   </tr>
 </tbody>
 
 
         </table>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+  <nav>
+    <ul class="pagination mb-0">
+      <li class="page-item" [class.disabled]="page === 1">
+        <button class="page-link" (click)="page = page - 1">Précédent</button>
+      </li>
+
+      <li class="page-item disabled">
+        <span class="page-link">{{ page }}</span>
+      </li>
+
+      <li class="page-item"
+          [class.disabled]="page * pageSize >= filteredClasses.length">
+        <button class="page-link" (click)="page = page + 1">Suivant</button>
+      </li>
+    </ul>
+  </nav>
+
+  <select class="form-select w-auto"
+          [(ngModel)]="pageSize"
+          (change)="onSearchChange()"
+          [ngModelOptions]="{standalone:true}">
+    <option [ngValue]="5">5 / page</option>
+    <option [ngValue]="10">10 / page</option>
+    <option [ngValue]="20">20 / page</option>
+  </select>
+</div>
       </div>
 
     </div>

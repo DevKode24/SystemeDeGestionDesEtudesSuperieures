@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Role, TokenStorageService } from 'src/app/auth/token-storage.service';
 import { Filiere } from 'src/app/models/filiere';
 import { FiliereService } from 'src/app/services/filiere.service';
-
 @Component({
   selector: 'app-filiere',
   templateUrl: './filiere.component.html',
@@ -11,10 +10,20 @@ import { FiliereService } from 'src/app/services/filiere.service';
 })
 export class FiliereComponent implements OnInit {
 
+  /* ==========================
+     DONNÉES
+  ========================== */
   filieres: Filiere[] = [];
+  filteredFilieres: Filiere[] = [];
+
   form!: FormGroup;
   editingId: number | null = null;
   loading = false;
+
+  // 🔹 Pagination
+  searchTerm = '';
+  page = 1;
+  pageSize = 5;
 
   role: Role | Role[] | null = null;
 
@@ -38,57 +47,72 @@ export class FiliereComponent implements OnInit {
 
   /* ==========================
      CHARGEMENT
-     ========================== */
+  ========================== */
   loadFilieres(): void {
-    this.service.getAll().subscribe(data => this.filieres = data);
+    this.service.getAll().subscribe(data => {
+      this.filieres = data;
+      this.applyFilter();
+    });
   }
 
   /* ==========================
-     AJOUT / MODIFICATION
-     ========================== */
+     FILTRE + PAGINATION
+  ========================== */
+  applyFilter(): void {
+    const term = this.searchTerm.toLowerCase().trim();
+
+    this.filteredFilieres = this.filieres.filter(f =>
+      f.nom.toLowerCase().includes(term) ||
+      f.code.toLowerCase().includes(term)
+    );
+  }
+
+  onSearchChange(): void {
+    this.applyFilter();
+    this.page = 1;
+  }
+
+  get pagedFilieres(): Filiere[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredFilieres.slice(start, start + this.pageSize);
+  }
+
+  /* ==========================
+     CRUD
+  ========================== */
   save(): void {
     if (this.form.invalid) return;
 
     this.loading = true;
     const filiere: Filiere = this.form.value;
 
-    if (this.editingId) {
-      this.service.modifier(this.editingId, filiere).subscribe(() => {
-        this.resetForm();
-        this.loadFilieres();
-      });
-    } else {
-      this.service.creer(filiere).subscribe(() => {
-        this.resetForm();
-        this.loadFilieres();
-      });
-    }
-  }
+    const action$ = this.editingId
+      ? this.service.modifier(this.editingId, filiere)
+      : this.service.creer(filiere);
 
-  /* ==========================
-     MODE ÉDITION
-     ========================== */
-  edit(filiere: Filiere): void {
-    this.editingId = filiere.id!;
-    this.form.patchValue({
-      nom: filiere.nom,
-      code: filiere.code,
-      description: filiere.description
+    action$.subscribe({
+      next: () => {
+        this.resetForm();
+        this.loadFilieres();
+      },
+      complete: () => this.loading = false
     });
   }
 
-  /* ==========================
-     SUPPRESSION
-     ========================== */
+  edit(f: Filiere): void {
+    this.editingId = f.id!;
+    this.form.patchValue({
+      nom: f.nom,
+      code: f.code,
+      description: f.description
+    });
+  }
+
   delete(id: number): void {
     if (!confirm('Supprimer cette filière ?')) return;
-
     this.service.supprimer(id).subscribe(() => this.loadFilieres());
   }
 
-  /* ==========================
-     RESET
-     ========================== */
   resetForm(): void {
     this.form.reset();
     this.editingId = null;
@@ -97,12 +121,11 @@ export class FiliereComponent implements OnInit {
 
   /* ==========================
      DROITS
-     ========================== */
+  ========================== */
   canEdit(): boolean {
     if (!this.role) return false;
-    if (Array.isArray(this.role)) {
-      return this.role.includes(Role.Admin) || this.role.includes(Role.Scolarite);
-    }
-    return this.role === Role.Admin || this.role === Role.Scolarite;
+    return Array.isArray(this.role)
+      ? this.role.includes(Role.Admin) || this.role.includes(Role.Scolarite)
+      : this.role === Role.Admin || this.role === Role.Scolarite;
   }
 }

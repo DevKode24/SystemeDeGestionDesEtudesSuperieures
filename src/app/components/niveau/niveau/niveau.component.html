@@ -43,7 +43,9 @@
 
         <!-- BOUTON REDUIT -->
         <div class="mt-1 text-end">
-          <button class="btn btn-gradient btn-lg" type="submit" [disabled]="loading || !canEdit()">
+          <button class="btn btn-gradient btn-lg"
+        type="submit"
+        [disabled]="form.invalid || loading || !canEdit()">
             <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
             {{ editingId ? 'Modifier' : 'Ajouter' }}
           </button>
@@ -52,16 +54,28 @@
 
       <!-- FILTRES -->
       <div class="filter-panel mb-2 d-flex gap-2 flex-wrap">
-        <input type="text" class="form-control filter-input" placeholder="Filtrer par Description"
-               [(ngModel)]="filterLibelle" (input)="applyFilters()" name="filterLibelle"/>
+          <input
+    type="text"
+    class="form-control"
+    placeholder="Rechercher un niveau (code ou description)..."
+    [(ngModel)]="searchTerm"
+    (ngModelChange)="onSearchChange()"
+    name="searchTerm"
+  />
         <select class="form-select filter-input" [(ngModel)]="filterFiliereId" (change)="applyFilters()" name="filterFiliereId">
           <option [ngValue]="null">Toutes les filières</option>
           <option *ngFor="let f of filieres" [ngValue]="f.id">{{ f.nom }}</option>
         </select>
       </div>
-
+  <div class="d-flex justify-content-end mb-3 gap-2">
+          <button class="btn btn-warning"><i class="bi bi-upload me-1"></i>Importer</button>
+          <button class="btn btn-success"><i class="bi bi-download me-1"></i>Exporter</button>
+        </div>
       <!-- TABLEAU -->
      <div class="modern-table fixed-table">
+      <div class="mb-2">
+
+</div>
 
   <table class="table align-middle">
     <thead>
@@ -74,7 +88,7 @@
         <th class="text-end">Actions</th>
       </tr>
 
-      <!-- FILTRES DANS LE TABLEAU -->
+      <!-- FILTRES DANS LE TABLEAU 
       <tr class="table-filters">
         <th></th>
         <th>
@@ -94,32 +108,77 @@
         </th>
         <th></th>
         <th></th>
-      </tr>
+      </tr>-->
     </thead>
 
-    <tbody>
-      <tr *ngFor="let n of filteredNiveaux; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ getFiliereNom(n.filiereId) }}</td>
-        <td>{{ n.libelle || '-' }}</td>
-        <td>{{ n.code }}</td>
-        <td class="text-end">
-          <button class="btn btn-action edit" (click)="edit(n)" [disabled]="!canEdit()">
-            <i class="bi bi-pencil-fill"></i>
-          </button>
-          <button class="btn btn-action delete" (click)="delete(n.id!)" [disabled]="!canEdit()">
-            <i class="bi bi-trash-fill"></i>
-          </button>
-        </td>
-      </tr>
+   <tbody>
+  <tr *ngFor="let n of pagedNiveaux; let i = index">
+    <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+    <td>{{ getFiliereNom(n.filiereId) }}</td>
+    <td>{{ n.libelle || '-' }}</td>
+    <td>{{ n.code }}</td>
+    <td class="text-end">
+      <button
+        class="btn btn-action edit me-1"
+        (click)="edit(n)"
+        [disabled]="!canEdit()">
+        <i class="bi bi-pencil-fill"></i>
+      </button>
 
-      <tr *ngIf="filteredNiveaux.length === 0">
-        <td colspan="5" class="text-center text-muted py-5">
-          <i class="bi bi-inbox-fill me-2"></i> Aucun niveau trouvé
-        </td>
-      </tr>
-    </tbody>
+      <button
+        class="btn btn-action delete"
+        (click)="delete(n.id!)"
+        [disabled]="!canEdit()">
+        <i class="bi bi-trash-fill"></i>
+      </button>
+    </td>
+  </tr>
+
+  <tr *ngIf="pagedNiveaux.length === 0">
+    <td colspan="5" class="text-center text-muted py-4">
+      <i class="bi bi-inbox-fill me-2"></i>
+      Aucun niveau trouvé
+    </td>
+  </tr>
+</tbody>
+
+
   </table>
+  <div class="d-flex justify-content-between align-items-center mt-3">
+  <nav>
+    <ul class="pagination mb-0">
+      <li class="page-item" [class.disabled]="page === 1">
+        <button class="page-link"
+                (click)="page = page - 1"
+                [disabled]="page === 1">
+          Précédent
+        </button>
+      </li>
+
+      <li class="page-item disabled">
+        <span class="page-link">{{ page }}</span>
+      </li>
+
+      <li class="page-item"
+          [class.disabled]="page * pageSize >= filteredNiveaux.length">
+        <button class="page-link"
+                (click)="page = page + 1"
+                [disabled]="page * pageSize >= filteredNiveaux.length">
+          Suivant
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <select class="form-select w-auto"
+          [(ngModel)]="pageSize"
+          (change)="onSearchChange()">
+    <option [ngValue]="5">5 / page</option>
+    <option [ngValue]="10">10 / page</option>
+    <option [ngValue]="20">20 / page</option>
+  </select>
+</div>
+
 
 </div>
 

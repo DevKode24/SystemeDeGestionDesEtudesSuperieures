@@ -18,6 +18,9 @@ import { SemestreComponent } from './components/semestre/semestre/semestre.compo
 import { FiliereComponent } from './components/filiere/filiere/filiere.component';
 import { NiveauComponent } from './components/niveau/niveau/niveau.component';
 import { ClasseComponent } from './components/classe/classe/classe.component';
+import { EnseignementComponent } from './components/enseignement/enseignement/enseignement.component';
+import { MatiereComponent } from './components/matiere/matiere/matiere.component';
+import { UeComponent } from './components/ue/ue.component';
 
 const routes: Routes = [
 
@@ -71,8 +74,16 @@ const routes: Routes = [
             component: ClasseComponent
           },
           {
-            path: 'Anneeacademique',
-            component: AnneeAcademiqueComponent
+            path: 'enseignements',
+            component: EnseignementComponent
+          },
+          {
+            path: 'matieres',
+            component: MatiereComponent
+          },
+          {
+            path: 'ues',
+            component: UeComponent
           },
           {
             path: 'enseignant',

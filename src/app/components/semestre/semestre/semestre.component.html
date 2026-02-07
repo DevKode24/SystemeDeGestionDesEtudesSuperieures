@@ -17,55 +17,65 @@
       <form
         [formGroup]="form"
         (ngSubmit)="save()"
-        class="mb-4 modern-form"
+        class="modern-form mb-4"
       >
 
         <div class="row g-3">
 
-    <!-- Numéro semestre -->
-<div class="col-md-6">
-  <div class="form-floating">
-    <select class="form-select" formControlName="numero">
-      <option [ngValue]="null">Sélectionner le semestre</option>
-      <option [ngValue]="1">Semestre 1</option>
-      <option [ngValue]="2">Semestre 2</option>
-      <option [ngValue]="3">Semestre 3</option>
-      <option [ngValue]="4">Semestre 4</option>
-      <option [ngValue]="5">Semestre 5</option>
-      <option [ngValue]="6">Semestre 6</option>
-    </select>
-    <label>Numéro du semestre</label>
-  </div>
-  <small class="text-danger" *ngIf="form.get('numero')?.invalid && form.get('numero')?.touched">
-    Le numéro du semestre est obligatoire
-  </small>
-</div>
+          <!-- Numéro semestre -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <select
+                class="form-select"
+                formControlName="numero"
+              >
+                <option [ngValue]="null">Sélectionner le semestre</option>
+                <option *ngFor="let n of [1,2,3,4,5,6]" [ngValue]="n">
+                  Semestre {{ n }}
+                </option>
+              </select>
+              <label>Numéro du semestre</label>
+            </div>
+            <small
+              class="text-danger"
+              *ngIf="form.get('numero')?.touched && form.get('numero')?.invalid"
+            >
+              Le numéro du semestre est obligatoire
+            </small>
+          </div>
 
-<!-- Année académique -->
-<div class="col-md-6">
-  <div class="form-floating">
-    <select class="form-select" formControlName="anneeAcademiqueId">
-      <option [ngValue]="null">Sélectionner l'année académique</option>
-      <option *ngFor="let a of anneesAcademiques" [ngValue]="a.id">
-        {{ a.libelle }}
-      </option>
-    </select>
-    <label>Année académique</label>
-  </div>
-  <small class="text-danger" *ngIf="form.get('anneeAcademiqueId')?.invalid && form.get('anneeAcademiqueId')?.touched">
-    L'année académique est obligatoire
-  </small>
-</div>
-
-
+          <!-- Année académique -->
+          <div class="col-md-6">
+            <div class="form-floating">
+              <select
+                class="form-select"
+                formControlName="anneeAcademiqueId"
+              >
+                <option [ngValue]="null">Sélectionner l'année académique</option>
+                <option
+                  *ngFor="let a of anneesAcademiques"
+                  [ngValue]="a.id"
+                >
+                  {{ a.libelle }}
+                </option>
+              </select>
+              <label>Année académique</label>
+            </div>
+            <small
+              class="text-danger"
+              *ngIf="form.get('anneeAcademiqueId')?.touched && form.get('anneeAcademiqueId')?.invalid"
+            >
+              L'année académique est obligatoire
+            </small>
+          </div>
 
         </div>
 
         <!-- Bouton submit -->
         <button
-          class="btn btn-gradient w-100 mt-4"
           type="submit"
-          [disabled]="loading || form.invalid || !canEdit()"
+          class="btn btn-gradient w-100 mt-4"
+          [disabled]="form.invalid || loading || !canEdit()"
         >
           <i
             class="bi me-1"
@@ -75,7 +85,10 @@
         </button>
 
       </form>
-
+  <div class="d-flex justify-content-end mb-3 gap-2">
+          <button class="btn btn-warning"><i class="bi bi-upload me-1"></i>Importer</button>
+          <button class="btn btn-success"><i class="bi bi-download me-1"></i>Exporter</button>
+        </div>
       <!-- ================= TABLE ================= -->
       <div class="table-responsive modern-table">
         <table class="table align-middle">
@@ -95,11 +108,11 @@
               <td>Semestre {{ s.numero }}</td>
               <td>{{ s.anneeAcademique?.libelle }}</td>
               <td class="text-end">
+
                 <button
                   class="btn btn-action edit me-2"
                   (click)="edit(s)"
-                  [disabled]="!canEdit()"
-                  [hidden]="!canEdit()"
+                  *ngIf="canEdit()"
                 >
                   <i class="bi bi-pencil-fill"></i>
                 </button>
@@ -107,11 +120,11 @@
                 <button
                   class="btn btn-action delete"
                   (click)="delete(s.id!)"
-                  [disabled]="!canEdit()"
-                  [hidden]="!canEdit()"
+                  *ngIf="canEdit()"
                 >
                   <i class="bi bi-trash-fill"></i>
                 </button>
+
               </td>
             </tr>
 

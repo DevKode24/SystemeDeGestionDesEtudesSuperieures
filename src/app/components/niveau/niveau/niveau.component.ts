@@ -6,6 +6,10 @@ import { NiveauService } from 'src/app/services/niveau.service';
 import { Filiere } from 'src/app/models/filiere';
 import { FiliereService } from 'src/app/services/filiere.service';
 
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
 @Component({
   selector: 'app-niveau',
   templateUrl: './niveau.component.html',
@@ -16,14 +20,19 @@ export class NiveauComponent implements OnInit {
   niveaux: Niveau[] = [];
   filieres: Filiere[] = [];
   filteredNiveaux: Niveau[] = [];
+
   form!: FormGroup;
   editingId: number | null = null;
   loading = false;
 
-  filterLibelle: string = '';
+  filterLibelle = '';
   filterFiliereId: number | null = null;
 
   role: Role | Role[] | null = null;
+  // 🔹 Pagination
+searchTerm = '';
+page = 1;
+pageSize = 5;
 
   constructor(
     private niveauService: NiveauService,
@@ -31,11 +40,6 @@ export class NiveauComponent implements OnInit {
     private fb: FormBuilder,
     private tokenStorage: TokenStorageService
   ) {}
-  getFiliereNom(filiereId: number | undefined): string {
-  const filiere = this.filieres.find(f => f.id === filiereId);
-  return filiere ? filiere.nom : '-';
-}
-
 
   ngOnInit(): void {
     this.role = this.tokenStorage.getUserRole();
@@ -51,40 +55,46 @@ export class NiveauComponent implements OnInit {
   }
 
   /* ==========================
-     CHARGEMENT
+     CHARGEMENTS
      ========================== */
   loadFilieres(): void {
-    this.filiereService.getAll().subscribe(data => this.filieres = data);
-  }
-
-  loadNiveaux(): void {
-    this.niveauService.getAll().subscribe(data => {
-      this.niveaux = data;
-      this.applyFilters();
+    this.filiereService.getAll().subscribe({
+      next: data => this.filieres = data,
+      error: err => console.error(err)
     });
   }
+
+loadNiveaux(): void {
+  this.niveauService.getAll().subscribe({
+    next: data => {
+      this.niveaux = data;
+      this.applyFilters();
+      this.page = 1;
+    },
+    error: err => console.error(err)
+  });
+}
 
   /* ==========================
      FILTRAGE
      ========================== */
-applyFilters(): void {
-  const libelleFilter = (this.filterLibelle ?? '').toLowerCase().trim();
-  const filiereFilter = this.filterFiliereId;
+  applyFilters(): void {
+  const term = this.searchTerm.toLowerCase().trim();
+  const filiereId = this.filterFiliereId;
 
   this.filteredNiveaux = this.niveaux.filter(n => {
+    const code = n.code?.toLowerCase() || '';
+    const libelle = n.libelle?.toLowerCase() || '';
 
-    const code = (n.code ?? '').toLowerCase();
-    const libelle = (n.libelle ?? '').toLowerCase();
-
-    const matchNom =
-      !libelleFilter ||
-      code.includes(libelleFilter) ||
-      libelle.includes(libelleFilter);
+    const matchText =
+      !term ||
+      code.includes(term) ||
+      libelle.includes(term);
 
     const matchFiliere =
-      filiereFilter == null || n.filiereId === filiereFilter;
+      filiereId == null || n.filiereId === filiereId;
 
-    return matchNom && matchFiliere;
+    return matchText && matchFiliere;
   });
 }
 
@@ -96,32 +106,34 @@ applyFilters(): void {
     if (this.form.invalid) return;
 
     this.loading = true;
-    const niveau: Niveau = this.form.value;
+    const payload: Niveau = this.form.value;
 
-    if (this.editingId) {
-      this.niveauService.modifier(this.editingId, niveau).subscribe(() => {
+    const request$ = this.editingId
+      ? this.niveauService.modifier(this.editingId, payload)
+      : this.niveauService.creer(payload);
+
+    request$.subscribe({
+      next: () => {
         this.resetForm();
         this.loadNiveaux();
-      });
-    } else {
-      this.niveauService.creer(niveau).subscribe(() => {
-        this.resetForm();
-        this.loadNiveaux();
-      });
-    }
-    console.log(niveau);
+      },
+      error: err => {
+        console.error(err);
+        alert('Erreur lors de l’enregistrement');
+        this.loading = false;
+      }
+    });
   }
 
   /* ==========================
-     MODE ÉDITION
+     ÉDITION
      ========================== */
   edit(niveau: Niveau): void {
     this.editingId = niveau.id!;
     this.form.patchValue({
-      nom: niveau.nom,
       code: niveau.code,
       libelle: niveau.libelle,
-      filiereId: niveau.filiereId || null
+      filiereId: niveau.filiereId
     });
   }
 
@@ -131,11 +143,14 @@ applyFilters(): void {
   delete(id: number): void {
     if (!confirm('Supprimer ce niveau ?')) return;
 
-    this.niveauService.supprimer(id).subscribe(() => this.loadNiveaux());
+    this.niveauService.supprimer(id).subscribe({
+      next: () => this.loadNiveaux(),
+      error: err => console.error(err)
+    });
   }
 
   /* ==========================
-     RESET
+     UTILITAIRES
      ========================== */
   resetForm(): void {
     this.form.reset();
@@ -143,9 +158,10 @@ applyFilters(): void {
     this.loading = false;
   }
 
-  /* ==========================
-     DROITS
-     ========================== */
+  getFiliereNom(filiereId: number | undefined): string {
+    return this.filieres.find(f => f.id === filiereId)?.nom || '-';
+  }
+
   canEdit(): boolean {
     if (!this.role) return false;
 
@@ -155,5 +171,13 @@ applyFilters(): void {
 
     return this.role === Role.Admin || this.role === Role.Scolarite;
   }
+  onSearchChange(): void {
+  this.applyFilters();
+  this.page = 1;
+}
 
+get pagedNiveaux(): Niveau[] {
+  const start = (this.page - 1) * this.pageSize;
+  return this.filteredNiveaux.slice(start, start + this.pageSize);
+}
 }

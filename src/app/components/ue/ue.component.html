@@ -1,34 +1,36 @@
 <div class="page-wrapper">
+
   <div class="card modern-card">
 
     <!-- HEADER -->
     <div class="card-header text-center">
-      <div class="icon-circle">
+      <div class="icon-circle mb-3">
         <i class="bi bi-journal-richtext"></i>
       </div>
-      <h3 class="fw-bold mt-2">Gestion des Unités d’Enseignement</h3>
+      <h3 class="fw-bold mb-1">Unités d’Enseignement</h3>
       <p class="text-muted small">
-        Création, modification et organisation des UE par semestre
+        Gestion des UE (création, modification, suppression)
       </p>
     </div>
 
+    <!-- BODY -->
     <div class="card-body">
 
       <!-- FORMULAIRE -->
-      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-3">
+      <form [formGroup]="form" (ngSubmit)="save()" class="mb-4 modern-form">
 
         <div class="row g-2">
 
           <div class="col-md-4">
             <div class="form-floating">
-              <input class="form-control" formControlName="code">
+              <input type="text" class="form-control" formControlName="code">
               <label>Code UE</label>
             </div>
           </div>
 
           <div class="col-md-8">
             <div class="form-floating">
-              <input class="form-control" formControlName="intitule">
+              <input type="text" class="form-control" formControlName="intitule">
               <label>Intitulé</label>
             </div>
           </div>
@@ -42,15 +44,8 @@
 
           <div class="col-md-3">
             <div class="form-floating">
-              <input type="number" class="form-control" formControlName="coefficient">
-              <label>Coefficient</label>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="form-floating">
               <select class="form-select" formControlName="semestreId">
-                <option [ngValue]="null">Sélectionner un semestre</option>
+                <option [ngValue]="null">Sélectionner</option>
                 <option *ngFor="let s of semestres" [ngValue]="s.id">
                   Semestre {{ s.numero }}
                 </option>
@@ -59,41 +54,56 @@
             </div>
           </div>
 
+          <div class="col-md-3">
+            <div class="form-floating">
+              <select class="form-select" formControlName="filiereId">
+                <option [ngValue]="null">Sélectionner</option>
+                <option *ngFor="let f of filieres" [ngValue]="f.id">
+                  {{ f.nom }}
+                </option>
+              </select>
+              <label>Filière</label>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-floating">
+              <select class="form-select" formControlName="niveauId">
+                <option [ngValue]="null">Sélectionner</option>
+                <option *ngFor="let n of niveaux" [ngValue]="n.id">
+                  {{ n.libelle }}
+                </option>
+              </select>
+              <label>Niveau</label>
+            </div>
+          </div>
+
         </div>
 
-        <div class="text-end mt-3">
-          <button class="btn btn-gradient"
-                  type="submit"
-                  [disabled]="!canEdit() || loading">
-            <i class="bi"
-               [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
-            {{ editingId ? 'Modifier' : 'Ajouter' }}
-          </button>
-        </div>
+        <button
+          class="btn btn-gradient w-100 mt-3"
+          type="submit"
+          [disabled]="loading || !canEdit()">
+          <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+          {{ editingId ? 'Modifier l’UE' : 'Ajouter une UE' }}
+        </button>
 
       </form>
 
-      <!-- FILTRES -->
-      <div class="filter-panel mb-3">
-        <input class="form-control filter-input"
-               placeholder="Filtrer UE"
-               [(ngModel)]="filterIntitule"
-               (input)="applyFilters()"
-               name="filterIntitule">
-
-        <select class="form-select filter-input"
-                [(ngModel)]="filterSemestreId"
-                (change)="loadUes()"
-                name="filterSemestre">
-          <option [ngValue]="null">Tous les semestres</option>
-          <option *ngFor="let s of semestres" [ngValue]="s.id">
-            Semestre {{ s.numero }}
-          </option>
-        </select>
+      <!-- 🔍 RECHERCHE -->
+      <div class="mb-3">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Rechercher une UE (code ou intitulé)..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          name="searchTerm"
+        />
       </div>
 
       <!-- TABLE -->
-      <div class="modern-table">
+      <div class="table-responsive modern-table">
         <table class="table align-middle">
           <thead>
             <tr>
@@ -101,42 +111,78 @@
               <th>Code</th>
               <th>Intitulé</th>
               <th>Crédits</th>
-              <th>Coef</th>
-              <th>Semestre</th>
               <th class="text-end">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr *ngFor="let u of filteredUes; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ u.code }}</td>
-              <td>{{ u.intitule }}</td>
-              <td>{{ u.credit }}</td>
-              <td>{{ u.coefficient }}</td>
-              <!-- ⚡ Corrected Semestre display -->
-              <td>Semestre {{ getSemestreNumero(u.semestre) }}</td>
+            <tr *ngFor="let ue of pagedUes; let i = index">
+              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+              <td class="fw-semibold">{{ ue.code }}</td>
+              <td>{{ ue.intitule }}</td>
+              <td>{{ ue.credit }}</td>
+
               <td class="text-end">
-                <button class="btn btn-action edit"
-                        (click)="edit(u)"
-                        [disabled]="!canEdit()">
+                <button
+                  class="btn btn-action edit me-1"
+                  (click)="edit(ue)"
+                  [disabled]="!canEdit()">
                   <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button class="btn btn-action delete"
-                        (click)="delete(u.id!)"
-                        [disabled]="!canEdit()">
+
+                <button
+                  class="btn btn-action delete"
+                  (click)="delete(ue.id!)"
+                  [disabled]="!canEdit()">
                   <i class="bi bi-trash-fill"></i>
                 </button>
               </td>
             </tr>
 
-            <tr *ngIf="filteredUes.length === 0">
-              <td colspan="7" class="text-center text-muted py-5">
-                <i class="bi bi-inbox"></i> Aucune UE trouvée
+            <tr *ngIf="pagedUes.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">
+                <i class="bi bi-inbox-fill me-2"></i>
+                Aucune UE trouvée
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="page === 1">
+              <button class="page-link"
+                      (click)="page = page - 1"
+                      [disabled]="page === 1">
+                Précédent
+              </button>
+            </li>
+
+            <li class="page-item disabled">
+              <span class="page-link">{{ page }}</span>
+            </li>
+
+            <li class="page-item"
+                [class.disabled]="page * pageSize >= filteredUes.length">
+              <button class="page-link"
+                      (click)="page = page + 1"
+                      [disabled]="page * pageSize >= filteredUes.length">
+                Suivant
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <select class="form-select w-auto"
+                [(ngModel)]="pageSize"
+                (change)="onSearchChange()">
+          <option [ngValue]="5">5 / page</option>
+          <option [ngValue]="10">10 / page</option>
+          <option [ngValue]="20">20 / page</option>
+        </select>
       </div>
 
     </div>

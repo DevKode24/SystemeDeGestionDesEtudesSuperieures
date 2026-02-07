@@ -28,6 +28,7 @@ import { SaisieNoteComponent } from './components/enseignant/saisie-note/saisie-
 import { UeComponent } from './components/ue/ue.component';
 import { BulletinComponent } from './components/bulletin/bulletin.component';
 import { ClasseComponent } from './components/classe/classe/classe.component';
+import { EnseignementComponent } from './components/enseignement/enseignement/enseignement.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { ClasseComponent } from './components/classe/classe/classe.component';
     SaisieNoteComponent,
     UeComponent,
     BulletinComponent,
-    ClasseComponent
+    ClasseComponent,
+    EnseignementComponent
   ],
   imports: [
     BrowserModule,
