@@ -1,5 +1,11 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { forkJoin } from 'rxjs';
 
 import { Matiere } from 'src/app/models/matiere';
 import { Ue } from 'src/app/models/ue';
@@ -9,7 +15,6 @@ import { MatiereService } from 'src/app/services/matiere.service';
 import { UeService } from 'src/app/services/ue.service';
 import { EnseignantService } from 'src/app/services/enseignant.service';
 
-import { Role, TokenStorageService } from 'src/app/auth/token-storage.service';
 @Component({
   selector: 'app-matiere',
   templateUrl: './matiere.component.html',
@@ -27,165 +32,186 @@ export class MatiereComponent implements OnInit {
   editingId: number | null = null;
   loading = false;
 
-  filterIntitule = '';
-  filterUeId: number | null = null;
+  /* ================= FILTRES ================= */
+  searchTerm = '';
+  filterUe = '';
+  filterEnseignant = '';
 
-  role: Role | Role[] | null = null;
+  /* ================= PAGINATION ================= */
+  page = 1;
+  pageSize = 5;
 
   constructor(
     private fb: FormBuilder,
     private matiereService: MatiereService,
     private ueService: UeService,
-    private enseignantService: EnseignantService,
-    private tokenStorage: TokenStorageService
+    private enseignantService: EnseignantService
   ) {}
 
+  /* ================= INIT ================= */
   ngOnInit(): void {
-    this.role = this.tokenStorage.getUserRole();
     this.initForm();
-    this.loadUes();
-    this.loadEnseignants();
-    this.loadMatieres();
+    this.loadAllData();
   }
 
-  /* ==========================
-     FORM
-     ========================== */
   private initForm(): void {
     this.form = this.fb.group({
       code: ['', Validators.required],
       intitule: ['', Validators.required],
       coefficient: [1, [Validators.required, Validators.min(1)]],
       ueId: [null, Validators.required],
-      enseignantId: [null, Validators.required]
+      enseignantId: [null]
     });
   }
 
-  /* ==========================
-     LOADERS
-     ========================== */
-  loadUes(): void {
-    this.ueService.getAll().subscribe({
-      next: data => this.ues = data,
-      error: err => this.handleError(err)
+  /* ================= CHARGEMENT GLOBAL ================= */
+  private loadAllData(): void {
+    forkJoin({
+      matieres: this.matiereService.getAll(),
+      ues: this.ueService.getAll(),
+      enseignants: this.enseignantService.getAll()
+    }).subscribe(res => {
+
+      this.ues = res.ues;
+      this.enseignants = res.enseignants;
+
+      // 🔥 ENRICHISSEMENT INTELLIGENT
+      this.matieres = res.matieres.map(m => ({
+        ...m,
+        ue: this.ues.find(u => u.id === m.ueId),
+        enseignant: this.enseignants.find(e => e.id === m.enseignantId)
+      }));
+
+      this.applyFilters();
     });
   }
 
-  loadEnseignants(): void {
-    this.enseignantService.getAll().subscribe({
-      next: data => this.enseignants = data,
-      error: err => this.handleError(err)
-    });
-  }
-
-  loadMatieres(): void {
-    const obs$ = this.filterUeId
-      ? this.matiereService.getByUE(this.filterUeId)
-      : this.matiereService.getAll();
-
-    obs$.subscribe({
-      next: data => {
-        this.matieres = data;
-        this.applyFilters();
-      },
-      error: err => this.handleError(err)
-    });
-  }
-
-  /* ==========================
-     FILTER
-     ========================== */
+  /* ================= FILTRES ================= */
   applyFilters(): void {
-    const term = this.filterIntitule.toLowerCase().trim();
+    const term = this.searchTerm.toLowerCase().trim();
+    const ue = this.filterUe.toLowerCase();
+    const ens = this.filterEnseignant.toLowerCase();
 
     this.filteredMatieres = this.matieres.filter(m =>
-      !term ||
-      m.code.toLowerCase().includes(term) ||
-      m.intitule.toLowerCase().includes(term)
+      (!term || m.intitule.toLowerCase().includes(term) || m.code.toLowerCase().includes(term)) &&
+      (!ue || (m.ue?.intitule ?? '').toLowerCase().includes(ue)) &&
+      (!ens || `${m.enseignant?.nom ?? ''} ${m.enseignant?.prenom ?? ''}`.toLowerCase().includes(ens))
     );
+
+    this.page = 1;
   }
 
-  /* ==========================
-     SAVE
-     ========================== */
+  onSearchChange(): void {
+    this.applyFilters();
+  }
+
+  get pagedMatieres(): Matiere[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredMatieres.slice(start, start + this.pageSize);
+  }
+
+  /* ================= CRUD ================= */
   save(): void {
-  if (this.form.invalid) return;
-
-  this.loading = true;
-
-  const payload: Matiere = {
-    code: this.form.value.code,
-    intitule: this.form.value.intitule,
-    coefficient: this.form.value.coefficient,
-    ueId: this.form.value.ueId,                 // ✅ number
-    enseignantId: this.form.value.enseignantId  // ✅ number
-  };
-
-  const action$ = this.editingId
-    ? this.matiereService.modifier(this.editingId, payload)
-    : this.matiereService.creer(payload);
-
-  action$.subscribe({
-    next: () => {
-      this.resetForm();
-      this.loadMatieres();
-    },
-    error: err => this.handleError(err),
-    complete: () => this.loading = false
-  });
-}
-
-
-  /* ==========================
-     EDIT
-     ========================== */
-  edit(m: Matiere): void {
-    if (!m?.id) return;
-
-    this.editingId = m.id;
-
-    this.form.patchValue({
-      code: m.code,
-      intitule: m.intitule,
-      coefficient: m.coefficient,
-      ueId: m.ue?.id ?? m.ueId,
-      enseignantId: m.enseignant?.id ?? m.enseignantId
-    });
-  }
-
-  /* ==========================
-     DELETE
-     ========================== */
-  delete(id: number): void {
-    if (!confirm('Confirmer la suppression ?')) return;
-
+    if (this.form.invalid) return;
     this.loading = true;
-    this.matiereService.supprimer(id).subscribe({
-      next: () => this.loadMatieres(),
-      error: err => this.handleError(err),
+
+    const payload: Matiere = this.form.value;
+
+    const action$ = this.editingId
+      ? this.matiereService.modifier(this.editingId, payload)
+      : this.matiereService.creer(payload);
+
+    action$.subscribe({
+      next: () => {
+        this.resetForm();
+        this.loadAllData();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Erreur backend Matière', err);
+      },
       complete: () => this.loading = false
     });
   }
 
+  edit(m: Matiere): void {
+    this.editingId = m.id!;
+    this.form.patchValue({
+      code: m.code,
+      intitule: m.intitule,
+      coefficient: m.coefficient,
+      ueId: m.ueId ?? m.ue?.id,
+      enseignantId: m.enseignantId ?? m.enseignant?.id ?? null
+    });
+    window.scroll({ top: 0, behavior: 'smooth' });
+  }
+
+  delete(id: number): void {
+    if (!confirm('Supprimer cette matière ?')) return;
+    this.matiereService.supprimer(id).subscribe(() => this.loadAllData());
+  }
+
   resetForm(): void {
-    this.form.reset();
+    this.form.reset({ coefficient: 1 });
     this.editingId = null;
     this.loading = false;
   }
 
-  private handleError(err: any): void {
-    console.error(err);
-    alert(err?.status === 403 ? 'Accès refusé' : 'Erreur serveur');
-    this.loading = false;
+  
+  /* ================= EXPORT ================= */
+  exportExcel(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredMatieres.map(m => ({
+      Code: m.code,
+      Matiere: m.intitule,
+      UE: m.ue?.intitule,
+      Enseignant: m.enseignant ? `${m.enseignant.nom} ${m.enseignant.prenom}` : '',
+      Coefficient: m.coefficient
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Matieres');
+    XLSX.writeFile(wb, 'matieres.xlsx');
   }
 
-  /* ==========================
-     DROITS
-  ========================== */
-  canEdit(): boolean {
-    if (!this.role) return false;
-    return Array.isArray(this.role)
-      ? this.role.includes(Role.Admin) || this.role.includes(Role.Scolarite)
-      : this.role === Role.Admin || this.role === Role.Scolarite;
+  exportCSV(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredMatieres.map(m => ({
+      Code: m.code,
+      Matiere: m.intitule,
+      UE: m.ue?.intitule,
+      Enseignant: m.enseignant ? `${m.enseignant.nom} ${m.enseignant.prenom}` : '',
+      Coefficient: m.coefficient
+    })));
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'matieres.csv');
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    (doc as any).autoTable({
+      head: [['Code', 'Matière', 'UE', 'Enseignant', 'Coef']],
+      body: this.filteredMatieres.map(m => [
+        m.code,
+        m.intitule,
+        m.ue?.intitule ?? '',
+        m.enseignant ? `${m.enseignant.nom} ${m.enseignant.prenom}` : '',
+        m.coefficient
+      ])
+    });
+    doc.save('matieres.pdf');
+  }
+
+  /* ================= IMPORT (STRUCTURE PRÊTE) ================= */
+  importFile(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data: any[] = XLSX.utils.sheet_to_json(ws);
+      console.log('Import Matières:', data);
+      alert('Import détecté – mapping backend à brancher');
+    };
+    reader.readAsBinaryString(file);
   }
 }

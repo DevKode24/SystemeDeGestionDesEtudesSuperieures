@@ -1,179 +1,210 @@
 <div class="page-wrapper">
   <div class="modern-card">
 
-    <!-- HEADER -->
-    <div class="card-header">
+    <!-- ================= HEADER ================= -->
+    <div class="card-header text-center">
       <div class="icon-circle">
         <i class="bi bi-people-fill"></i>
       </div>
-      <h3>Gestion des étudiants</h3>
+      <h3 class="fw-bold mt-2">Gestion des étudiants</h3>
       <p>Création, modification et consultation</p>
     </div>
 
     <div class="card-body">
 
-      <!-- ================= FORM ================= -->
-      <div class="etudiant-container">
-        <form [formGroup]="form" (ngSubmit)="save()" class="etudiant-form">
+      <!-- ================= FORMULAIRE ================= -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-4">
 
-          <!-- GRID 4 COLONNES -->
-          <div class="form-grid">
+        <div class="row g-2">
 
-            <!-- Ligne 1 -->
-            <div class="form-group">
-              <label>Nom *</label>
-              <input type="text" formControlName="nom">
-            </div>
-            <div class="form-group">
-              <label>Prénom *</label>
-              <input type="text" formControlName="prenom">
-            </div>
-            <div class="form-group">
-              <label>Email *</label>
-              <input type="email" formControlName="email">
-            </div>
-            <div class="form-group">
-              <label>Mot de passe *</label>
-              <input type="password" formControlName="password">
-            </div>
-
-            <!-- Ligne 2 -->
-            <div class="form-group">
-              <label>Matricule *</label>
-              <input type="text" formControlName="matricule">
-            </div>
-            <div class="form-group">
-              <label>Date de naissance</label>
-              <input type="date" formControlName="dateNaissance">
-            </div>
-            <div class="form-group">
-              <label>Date d'inscription</label>
-              <input type="date" formControlName="dateInscription">
-            </div>
-            <div class="form-group">
-              <label>Sexe *</label>
-              <select formControlName="sexe">
-                <option value="">-- Sélectionner --</option>
-                <option *ngFor="let s of sexes" [value]="s">{{ s }}</option>
-              </select>
-            </div>
-
-            <!-- Ligne 3 -->
-            <div class="form-group">
-              <label>Nationalité *</label>
-              <select formControlName="nationalite">
-                <option value="">-- Sélectionner --</option>
-                <option *ngFor="let n of nationalites" [value]="n">{{ n }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>État civil *</label>
-              <select formControlName="etatCivil">
-                <option value="">-- Sélectionner --</option>
-                <option *ngFor="let e of etatsCivils" [value]="e">{{ e }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Lieu de naissance</label>
-              <input type="text" formControlName="lieuNaissance">
-            </div>
-            <div class="form-group">
-              <label>Contact étudiant</label>
-              <input type="text" formControlName="contactEtudiant">
-            </div>
-
-            <!-- Ligne 4 -->
-            <div class="form-group">
-              <label>Contact urgence</label>
-              <input type="text" formControlName="contactUrgence">
-            </div>
-            <div class="form-group">
-              <label>Nom du tuteur</label>
-              <input type="text" formControlName="nomTuteur">
-            </div>
-            <div class="form-group">
-              <label>Classe *</label>
-              <select formControlName="classeId" (change)="onClasseChange()">
-                <option value="">-- Sélectionner --</option>
-                <option *ngFor="let c of classes" [value]="c.id">
-                  {{ c.code }} | {{ c.filiereNom }} | {{ c.niveauLibelle }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Champs dérivés -->
-            <div class="form-group">
-              <label>Filière</label>
-              <input type="text" [value]="selectedClasse ? selectedClasse.filiereNom : ''" disabled>
-            </div>
-            <div class="form-group">
-              <label>Niveau</label>
-              <input type="text" [value]="selectedClasse ? selectedClasse.niveauLibelle : ''" disabled>
-            </div>
-
-            <!-- Année académique -->
-            <div class="form-group">
-              <label>Année académique</label>
-              <select formControlName="anneeAcademiqueId">
-                <option [ngValue]="null">-- Sélectionner --</option>
-                <option *ngFor="let a of anneesAcademiques" [ngValue]="a.id">
-                  {{ a.libelle }}
-                </option>
-              </select>
-            </div>
-
+          <!-- Nom -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Nom *" formControlName="nom">
           </div>
 
-          <!-- ACTIONS -->
-          <div class="form-actions">
-            <button type="submit" [disabled]="loading">
-              <i class="bi bi-save"></i>
-              {{ editingId ? 'Modifier' : 'Ajouter' }}
-            </button>
-            <button type="button" (click)="resetForm()">
-              <i class="bi bi-x-circle"></i>
-              Annuler
-            </button>
+          <!-- Prénom -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Prénom *" formControlName="prenom">
           </div>
 
-        </form>
+          <!-- Email -->
+          <div class="col-md-4">
+            <input type="email" class="form-control" placeholder="Email *" formControlName="email">
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="col-md-4">
+            <input type="password" class="form-control" placeholder="Mot de passe *" formControlName="password">
+          </div>
+
+          <!-- Matricule -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Matricule *" formControlName="matricule">
+          </div>
+
+          <!-- Date de naissance -->
+          <div class="col-md-4">
+            <input type="date" class="form-control" placeholder="Date de naissance" formControlName="dateNaissance">
+          </div>
+
+          <!-- Lieu de naissance -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Lieu de naissance" formControlName="lieuNaissance">
+          </div>
+
+          <!-- Sexe -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Sexe *" formControlName="sexe">
+          </div>
+
+          <!-- Nationalité -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Nationalité *" formControlName="nationalite">
+          </div>
+
+          <!-- État civil -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="État civil *" formControlName="etatCivil">
+          </div>
+
+          <!-- Contact étudiant -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Contact de l'étudiant *" formControlName="contactEtudiant">
+          </div>
+
+          <!-- Contact urgence -->
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Contact d'urgence *" formControlName="contactUrgence">
+          </div>
+
+          <!-- Filière -->
+          <div class="col-md-4">
+            <select class="form-control" formControlName="filiereId">
+              <option [ngValue]="null">-- Sélectionner une filière --</option>
+              <option *ngFor="let f of filieres" [ngValue]="f.id">{{ f.nom }}</option>
+            </select>
+          </div>
+
+          <!-- Niveau -->
+          <div class="col-md-4">
+            <select class="form-control" formControlName="niveauId">
+              <option [ngValue]="null">-- Sélectionner un niveau --</option>
+              <option *ngFor="let n of niveaux" [ngValue]="n.id">{{ n.libelle }}</option>
+            </select>
+          </div>
+
+          <!-- Classe -->
+          <div class="col-md-4">
+            <select class="form-control" formControlName="classeId">
+              <option [ngValue]="null">-- Sélectionner une classe --</option>
+              <option *ngFor="let c of classes" [ngValue]="c.id">{{ c.code }}</option>
+            </select>
+          </div>
+
+          <!-- Année académique -->
+          <div class="col-md-4">
+            <select class="form-control" formControlName="anneeAcademiqueId">
+              <option [ngValue]="null">-- Sélectionner une année académique --</option>
+              <option *ngFor="let a of anneesAcademiques" [ngValue]="a.id">{{ a.libelle }}</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="mt-3 d-flex gap-2">
+          <button class="btn btn-gradient w-50" type="submit" [disabled]="form.invalid || loading">
+            <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+            {{ editingId ? 'Modifier' : 'Ajouter' }}
+          </button>
+          <button type="button" class="btn btn-outline-secondary w-50" (click)="resetForm()">
+            <i class="bi bi-x-circle"></i> Annuler
+          </button>
+        </div>
+
+      </form>
+
+      <!-- ================= FILTRES & EXPORT ================= -->
+      <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <input
+          type="text"
+          class="form-control w-50"
+          placeholder="Rechercher par nom, prénom, matricule..."
+          [(ngModel)]="filterNom"
+          (ngModelChange)="applyFilters()"
+          [ngModelOptions]="{ standalone: true }"
+        />
+
+        <div class="btn-group">
+          <button class="btn btn-success" (click)="exportExcel()"><i class="bi bi-file-earmark-excel-fill"></i> Excel</button>
+          <button class="btn btn-primary" (click)="exportCSV()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> CSV</button>
+          <button class="btn btn-danger" (click)="exportPDF()"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</button>
+          <label class="btn btn-warning mb-0">
+            <i class="bi bi-upload"></i> Import
+            <input type="file" hidden (change)="importFile($event)" accept=".xlsx,.xls,.csv" />
+          </label>
+        </div>
       </div>
 
-      <!-- ================= TABLE ================= -->
+      <!-- ================= TABLEAU ================= -->
       <div class="table-container">
-        <table class="modern-table">
-          <thead>
+        <table class="modern-table table table-striped table-hover align-middle">
+          <thead class="table-dark">
             <tr>
+              <th>#</th>
               <th>Nom</th>
               <th>Prénom</th>
               <th>Matricule</th>
               <th>Email</th>
-              <th>Filière</th>
-              <th>Niveau</th>
               <th>Classe</th>
-              <th>Actions</th>
+              <th>Année</th>
+              <th class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of filteredEtudiants">
+            <tr *ngFor="let e of pagedEtudiants; let i = index">
+              <td>{{ (page-1)*pageSize + i + 1 }}</td>
               <td>{{ e.nom }}</td>
               <td>{{ e.prenom }}</td>
               <td>{{ e.matricule }}</td>
               <td>{{ e.email }}</td>
-              <td>{{ e.classe ? e.classe.filiereNom : '' }}</td>
-              <td>{{ e.classe ? e.classe.niveauLibelle : '' }}</td>
-              <td>{{ e.classe ? e.classe.code : '' }}</td>
-              <td>
-                <button class="btn-edit" (click)="edit(e)">
+              <td>{{ e.classe?.code || '—' }}</td>
+              <td>{{ e.anneeAcademique?.libelle || '—' }}</td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary" (click)="edit(e)">
                   <i class="bi bi-pencil-square"></i>
                 </button>
               </td>
             </tr>
-            <tr *ngIf="filteredEtudiants.length === 0">
-              <td colspan="8" class="text-center">Aucun étudiant trouvé</td>
+
+            <tr *ngIf="pagedEtudiants.length === 0">
+              <td colspan="8" class="text-center text-muted py-4">Aucun étudiant trouvé</td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- ================= PAGINATION ================= -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="page===1">
+              <button class="page-link" (click)="page = page-1">Précédent</button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link">{{ page }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="page*pageSize >= filteredEtudiants.length">
+              <button class="page-link" (click)="page = page+1">Suivant</button>
+            </li>
+          </ul>
+        </nav>
+
+        <select class="form-select w-auto" [(ngModel)]="pageSize" (change)="applyFilters()" [ngModelOptions]="{standalone:true}">
+          <option [ngValue]="5">5 / page</option>
+          <option [ngValue]="10">10 / page</option>
+          <option [ngValue]="20">20 / page</option>
+        </select>
       </div>
 
     </div>

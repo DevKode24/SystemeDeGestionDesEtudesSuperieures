@@ -1,0 +1,68 @@
+ <div class="dashboard-container">
+
+  <!-- =======================
+       KPI Cards
+  ======================= -->
+  <div class="kpi-cards">
+    <div class="kpi-card">
+      <h3>Total Étudiants</h3>
+      <p>{{ totalEtudiants }}</p>
+    </div>
+    <div class="kpi-card">
+      <h3>Total Enseignants</h3>
+      <p>{{ totalEnseignants }}</p>
+    </div>
+    <div class="kpi-card">
+      <h3>Total Matières</h3>
+      <p>{{ totalMatieres }}</p>
+    </div>
+    <div class="kpi-card">
+      <h3>Taux de Réussite</h3>
+      <p>{{ tauxReussite }}%</p>
+    </div>
+  </div>
+
+  <!-- =======================
+       Graphiques
+  ======================= -->
+  <div class="charts">
+
+    <!-- Étudiants par filière -->
+    <div class="chart-card">
+      <h4>Étudiants par filière</h4>
+      <canvas baseChart
+              [data]="chartEtudiantsParFiliere"
+              [type]="'bar'">
+      </canvas>
+    </div>
+
+    <!-- Répartition Sexe -->
+    <div class="chart-card">
+      <h4>Répartition Sexe</h4>
+      <canvas baseChart
+              [data]="chartRepartitionSexe"
+              [type]="'doughnut'">
+      </canvas>
+    </div>
+
+    <!-- Redoublement / Ajourné / Admis -->
+    <div class="chart-card">
+      <h4>Statut des Étudiants</h4>
+      <canvas baseChart
+              [data]="chartRedoublement"
+              [type]="'pie'">
+      </canvas>
+    </div>
+
+    <!-- Moyenne par semestre -->
+    <div class="chart-card">
+      <h4>Moyenne par semestre</h4>
+      <canvas baseChart
+              [data]="chartMoyenneParSemestre"
+              [type]="'line'">
+      </canvas>
+    </div>
+
+  </div>
+
+</div>

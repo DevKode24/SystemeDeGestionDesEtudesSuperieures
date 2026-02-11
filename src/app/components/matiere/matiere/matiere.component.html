@@ -1,125 +1,125 @@
 <div class="page-wrapper">
-  <div class="card modern-card">
+  <div class="modern-card">
 
-    <!-- HEADER -->
+    <!-- ================= HEADER ================= -->
     <div class="card-header text-center">
       <div class="icon-circle">
-        <i class="bi bi-book"></i>
+        <i class="bi bi-book-half"></i>
       </div>
       <h3 class="fw-bold mt-2">Gestion des Matières</h3>
-      <p class="text-muted small">
-        Création, modification et organisation des matières par UE
-      </p>
+      <p>Création, organisation et affectation pédagogique</p>
     </div>
 
     <div class="card-body">
 
-      <!-- FORMULAIRE -->
-      <form
-        [formGroup]="form"
-        (ngSubmit)="save()"
-        class="modern-form mb-4">
+      <!-- ================= FORMULAIRE ================= -->
+<!-- ================= FORMULAIRE ================= -->
+<form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-4">
 
-        <div class="row g-2">
+  <div class="row g-2">
 
-          <div class="col-md-4">
-            <div class="form-floating">
-              <input class="form-control" formControlName="code">
-              <label>Code Matière</label>
-            </div>
-          </div>
+    <!-- CODE -->
+    <div class="col-md-4">
+      <input
+        class="form-control"
+        placeholder="Code matière (Ex : ECUE13)"
+        formControlName="code"
+      />
+    </div>
 
-          <div class="col-md-8">
-            <div class="form-floating">
-              <input class="form-control" formControlName="intitule">
-              <label>Intitulé</label>
-            </div>
-          </div>
+    <!-- INTITULÉ -->
+    <div class="col-md-8">
+      <input
+        class="form-control"
+        placeholder="Intitulé de la matière"
+        formControlName="intitule"
+      />
+    </div>
 
-          <div class="col-md-4">
-            <div class="form-floating">
-              <input
-                type="number"
-                class="form-control"
-                formControlName="coefficient">
-              <label>Coefficient</label>
-            </div>
-          </div>
+    <!-- COEFFICIENT -->
+    <div class="col-md-4">
+      <input
+        type="number"
+        min="1"
+        class="form-control"
+        placeholder="Coefficient"
+        formControlName="coefficient"
+      />
+    </div>
 
-          <div class="col-md-4">
-            <div class="form-floating">
-              <select class="form-select" formControlName="ueId">
-                <option [ngValue]="null" disabled>Sélectionner une UE</option>
-                <option *ngFor="let u of ues" [ngValue]="u.id">
-                  {{ u.intitule }} ({{ u.code }})
-                </option>
-              </select>
-              <label>Unité d’Enseignement</label>
-            </div>
-          </div>
+    <!-- UE -->
+    <div class="col-md-4">
+      <select class="form-control" formControlName="ueId">
+        <option [ngValue]="null" disabled>Unité d’Enseignement</option>
+        <option *ngFor="let u of ues" [ngValue]="u.id">
+          {{ u.code }} – {{ u.intitule }}
+        </option>
+      </select>
+    </div>
 
-          <div class="col-md-4">
-            <div class="form-floating">
-              <select class="form-select" formControlName="enseignantId">
-                <option [ngValue]="null" disabled>Sélectionner un enseignant</option>
-                <option *ngFor="let e of enseignants" [ngValue]="e.id">
-                  {{ e.nom }} {{ e.prenom }}
-                </option>
-              </select>
-              <label>Enseignant</label>
-            </div>
-          </div>
+    <!-- ENSEIGNANT -->
+    <div class="col-md-4">
+      <select class="form-control" formControlName="enseignantId">
+        <option [ngValue]="null">Enseignant</option>
+        <option *ngFor="let e of enseignants" [ngValue]="e.id">
+          {{ e.nom }} {{ e.prenom }}
+        </option>
+      </select>
+    </div>
 
-        </div>
+  </div>
 
-        <!-- BOUTON -->
-        <div class="btn-center mt-3">
-          <button
-            class="btn btn-gradient"
-            type="submit"
-            [disabled]="form.invalid || !canEdit() || loading">
-            <i
-              class="bi"
-              [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'">
-            </i>
-            {{ editingId ? 'Modifier' : 'Ajouter' }}
-          </button>
-        </div>
+  <!-- ACTION -->
+  <button
+    class="btn btn-gradient w-100 mt-3"
+    type="submit"
+    [disabled]="form.invalid || loading"
+  >
+    <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+    {{ editingId ? 'Modifier' : 'Ajouter' }}
+  </button>
 
-      </form>
+</form>
 
-      <!-- FILTRES -->
-      <div class="filter-panel mb-3">
+
+      <!-- ================= RECHERCHE & EXPORT ================= -->
+      <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+
         <input
-          class="form-control filter-input"
-          placeholder="Filtrer par code ou intitulé"
-          [(ngModel)]="filterIntitule"
-          (input)="applyFilters()"
-          name="filterIntitule"
-          [ngModelOptions]="{ standalone: true }">
+          type="text"
+          class="form-control w-50"
+          placeholder="Rechercher une matière, un code, une UE, un enseignant..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          [ngModelOptions]="{ standalone: true }"
+        />
 
-        <select
-          class="form-select filter-input"
-          [(ngModel)]="filterUeId"
-          (change)="loadMatieres()"
-          name="filterUe"
-          [ngModelOptions]="{ standalone: true }">
-          <option [ngValue]="null">Toutes les UE</option>
-          <option *ngFor="let u of ues" [ngValue]="u.id">
-            {{ u.intitule }} ({{ u.code }})
-          </option>
-        </select>
+        <div class="btn-group">
+          <button class="btn btn-success" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-excel-fill"></i> Excel
+          </button>
+          <button class="btn btn-primary" (click)="exportCSV()">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i> CSV
+          </button>
+          <button class="btn btn-danger" (click)="exportPDF()">
+            <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+          </button>
+          <label class="btn btn-warning mb-0">
+            <i class="bi bi-upload"></i> Import
+            <input type="file" hidden (change)="importFile($event)" accept=".xlsx,.xls,.csv" />
+          </label>
+        </div>
+
       </div>
 
-      <!-- TABLE -->
-      <div class="modern-table">
-        <table class="table align-middle">
-          <thead>
+      <!-- ================= TABLEAU ================= -->
+      <div class="table-container">
+        <table class="modern-table table table-striped table-hover align-middle">
+          <thead class="table-dark">
             <tr>
               <th>#</th>
               <th>Code</th>
-              <th>Intitulé</th>
-              <th>Coef</th>
+              <th>Matière</th>
               <th>UE</th>
               <th>Enseignant</th>
               <th class="text-end">Actions</th>
@@ -127,50 +127,96 @@
           </thead>
 
           <tbody>
-            <tr *ngFor="let m of filteredMatieres; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>{{ m.code }}</td>
-              <td>{{ m.intitule }}</td>
-              <td>{{ m.coefficient }}</td>
 
-              <!-- UE sécurisée -->
+            <tr *ngFor="let m of pagedMatieres; let i = index">
+              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+
               <td>
-                {{ m.ue?.intitule || '—' }}
-                <span *ngIf="m.ue?.code">
-                  ({{ m.ue?.code }})
+                <span class="badge bg-secondary">
+                  {{ m.code }}
                 </span>
               </td>
 
-              <!-- Enseignant sécurisé -->
+              <td class="fw-semibold">
+                {{ m.intitule }}
+              </td>
+
+              <!-- UE COMPLET -->
               <td>
-                {{ m.enseignant?.nom || '—' }}
-                {{ m.enseignant?.prenom || '' }}
+                <ng-container *ngIf="m.ue; else noUe">
+                  <span class="badge bg-info text-dark">
+                    {{ m.ue.code }}
+                  </span>
+                  <div class="small text-muted">
+                    {{ m.ue.intitule }}
+                  </div>
+                </ng-container>
+                <ng-template #noUe>
+                  <span class="text-muted">—</span>
+                </ng-template>
+              </td>
+
+              <!-- ENSEIGNANT COMPLET -->
+              <td>
+                <ng-container *ngIf="m.enseignant; else noEns">
+                  <span class="fw-semibold">
+                    {{ m.enseignant.nom }} {{ m.enseignant.prenom }}
+                  </span>
+                </ng-container>
+                <ng-template #noEns>
+                  <span class="text-muted">Non affecté</span>
+                </ng-template>
               </td>
 
               <td class="text-end">
-                <button
-                  class="btn btn-action edit"
-                  (click)="edit(m)"
-                  [disabled]="!canEdit()">
-                  <i class="bi bi-pencil-fill"></i>
+                <button class="btn btn-sm btn-outline-primary me-2" (click)="edit(m)">
+                  <i class="bi bi-pencil-square"></i>
                 </button>
-
-                <button
-                  class="btn btn-action delete"
-                  (click)="delete(m.id!)"
-                  [disabled]="!canEdit()">
+                <button class="btn btn-sm btn-outline-danger" (click)="delete(m.id!)">
                   <i class="bi bi-trash-fill"></i>
                 </button>
               </td>
             </tr>
 
             <tr *ngIf="filteredMatieres.length === 0">
-              <td colspan="7" class="text-center text-muted py-5">
-                <i class="bi bi-inbox"></i> Aucune matière trouvée
+              <td colspan="6" class="text-center text-muted py-4">
+                Aucune matière trouvée
               </td>
             </tr>
+
           </tbody>
         </table>
+
+        <!-- ================= PAGINATION ================= -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <nav>
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="page === 1">
+                <button class="page-link" (click)="page = page - 1">Précédent</button>
+              </li>
+
+              <li class="page-item disabled">
+                <span class="page-link">{{ page }}</span>
+              </li>
+
+              <li class="page-item" [class.disabled]="page * pageSize >= filteredMatieres.length">
+                <button class="page-link" (click)="page = page + 1">Suivant</button>
+              </li>
+            </ul>
+          </nav>
+
+          <select
+            class="form-select w-auto"
+            [(ngModel)]="pageSize"
+            (change)="onSearchChange()"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option [ngValue]="5">5 / page</option>
+            <option [ngValue]="10">10 / page</option>
+            <option [ngValue]="20">20 / page</option>
+          </select>
+        </div>
+
       </div>
 
     </div>

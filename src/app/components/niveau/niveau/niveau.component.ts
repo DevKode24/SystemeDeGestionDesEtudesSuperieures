@@ -5,10 +5,9 @@ import { Niveau } from 'src/app/models/niveau';
 import { NiveauService } from 'src/app/services/niveau.service';
 import { Filiere } from 'src/app/models/filiere';
 import { FiliereService } from 'src/app/services/filiere.service';
-
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-niveau',
@@ -29,10 +28,11 @@ export class NiveauComponent implements OnInit {
   filterFiliereId: number | null = null;
 
   role: Role | Role[] | null = null;
-  // 🔹 Pagination
-searchTerm = '';
-page = 1;
-pageSize = 5;
+
+  // Pagination
+  searchTerm = '';
+  page = 1;
+  pageSize = 5;
 
   constructor(
     private niveauService: NiveauService,
@@ -56,7 +56,7 @@ pageSize = 5;
 
   /* ==========================
      CHARGEMENTS
-     ========================== */
+  ========================== */
   loadFilieres(): void {
     this.filiereService.getAll().subscribe({
       next: data => this.filieres = data,
@@ -64,44 +64,38 @@ pageSize = 5;
     });
   }
 
-loadNiveaux(): void {
-  this.niveauService.getAll().subscribe({
-    next: data => {
-      this.niveaux = data;
-      this.applyFilters();
-      this.page = 1;
-    },
-    error: err => console.error(err)
-  });
-}
+  loadNiveaux(): void {
+    this.niveauService.getAll().subscribe({
+      next: data => {
+        this.niveaux = data;
+        this.applyFilters();
+        this.page = 1;
+      },
+      error: err => console.error(err)
+    });
+  }
 
   /* ==========================
      FILTRAGE
-     ========================== */
+  ========================== */
   applyFilters(): void {
-  const term = this.searchTerm.toLowerCase().trim();
-  const filiereId = this.filterFiliereId;
+    const term = this.searchTerm.toLowerCase().trim();
+    const filiereId = this.filterFiliereId;
 
-  this.filteredNiveaux = this.niveaux.filter(n => {
-    const code = n.code?.toLowerCase() || '';
-    const libelle = n.libelle?.toLowerCase() || '';
+    this.filteredNiveaux = this.niveaux.filter(n => {
+      const code = n.code?.toLowerCase() || '';
+      const libelle = n.libelle?.toLowerCase() || '';
 
-    const matchText =
-      !term ||
-      code.includes(term) ||
-      libelle.includes(term);
+      const matchText = !term || code.includes(term) || libelle.includes(term);
+      const matchFiliere = filiereId == null || n.filiereId === filiereId;
 
-    const matchFiliere =
-      filiereId == null || n.filiereId === filiereId;
-
-    return matchText && matchFiliere;
-  });
-}
-
+      return matchText && matchFiliere;
+    });
+  }
 
   /* ==========================
      AJOUT / MODIFICATION
-     ========================== */
+  ========================== */
   save(): void {
     if (this.form.invalid) return;
 
@@ -127,7 +121,7 @@ loadNiveaux(): void {
 
   /* ==========================
      ÉDITION
-     ========================== */
+  ========================== */
   edit(niveau: Niveau): void {
     this.editingId = niveau.id!;
     this.form.patchValue({
@@ -139,7 +133,7 @@ loadNiveaux(): void {
 
   /* ==========================
      SUPPRESSION
-     ========================== */
+  ========================== */
   delete(id: number): void {
     if (!confirm('Supprimer ce niveau ?')) return;
 
@@ -150,8 +144,53 @@ loadNiveaux(): void {
   }
 
   /* ==========================
+     EXPORT / IMPORT
+  ========================== */
+  export(format: 'excel' | 'csv' | 'pdf'): void {
+    if (format === 'excel' || format === 'csv') {
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.filteredNiveaux.map(n => ({
+        Code: n.code,
+        Description: n.libelle,
+        Filiere: this.getFiliereNom(n.filiereId)
+      })));
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Niveaux');
+      XLSX.writeFile(wb, `niveaux.${format === 'excel' ? 'xlsx' : 'csv'}`);
+    } else if (format === 'pdf') {
+      const doc = new jsPDF();
+      autoTable(doc, {
+        head: [['#', 'Filière', 'Description', 'Code']],
+        body: this.filteredNiveaux.map((n, i) => [
+          i + 1,
+          this.getFiliereNom(n.filiereId),
+          n.libelle || '-',
+          n.code
+        ])
+      });
+      doc.save('niveaux.pdf');
+    }
+  }
+
+  importExcel(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      console.log('Importé :', jsonData);
+      alert('Importation terminée (voir console pour les données).');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  /* ==========================
      UTILITAIRES
-     ========================== */
+  ========================== */
   resetForm(): void {
     this.form.reset();
     this.editingId = null;
@@ -164,20 +203,19 @@ loadNiveaux(): void {
 
   canEdit(): boolean {
     if (!this.role) return false;
-
     if (Array.isArray(this.role)) {
       return this.role.includes(Role.Admin) || this.role.includes(Role.Scolarite);
     }
-
     return this.role === Role.Admin || this.role === Role.Scolarite;
   }
-  onSearchChange(): void {
-  this.applyFilters();
-  this.page = 1;
-}
 
-get pagedNiveaux(): Niveau[] {
-  const start = (this.page - 1) * this.pageSize;
-  return this.filteredNiveaux.slice(start, start + this.pageSize);
-}
+  onSearchChange(): void {
+    this.applyFilters();
+    this.page = 1;
+  }
+
+  get pagedNiveaux(): Niveau[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredNiveaux.slice(start, start + this.pageSize);
+  }
 }

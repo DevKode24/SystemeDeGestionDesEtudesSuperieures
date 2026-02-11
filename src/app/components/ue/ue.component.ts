@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 import { Role, TokenStorageService } from 'src/app/auth/token-storage.service';
 import { Ue } from 'src/app/models/ue';
 import { UeService } from 'src/app/services/ue.service';
@@ -28,7 +33,6 @@ export class UeComponent implements OnInit {
   editingId: number | null = null;
   loading = false;
 
-  // 🔹 Pagination + recherche (CLONE Filière)
   searchTerm = '';
   page = 1;
   pageSize = 5;
@@ -50,10 +54,8 @@ export class UeComponent implements OnInit {
   ngOnInit(): void {
     this.role = this.tokenStorage.getUserRole();
     this.initForm();
+    this.loadOptions();
     this.loadUes();
-    this.loadSemestres();
-    this.loadFilieres();
-    this.loadNiveaux();
   }
 
   private initForm(): void {
@@ -67,29 +69,17 @@ export class UeComponent implements OnInit {
     });
   }
 
-  /* ==========================
-     LOAD DATA
-  ========================== */
+  loadOptions(): void {
+    this.semestreService.getAll().subscribe(r => this.semestres = r);
+    this.filiereService.getAll().subscribe(r => this.filieres = r);
+    this.niveauService.getAll().subscribe(r => this.niveaux = r);
+  }
+
   loadUes(): void {
-    this.ueService.getAll().subscribe({
-      next: data => {
-        this.ues = data;
-        this.applyFilter();
-      },
-      error: err => console.error('Erreur chargement UE', err)
+    this.ueService.getAll().subscribe(data => {
+      this.ues = data;
+      this.applyFilter();
     });
-  }
-
-  loadSemestres(): void {
-    this.semestreService.getAll().subscribe(data => this.semestres = data);
-  }
-
-  loadFilieres(): void {
-    this.filiereService.getAll().subscribe(data => this.filieres = data);
-  }
-
-  loadNiveaux(): void {
-    this.niveauService.getAll().subscribe(data => this.niveaux = data);
   }
 
   /* ==========================
@@ -97,13 +87,13 @@ export class UeComponent implements OnInit {
   ========================== */
   applyFilter(): void {
     const term = this.searchTerm.toLowerCase().trim();
-
     this.filteredUes = this.ues.filter(u =>
       u.code.toLowerCase().includes(term) ||
       u.intitule.toLowerCase().includes(term)
     );
   }
 
+  
   onSearchChange(): void {
     this.applyFilter();
     this.page = 1;
@@ -119,57 +109,30 @@ export class UeComponent implements OnInit {
   ========================== */
   save(): void {
     if (this.form.invalid) return;
-
     this.loading = true;
 
-    const payload: Ue = {
-      code: this.form.value.code,
-      intitule: this.form.value.intitule,
-      credit: this.form.value.credit,
-      semestreId: this.form.value.semestreId,
-      filiereId: this.form.value.filiereId,
-      niveauId: this.form.value.niveauId
-    };
+    const payload: Ue = { ...this.form.value };
 
     const action$ = this.editingId
       ? this.ueService.modifier(this.editingId, payload)
       : this.ueService.creer(payload);
 
     action$.subscribe({
-      next: () => {
-        this.resetForm();
-        this.loadUes();
-      },
-      error: err => {
-        console.error('Erreur enregistrement UE', err);
-        alert('Erreur lors de l’enregistrement');
-      },
+      next: () => { this.resetForm(); this.loadUes(); },
+      error: err => console.error(err),
       complete: () => this.loading = false
     });
   }
 
   edit(ue: Ue): void {
-    this.editingId = ue.id ?? null;
-
-    this.form.patchValue({
-      code: ue.code,
-      intitule: ue.intitule,
-      credit: ue.credit,
-      semestreId: ue.semestreId,
-      filiereId: ue.filiereId,
-      niveauId: ue.niveauId
-    });
-
+    this.editingId = ue.id!;
+    this.form.patchValue(ue);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   delete(id: number): void {
     if (!confirm('Supprimer cette UE ?')) return;
-
-    this.ueService.supprimer(id).subscribe({
-      next: () => this.loadUes(),
-      error: err => console.error('Erreur suppression UE', err)
-    });
+    this.ueService.supprimer(id).subscribe(() => this.loadUes());
   }
 
   resetForm(): void {
@@ -178,13 +141,67 @@ export class UeComponent implements OnInit {
     this.loading = false;
   }
 
-  /* ==========================
-     DROITS (OPTIONNEL)
-  ========================== */
   canEdit(): boolean {
     if (!this.role) return false;
     return Array.isArray(this.role)
       ? this.role.includes(Role.Admin) || this.role.includes(Role.Scolarite)
       : this.role === Role.Admin || this.role === Role.Scolarite;
+  }
+
+  /* ==========================
+     EXPORT
+  ========================== */
+  exportExcel(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredUes.map(u => ({
+      Code: u.code,
+      Intitulé: u.intitule,
+      Crédits: u.credit
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'UE');
+    XLSX.writeFile(wb, 'ues.xlsx');
+  }
+
+  exportCSV(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredUes);
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    saveAs(new Blob([csv]), 'ues.csv');
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    (doc as any).autoTable({
+      head: [['Code', 'Intitulé', 'Crédits']],
+      body: this.filteredUes.map(u => [u.code, u.intitule, u.credit])
+    });
+    doc.save('ues.pdf');
+  }
+
+  /* ==========================
+     IMPORT
+  ========================== */
+  importFile(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+      data.forEach(row => {
+        const payload: Ue = {
+          code: row.Code,
+          intitule: row.Intitulé,
+          credit: row.Crédits,
+          semestreId: row.SemestreId,
+          filiereId: row.FiliereId,
+          niveauId: row.NiveauId
+        };
+        this.ueService.creer(payload).subscribe(() => this.loadUes());
+      });
+    };
+    reader.readAsBinaryString(file);
   }
 }

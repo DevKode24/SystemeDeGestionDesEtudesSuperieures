@@ -1,17 +1,24 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 import { Enseignement } from 'src/app/models/enseignement';
 import { Classe } from 'src/app/models/classe';
 import { Matiere } from 'src/app/models/matiere';
 import { Enseignant } from 'src/app/models/enseignant';
+import { AnneeAcademique } from 'src/app/models/annee-academique';
 
 import { EnseignementService } from 'src/app/services/enseignement.service';
-import { MatiereService } from 'src/app/services/matiere.service';
 import { ClasseService } from 'src/app/services/classe.service';
+import { MatiereService } from 'src/app/services/matiere.service';
 import { EnseignantService } from 'src/app/services/enseignant.service';
-import { TokenStorageService, Role } from 'src/app/auth/token-storage.service';
+import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service';
+import { forkJoin } from 'rxjs';
+
 
 @Component({
   selector: 'app-enseignement',
@@ -21,13 +28,13 @@ import { TokenStorageService, Role } from 'src/app/auth/token-storage.service';
 export class EnseignementComponent implements OnInit {
 
   form!: FormGroup;
-
   enseignements: Enseignement[] = [];
   filteredEnseignements: Enseignement[] = [];
 
   classes: Classe[] = [];
   matieres: Matiere[] = [];
   enseignants: Enseignant[] = [];
+  annees: AnneeAcademique[] = [];
 
   editingId?: number;
   loading = false;
@@ -36,96 +43,81 @@ export class EnseignementComponent implements OnInit {
   filterClasse = '';
   filterMatiere = '';
   filterEnseignant = '';
+  filterAnnee = '';
 
-  userRoles: Role | Role[] | null = null;
+  // pagination
+  page = 1;
+  pageSize = 5;
 
   constructor(
     private fb: FormBuilder,
-    private router: Router,
-    private tokenStorage: TokenStorageService,
     private enseignementService: EnseignementService,
     private classeService: ClasseService,
     private matiereService: MatiereService,
-    private enseignantService: EnseignantService
+    private enseignantService: EnseignantService,
+    private anneeService: AnneeAcademiqueService
   ) {}
 
-  /* =========================
-     INIT
-     ========================= */
   ngOnInit(): void {
-    this.userRoles = this.tokenStorage.getUserRole();
-
-    if (!this.canAccess()) {
-      alert('Accès refusé');
-      this.router.navigate(['/login']);
-      return;
-    }
-
     this.initForm();
     this.loadOptions();
-    this.loadEnseignements();
-  }
+    this.loadReferentiels();
+}
+loadReferentiels(): void {
+  forkJoin({
+    matieres: this.matiereService.getAll(),
+    classes: this.classeService.getAll(),
+    enseignants: this.enseignantService.getAll(),
+    annees: this.anneeService.getAll()
+  }).subscribe(res => {
+    this.matieres = res.matieres;
+    this.classes = res.classes;
+    this.enseignants = res.enseignants;
+    this.annees = res.annees;
 
-  canAccess(): boolean {
-    const allowed = ['ADMIN', 'SCOLARITE'];
-    if (!this.userRoles) return false;
-    if (Array.isArray(this.userRoles)) {
-      return this.userRoles.some(r => allowed.includes(r));
-    }
-    return allowed.includes(this.userRoles as string);
-  }
+    // 🔥 UNE FOIS TOUT CHARGÉ
+    this.loadEnseignements();
+  });
+}
 
   initForm(): void {
     this.form = this.fb.group({
       matiereId: [null, Validators.required],
       classeId: [null, Validators.required],
       enseignantId: [null, Validators.required],
+      anneeAcademiqueId: [null, Validators.required],
       actif: [true]
     });
   }
 
-  /* =========================
-     OPTIONS
-     ========================= */
   loadOptions(): void {
-    this.loadClasses();
-    this.loadMatieres();
-    this.loadEnseignants();
+    this.classeService.getAll().subscribe(c => { this.classes = c; this.loadEnseignements(); });
+    this.matiereService.getAll().subscribe(m => this.matieres = m);
+    this.enseignantService.getAll().subscribe(e => this.enseignants = e);
+    this.anneeService.getAll().subscribe(a => this.annees = a);
   }
 
-  loadClasses(): void {
-    this.classeService.getAll().subscribe({
-      next: res => this.classes = res,
-      error: err => console.error('Erreur chargement classes', err)
-    });
-  }
+ loadEnseignements(): void {
+  this.enseignementService.getAll().subscribe(data => {
 
-  loadMatieres(): void {
-    this.matiereService.getAll().subscribe({
-      next: res => this.matieres = res,
-      error: err => console.error('Erreur chargement matières', err)
-    });
-  }
+    this.enseignements = data.map(e => ({
+      ...e,
+      matiereIntitule:
+        this.matieres.find(m => m.id === e.matiereId)?.intitule ?? '',
+      classeCode:
+        this.classes.find(c => c.id === e.classeId)?.code ?? '',
+      enseignantNom: (() => {
+        const ens = this.enseignants.find(p => p.id === e.enseignantId);
+        return ens ? `${ens.nom} ${ens.prenom}` : '';
+      })(),
+      anneeAcademiqueLibelle:
+        this.annees.find(a => a.id === e.anneeAcademiqueId)?.libelle ?? ''
+    }));
 
-  loadEnseignants(): void {
-    this.enseignantService.getAll().subscribe({
-      next: res => this.enseignants = res,
-      error: err => console.error('Erreur chargement enseignants', err)
-    });
-  }
-
-  /* =========================
-     ENSEIGNEMENTS
-     ========================= */
-  loadEnseignements(): void {
-    this.enseignementService.getAll().subscribe({
-      next: res => {
-        this.enseignements = res;
-        this.applyFilters();
-      },
-      error: err => console.error('Erreur chargement enseignements', err)
-    });
-  }
+    // ✅ IMPORTANT
+    this.filteredEnseignements = [...this.enseignements];
+  });
+}
 
   save(): void {
     if (this.form.invalid) return;
@@ -133,16 +125,13 @@ export class EnseignementComponent implements OnInit {
 
     const payload: Enseignement = this.form.value;
 
-    const obs = this.editingId
+    const action$ = this.editingId
       ? this.enseignementService.modifier(this.editingId, payload)
       : this.enseignementService.creer(payload);
 
-    obs.subscribe({
-      next: () => {
-        this.loadEnseignements();
-        this.resetForm();
-      },
-      error: err => console.error(err),
+    action$.subscribe({
+      next: () => { this.resetForm(); this.loadEnseignements(); },
+      error: (err: HttpErrorResponse) => console.error('Erreur backend', err),
       complete: () => this.loading = false
     });
   }
@@ -159,15 +148,103 @@ export class EnseignementComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.editingId = undefined;
     this.form.reset({ actif: true });
+    this.editingId = undefined;
+    this.loading = false;
   }
 
   applyFilters(): void {
-    this.filteredEnseignements = this.enseignements.filter(e =>
-      (this.filterClasse === '' || (e.classeCode ?? '').toLowerCase().includes(this.filterClasse.toLowerCase())) &&
-      (this.filterMatiere === '' || (e.matiereIntitule ?? '').toLowerCase().includes(this.filterMatiere.toLowerCase())) &&
-      (this.filterEnseignant === '' || (e.enseignantNom ?? '').toLowerCase().includes(this.filterEnseignant.toLowerCase()))
-    );
+  const termClasse = this.filterClasse.toLowerCase();
+  const termMatiere = this.filterMatiere.toLowerCase();
+  const termEnseignant = this.filterEnseignant.toLowerCase();
+  const termAnnee = this.filterAnnee.toLowerCase();
+
+  this.filteredEnseignements = this.enseignements.filter(e => 
+    (e.classeCode ?? '').toLowerCase().includes(termClasse) &&
+    (e.matiereIntitule ?? '').toLowerCase().includes(termMatiere) &&
+    (e.enseignantNom ?? '').toLowerCase().includes(termEnseignant) &&
+    (e.anneeAcademiqueLibelle ?? '').toLowerCase().includes(termAnnee)
+  );
+}
+
+
+  onSearchChange(): void {
+    this.applyFilters();
+    this.page = 1;
+  }
+
+  get pagedEnseignements(): Enseignement[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredEnseignements.slice(start, start + this.pageSize);
+  }
+
+  /* ========================== EXPORT ========================== */
+  exportExcel(): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.filteredEnseignements.map(e => ({
+      Matiere: e.matiereIntitule,
+      Classe: e.classeCode,
+      Enseignant: e.enseignantNom,
+      Annee: e.anneeAcademiqueLibelle,
+      Actif: e.actif ? 'Oui' : 'Non'
+    })));
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Enseignements');
+    XLSX.writeFile(wb, 'enseignements.xlsx');
+  }
+
+  exportCSV(): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.filteredEnseignements.map(e => ({
+      Matiere: e.matiereIntitule,
+      Classe: e.classeCode,
+      Enseignant: e.enseignantNom,
+      Annee: e.anneeAcademiqueLibelle,
+      Actif: e.actif ? 'Oui' : 'Non'
+    })));
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, 'enseignements.csv');
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    const rows = this.filteredEnseignements.map(e => [
+      e.matiereIntitule,
+      e.classeCode,
+      e.enseignantNom,
+      e.anneeAcademiqueLibelle,
+      e.actif ? 'Oui' : 'Non'
+    ]);
+    (doc as any).autoTable({
+      head: [['Matière', 'Classe', 'Enseignant', 'Année', 'Actif']],
+      body: rows
+    });
+    doc.save('enseignements.pdf');
+  }
+
+/* ========================= IMPORT ========================= */
+  importFile(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const bstr: string = e.target.result;
+      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+      const wsname: string = wb.SheetNames[0];
+      const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+      const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+      data.forEach(row => {
+        const payload: Enseignement = {
+          matiereId: this.matieres.find(m => m.intitule === row.Matiere)?.id ?? 0,
+          classeId: this.classes.find(c => c.code === row.Classe)?.id ?? 0,
+          enseignantId: this.enseignants.find(a => a.nom === row.Enseignant)?.id ?? 0,
+          anneeAcademiqueId: 1, // adapter selon votre logique
+          actif: row.Actif === 'Oui'
+        };
+        this.enseignementService.creer(payload).subscribe(() => this.loadEnseignements());
+      });
+    };
+    reader.readAsBinaryString(file);
   }
 }

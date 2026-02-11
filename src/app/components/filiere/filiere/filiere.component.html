@@ -1,134 +1,145 @@
 <div class="page-wrapper">
-
   <div class="card modern-card">
 
-    <!-- HEADER -->
+    <!-- ================= HEADER ================= -->
     <div class="card-header text-center">
       <div class="icon-circle mb-3">
-        <i class="bi bi-building-fill"></i>
+        <i class="bi bi-diagram-3-fill"></i>
       </div>
       <h3 class="fw-bold mb-1">Filières Académiques</h3>
       <p class="text-muted small">
-        Gestion centralisée des filières universitaires
+        Gestion centralisée des filières
       </p>
     </div>
 
-    <!-- FORM -->
     <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="save()" class="mb-3 modern-form">
 
-        <div class="form-floating mb-2">
-          <input type="text" class="form-control" placeholder="Informatique" formControlName="nom"/>
-          <label>Nom de la filière</label>
+      <!-- ================= FORM ================= -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-4">
+        <div class="row g-3">
+
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input class="form-control" formControlName="nom" placeholder="Nom">
+              <label>Nom de la filière</label>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input class="form-control" formControlName="code" placeholder="Code">
+              <label>Code</label>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-floating">
+              <input class="form-control" formControlName="description" placeholder="Description">
+              <label>Description</label>
+            </div>
+          </div>
+
         </div>
 
-        <div class="form-floating mb-2">
-          <input type="text" class="form-control" placeholder="INFO" formControlName="code"/>
-          <label>Code de la filière</label>
-        </div>
-
-       
-
-        <button class="btn btn-gradient w-100" type="submit" [disabled]="loading || !canEdit()">
-          <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+        <button class="btn btn-gradient w-100 mt-3" type="submit">
+          <i class="bi me-1"
+             [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
           {{ editingId ? 'Modifier la filière' : 'Ajouter une filière' }}
         </button>
       </form>
 
-      <!-- TABLE -->
-      <!-- 🔍 RECHERCHE -->
-<div class="mb-3">
-  <input
-    type="text"
-    class="form-control"
-    placeholder="Rechercher une filière..."
-    [(ngModel)]="searchTerm"
-    (ngModelChange)="onSearchChange()"
-    name="searchTerm"
-  />
-</div>
-  <div class="d-flex justify-content-end mb-3 gap-2">
-          <button class="btn btn-warning"><i class="bi bi-upload me-1"></i>Importer</button>
-          <button class="btn btn-success"><i class="bi bi-download me-1"></i>Exporter</button>
+      <!-- ================= SEARCH + ACTIONS ================= -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <input
+          class="form-control w-50"
+          placeholder="🔎 Rechercher par nom ou code..."
+          [(ngModel)]="filterValue"
+          (ngModelChange)="applyFilters()"
+          name="filterValue"
+        />
+
+        <div class="d-flex gap-2">
+          <label class="btn btn-warning mb-0">
+            <i class="bi bi-upload me-1"></i> Import
+            <input type="file" hidden (change)="importFile($event)">
+          </label>
+
+          <button class="btn btn-success" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+          </button>
+
+          <button class="btn btn-secondary" (click)="exportCSV()">
+            <i class="bi bi-filetype-csv me-1"></i> CSV
+          </button>
         </div>
-<!-- TABLE -->
-<div class="table-responsive modern-table">
-  <table class="table align-middle">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Nom</th>
-        <th>Code</th>
-        <th class="text-end">Actions</th>
-      </tr>
-    </thead>
+      </div>
 
-    <tbody>
-      <tr *ngFor="let filiere of pagedFilieres; let i = index">
-        <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-        <td class="fw-semibold">{{ filiere.nom }}</td>
-        <td>{{ filiere.code }}</td>
-        <td class="text-end">
-          <button
-            class="btn btn-action edit me-1"
-            (click)="edit(filiere)"
-            [disabled]="!canEdit()">
-            <i class="bi bi-pencil-fill"></i>
+      <!-- ================= TABLE ================= -->
+      <div class="table-responsive modern-table">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nom</th>
+              <th>Code</th>
+              <th>Description</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let f of pagedFilieres; let i = index">
+              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+              <td class="fw-semibold">{{ f.nom }}</td>
+              <td>{{ f.code }}</td>
+              <td>{{ f.description }}</td>
+              <td class="text-end">
+                <button class="btn btn-action edit me-2" (click)="edit(f)">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-action delete" (click)="supprimer(f.id!)">
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="pagedFilieres.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">
+                Aucune filière trouvée
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================= PAGINATION ================= -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+          Page {{ page }}
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary"
+                  (click)="prevPage()"
+                  [disabled]="page === 1">
+            Précédent
           </button>
 
-          <button
-            class="btn btn-action delete"
-            (click)="delete(filiere.id!)"
-            [disabled]="!canEdit()">
-            <i class="bi bi-trash-fill"></i>
+          <button class="btn btn-outline-secondary"
+                  (click)="nextPage()"
+                  [disabled]="page * pageSize >= filteredFilieres.length">
+            Suivant
           </button>
-        </td>
-      </tr>
 
-      <tr *ngIf="pagedFilieres.length === 0">
-        <td colspan="4" class="text-center text-muted py-4">
-          <i class="bi bi-inbox-fill me-2"></i>
-          Aucune filière trouvée
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- PAGINATION -->
-<div class="d-flex justify-content-between align-items-center mt-3">
-  <nav>
-    <ul class="pagination mb-0">
-      <li class="page-item" [class.disabled]="page === 1">
-        <button class="page-link" (click)="page = page - 1" [disabled]="page === 1">
-          Précédent
-        </button>
-      </li>
-
-      <li class="page-item disabled">
-        <span class="page-link">{{ page }}</span>
-      </li>
-
-      <li class="page-item"
-          [class.disabled]="page * pageSize >= filteredFilieres.length">
-        <button class="page-link"
-                (click)="page = page + 1"
-                [disabled]="page * pageSize >= filteredFilieres.length">
-          Suivant
-        </button>
-      </li>
-    </ul>
-  </nav>
-
-  <select class="form-select w-auto"
-          [(ngModel)]="pageSize"
-          (change)="onSearchChange()">
-    <option [ngValue]="5">5 / page</option>
-    <option [ngValue]="10">10 / page</option>
-    <option [ngValue]="20">20 / page</option>
-  </select>
-</div>
-
+          <select class="form-select w-auto"
+                  [(ngModel)]="pageSize"
+                  (change)="applyFilters()">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="20">20</option>
+          </select>
+        </div>
+      </div>
 
     </div>
   </div>

@@ -1,78 +1,127 @@
 <div class="page-wrapper">
-  <div class="modern-card">
+  <div class="card modern-card">
 
-    <div class="card-header">
+    <!-- HEADER -->
+    <div class="card-header text-center">
       <div class="icon-circle">
         <i class="bi bi-calendar-range-fill"></i>
       </div>
-      <h3>Gestion des Années Académiques</h3>
-      <p>Création et administration</p>
+      <h3 class="fw-bold mt-2">Années Académiques</h3>
+      <p class="text-muted">Gestion · Import · Export</p>
     </div>
 
     <div class="card-body">
 
-      <!-- FORMULAIRE -->
-      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
-        <div class="form-group">
-          <label>Libellé</label>
-          <input
-            class="form-control"
-            formControlName="libelle"
-            placeholder="Ex: 2026 - 2027">
-        </div>
+      <!-- FORM -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-8">
+            <div class="form-floating">
+              <input class="form-control"
+                     formControlName="libelle"
+                     placeholder="2026 - 2027">
+              <label>Libellé</label>
+            </div>
+          </div>
 
-        <div class="btn-center">
-          <button
-            class="btn btn-gradient"
-            type="submit"
-            [disabled]="form.invalid || loading">
-            <i class="bi"
-               [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
-            {{ editingId ? 'Modifier' : 'Ajouter' }}
-          </button>
+          <div class="col-md-4">
+            <button class="btn btn-gradient w-100" type="submit">
+              <i class="bi"
+                 [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+              {{ editingId ? 'Modifier' : 'Ajouter' }}
+            </button>
+          </div>
         </div>
       </form>
 
-      <!-- TABLEAU -->
-      <div class="table-container">
-        <table class="modern-table">
+      <!-- ACTION BAR -->
+      <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+        <input class="form-control w-auto"
+               placeholder="🔎 Rechercher..."
+               [(ngModel)]="filterLibelle"
+               [ngModelOptions]="{ standalone: true }"
+               (input)="applyFilters()">
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-success" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-excel-fill"></i> Excel
+          </button>
+
+          <button class="btn btn-outline-secondary" (click)="exportCSV()">
+            <i class="bi bi-filetype-csv"></i> CSV
+          </button>
+
+          <label class="btn btn-outline-primary mb-0">
+            <i class="bi bi-upload"></i> Import
+            <input type="file"
+                   hidden
+                   accept=".xlsx,.csv"
+                   (change)="importFile($event)">
+          </label>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="modern-table">
+        <table class="table align-middle">
           <thead>
             <tr>
               <th>#</th>
-              <th>
-                Libellé
-                <input
-                  class="table-filter"
-                  [(ngModel)]="filterLibelle"
-                  [ngModelOptions]="{ standalone: true }"
-                  (input)="applyFilters()"
-                  placeholder="Filtrer...">
-              </th>
-              <th>Actions</th>
+              <th>Libellé</th>
+              <th class="text-end">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr *ngFor="let a of filteredAnnees; let i = index">
-              <td>{{ i + 1 }}</td>
+            <tr *ngFor="let a of pagedAnnees; let i = index">
+              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
               <td>{{ a.libelle }}</td>
-              <td>
-                <button class="btn-edit" (click)="edit(a)">
-                  <i class="bi bi-pencil-square"></i>
+              <td class="text-end actions">
+                <button class="edit" (click)="edit(a)">
+                  <i class="bi bi-pencil-fill"></i>
                 </button>
-                <button class="btn-delete" (click)="supprimer(a.id!)">
+                <button class="delete" (click)="supprimer(a.id!)">
                   <i class="bi bi-trash-fill"></i>
                 </button>
               </td>
             </tr>
 
             <tr *ngIf="filteredAnnees.length === 0">
-              <td colspan="3" class="text-center">
-                Aucune année académique trouvée
+              <td colspan="3" class="text-center text-muted py-4">
+                Aucun résultat
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="page === 1">
+              <button class="page-link" (click)="prevPage()">Précédent</button>
+            </li>
+
+            <li class="page-item disabled">
+              <span class="page-link">{{ page }}</span>
+            </li>
+
+            <li class="page-item"
+                [class.disabled]="page * pageSize >= filteredAnnees.length">
+              <button class="page-link" (click)="nextPage()">Suivant</button>
+            </li>
+          </ul>
+        </nav>
+
+        <select class="form-select w-auto"
+                [(ngModel)]="pageSize"
+                [ngModelOptions]="{ standalone: true }"
+                (change)="updatePagination()">
+          <option [ngValue]="5">5 / page</option>
+          <option [ngValue]="10">10 / page</option>
+          <option [ngValue]="20">20 / page</option>
+        </select>
       </div>
 
     </div>

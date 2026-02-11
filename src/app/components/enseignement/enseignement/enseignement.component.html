@@ -1,82 +1,240 @@
 <div class="page-wrapper">
   <div class="modern-card">
 
-    <div class="card-header">
+    <!-- HEADER -->
+    <div class="card-header text-center">
       <div class="icon-circle">
         <i class="bi bi-journal-bookmark"></i>
       </div>
-      <h3>Gestion des Enseignements</h3>
-      <p>Matière • Classe • Enseignant</p>
+      <h3 class="fw-bold mt-2">Gestion des Enseignements</h3>
+      <p class="subtitle">Matière • Classe • Enseignant • Année</p>
     </div>
 
     <div class="card-body">
 
-      <!-- FORMULAIRE -->
-      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
+      <!-- ================= FORMULAIRE ================= -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form mb-4">
         <div class="form-grid">
 
+          <!-- MATIERE -->
           <div class="form-group">
             <label>Matière</label>
             <select class="form-control" formControlName="matiereId">
               <option [ngValue]="null" disabled>-- Sélectionner --</option>
-              <option *ngFor="let m of matieres" [value]="m.id">{{ m.intitule }}</option>
+              <option *ngFor="let m of matieres" [ngValue]="m.id">
+                {{ m.intitule }}
+              </option>
             </select>
           </div>
 
+          <!-- CLASSE -->
           <div class="form-group">
             <label>Classe</label>
             <select class="form-control" formControlName="classeId">
               <option [ngValue]="null" disabled>-- Sélectionner --</option>
-              <option *ngFor="let c of classes" [value]="c.id">{{ c.code }}</option>
+              <option *ngFor="let c of classes" [ngValue]="c.id">
+                {{ c.code }}
+              </option>
             </select>
           </div>
 
+          <!-- ENSEIGNANT -->
           <div class="form-group">
             <label>Enseignant</label>
             <select class="form-control" formControlName="enseignantId">
               <option [ngValue]="null" disabled>-- Sélectionner --</option>
-              <option *ngFor="let e of enseignants" [value]="e.id">
-                {{ e?.nom }} {{ e?.prenom }}
+              <option *ngFor="let e of enseignants" [ngValue]="e.id">
+                {{ e.nom }} {{ e.prenom }}
+              </option>
+            </select>
+          </div>
+
+          <!-- ANNEE -->
+          <div class="form-group">
+            <label>Année académique</label>
+            <select class="form-control" formControlName="anneeAcademiqueId">
+              <option [ngValue]="null" disabled>-- Sélectionner --</option>
+              <option *ngFor="let a of annees" [ngValue]="a.id">
+                {{ a.libelle }}
               </option>
             </select>
           </div>
 
         </div>
 
-        <div class="btn-center">
-          <button class="btn btn-gradient" type="submit" [disabled]="form.invalid || loading">
-            <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+        <!-- ACTION FORM -->
+        <div class="btn-center mt-3">
+          <button
+            class="btn btn-gradient"
+            type="submit"
+            [disabled]="form.invalid || loading"
+          >
+            <i
+              class="bi"
+              [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"
+            ></i>
             {{ editingId ? 'Modifier' : 'Ajouter' }}
           </button>
         </div>
       </form>
 
-      <!-- TABLE -->
+      <!-- ================= FILTRES & EXPORT ================= -->
+      <div class="toolbar mb-3">
+
+        <!-- ACTIONS -->
+        <div class="btn-group actions">
+          <button class="btn btn-success" (click)="exportExcel()">
+            <i class="bi bi-file-earmark-excel-fill"></i> Excel
+          </button>
+          <button class="btn btn-primary" (click)="exportCSV()">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i> CSV
+          </button>
+          <button class="btn btn-danger" (click)="exportPDF()">
+            <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+          </button>
+
+          <!-- IMPORT -->
+          <label class="btn btn-import">
+            <i class="bi bi-cloud-arrow-up-fill"></i>
+            Import
+            <input
+              type="file"
+              hidden
+              (change)="importFile($event)"
+              accept=".xlsx,.xls,.csv"
+            />
+          </label>
+        </div>
+        
+        <!-- FILTRES -->
+        <div class="filters">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Matière"
+            [(ngModel)]="filterMatiere"
+            (ngModelChange)="applyFilters()"
+            [ngModelOptions]="{standalone:true}"
+          />
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Classe"
+            [(ngModel)]="filterClasse"
+            (ngModelChange)="applyFilters()"
+            [ngModelOptions]="{standalone:true}"
+          />
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Enseignant"
+            [(ngModel)]="filterEnseignant"
+            (ngModelChange)="applyFilters()"
+            [ngModelOptions]="{standalone:true}"
+          />
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Année"
+            [(ngModel)]="filterAnnee"
+            (ngModelChange)="applyFilters()"
+            [ngModelOptions]="{standalone:true}"
+          />
+        </div>
+      </div>
+
+      <!-- ================= TABLE ================= -->
       <div class="table-container">
-        <table class="modern-table">
+        <table class="modern-table table table-hover">
           <thead>
             <tr>
               <th>#</th>
-              <th>Matière <input class="table-filter" [(ngModel)]="filterMatiere" [ngModelOptions]="{standalone:true}" (input)="applyFilters()"></th>
-              <th>Classe <input class="table-filter" [(ngModel)]="filterClasse" [ngModelOptions]="{standalone:true}" (input)="applyFilters()"></th>
-              <th>Enseignant <input class="table-filter" [(ngModel)]="filterEnseignant" [ngModelOptions]="{standalone:true}" (input)="applyFilters()"></th>
+              <th>Matière</th>
+              <th>Classe</th>
+              <th>Enseignant</th>
+              <th>Année</th>
+              <th>Actif</th>
               <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr *ngFor="let e of filteredEnseignements; let i = index">
-              <td>{{ i + 1 }}</td>
+            <tr *ngFor="let e of pagedEnseignements; let i = index">
+              <td>{{ (page - 1) * pageSize + i + 1 }}</td>
               <td>{{ e.matiereIntitule }}</td>
               <td>{{ e.classeCode }}</td>
               <td>{{ e.enseignantNom }}</td>
+              <td>{{ e.anneeAcademiqueLibelle }}</td>
               <td>
-                <button class="btn-edit" (click)="edit(e)"><i class="bi bi-pencil-square"></i></button>
-                <button class="btn-delete" (click)="desactiver(e.id!)"><i class="bi bi-trash-fill"></i></button>
+                <span
+                  class="badge"
+                  [class.badge-success]="e.actif"
+                  [class.badge-danger]="!e.actif"
+                >
+                  {{ e.actif ? 'Oui' : 'Non' }}
+                </span>
+              </td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary me-2"
+                  (click)="edit(e)"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="desactiver(e.id!)"
+                >
+                  <i class="bi bi-trash-fill"></i>
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="filteredEnseignements.length === 0">
+              <td colspan="7" class="text-center text-muted">
+                Aucun enseignement trouvé
               </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- ================= PAGINATION ================= -->
+        <div class="pagination-wrapper mt-3">
+          <nav>
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="page === 1">
+                <button class="page-link" (click)="page = page - 1">
+                  Précédent
+                </button>
+              </li>
+
+              <li class="page-item disabled">
+                <span class="page-link">{{ page }}</span>
+              </li>
+
+              <li
+                class="page-item"
+                [class.disabled]="page * pageSize >= filteredEnseignements.length"
+              >
+                <button class="page-link" (click)="page = page + 1">
+                  Suivant
+                </button>
+              </li>
+            </ul>
+          </nav>
+
+          <select
+            class="form-select w-auto"
+            [(ngModel)]="pageSize"
+            (change)="onSearchChange()"
+            [ngModelOptions]="{standalone:true}"
+          >
+            <option [ngValue]="5">5 / page</option>
+            <option [ngValue]="10">10 / page</option>
+            <option [ngValue]="20">20 / page</option>
+          </select>
+        </div>
+
       </div>
 
     </div>

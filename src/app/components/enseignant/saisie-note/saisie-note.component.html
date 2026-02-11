@@ -21,9 +21,10 @@
       <label>Matière</label>
       <select class="form-select" formControlName="matiereId">
         <option value="">-- Sélectionner --</option>
-        <option *ngFor="let m of matieres()" [value]="m.id">
-          {{ m.intitule }}
-        </option>
+        <option *ngFor="let m of matieres()" [ngValue]="m.id">
+              {{ m.intitule }} ({{ m.code }})
+         </option>
+
       </select>
     </div>
 
@@ -31,9 +32,10 @@
       <label>Année académique</label>
       <select class="form-select" formControlName="anneeAcademiqueId">
         <option value="">-- Sélectionner --</option>
-        <option *ngFor="let a of annees()" [value]="a.id">
-          {{ a.libelle }}
+        <option *ngFor="let a of annees()" [ngValue]="a.id">
+            {{ a.libelle }}
         </option>
+
       </select>
     </div>
 

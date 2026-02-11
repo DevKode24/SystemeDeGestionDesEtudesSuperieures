@@ -1,97 +1,86 @@
 <div class="page-wrapper">
-  <div class="card modern-card">
+  <div class="modern-card">
 
-    <!-- ================= HEADER ================= -->
-    <div class="card-header text-center">
-      <div class="icon-circle mb-3">
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-circle">
         <i class="bi bi-calendar2-week-fill"></i>
       </div>
-      <h3 class="fw-bold mb-1">Semestres Académiques</h3>
-      <p class="text-muted small">
-        Gestion centralisée des semestres par année académique
-      </p>
+      <h3>Gestion des Semestres Académiques</h3>
+      <p>Organisation des semestres par année académique</p>
     </div>
 
-    <!-- ================= FORM ================= -->
+    <!-- BODY -->
     <div class="card-body">
-      <form
-        [formGroup]="form"
-        (ngSubmit)="save()"
-        class="modern-form mb-4"
-      >
 
-        <div class="row g-3">
+      <!-- FORMULAIRE -->
+      <form [formGroup]="form" (ngSubmit)="save()" class="modern-form">
+        <div class="form-grid">
 
-          <!-- Numéro semestre -->
-          <div class="col-md-6">
-            <div class="form-floating">
-              <select
-                class="form-select"
-                formControlName="numero"
-              >
-                <option [ngValue]="null">Sélectionner le semestre</option>
-                <option *ngFor="let n of [1,2,3,4,5,6]" [ngValue]="n">
-                  Semestre {{ n }}
-                </option>
-              </select>
-              <label>Numéro du semestre</label>
-            </div>
-            <small
-              class="text-danger"
-              *ngIf="form.get('numero')?.touched && form.get('numero')?.invalid"
-            >
-              Le numéro du semestre est obligatoire
-            </small>
+          <div class="form-group">
+            <label>Numéro du semestre</label>
+            <select class="form-control" formControlName="numero">
+              <option [ngValue]="null">Sélectionner</option>
+              <option *ngFor="let n of [1,2,3,4,5,6]" [ngValue]="n">Semestre {{ n }}</option>
+            </select>
           </div>
 
-          <!-- Année académique -->
-          <div class="col-md-6">
-            <div class="form-floating">
-              <select
-                class="form-select"
-                formControlName="anneeAcademiqueId"
-              >
-                <option [ngValue]="null">Sélectionner l'année académique</option>
-                <option
-                  *ngFor="let a of anneesAcademiques"
-                  [ngValue]="a.id"
-                >
-                  {{ a.libelle }}
-                </option>
-              </select>
-              <label>Année académique</label>
-            </div>
-            <small
-              class="text-danger"
-              *ngIf="form.get('anneeAcademiqueId')?.touched && form.get('anneeAcademiqueId')?.invalid"
-            >
-              L'année académique est obligatoire
-            </small>
+          <div class="form-group">
+            <label>Année académique</label>
+            <select class="form-control" formControlName="anneeAcademiqueId">
+              <option [ngValue]="null">Sélectionner</option>
+              <option *ngFor="let a of anneesAcademiques" [ngValue]="a.id">{{ a.libelle }}</option>
+            </select>
           </div>
 
         </div>
 
-        <!-- Bouton submit -->
-        <button
-          type="submit"
-          class="btn btn-gradient w-100 mt-4"
-          [disabled]="form.invalid || loading || !canEdit()"
-        >
-          <i
-            class="bi me-1"
-            [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"
-          ></i>
-          {{ editingId ? 'Modifier le semestre' : 'Ajouter un semestre' }}
-        </button>
-
+        <div class="btn-center">
+          <button type="submit" class="btn-gradient" [disabled]="form.invalid || loading">
+            <i class="bi" [ngClass]="editingId ? 'bi-save-fill' : 'bi-plus-circle-fill'"></i>
+            {{ editingId ? 'Mettre à jour' : 'Ajouter le semestre' }}
+          </button>
+        </div>
       </form>
-  <div class="d-flex justify-content-end mb-3 gap-2">
-          <button class="btn btn-warning"><i class="bi bi-upload me-1"></i>Importer</button>
-          <button class="btn btn-success"><i class="bi bi-download me-1"></i>Exporter</button>
+
+      <!-- BARRE D’ACTIONS -->
+      <div class="table-toolbar">
+
+        <input type="text" class="search-input" placeholder="🔎 Rechercher semestre ou année..."
+               [(ngModel)]="searchTerm" [ngModelOptions]="{ standalone: true }" (input)="applyFilter()" />
+
+        <div class="toolbar-actions">
+
+          <!-- Importer -->
+          <label class="btn-action import">
+            <i class="bi bi-upload"></i> Importer
+            <input type="file" hidden (change)="importExcel($event)" />
+          </label>
+
+           <div class="d-flex gap-2">
+          <button class="btn btn-outline-success" (click)="export('excel')">
+            <i class="bi bi-file-earmark-excel-fill"></i> Excel
+          </button>
+
+          <button class="btn btn-outline-secondary" (click)="export('csv')">
+            <i class="bi bi-filetype-csv"></i> CSV
+          </button>
+
+          <button class="btn btn-outline-danger" (click)="export('pdf')">
+            <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+          </button>
+
+          <label class="btn btn-outline-primary mb-0">
+            <i class="bi bi-upload"></i> Import
+            <input type="file" hidden accept=".xlsx,.csv" (change)="importExcel($event)">
+          </label>
         </div>
-      <!-- ================= TABLE ================= -->
-      <div class="table-responsive modern-table">
-        <table class="table align-middle">
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-container">
+        <table class="modern-table">
           <thead>
             <tr>
               <th>#</th>
@@ -100,44 +89,33 @@
               <th class="text-end">Actions</th>
             </tr>
           </thead>
-
           <tbody>
-
-            <tr *ngFor="let s of semestres; let i = index">
-              <td>{{ i + 1 }}</td>
-              <td>Semestre {{ s.numero }}</td>
+            <tr *ngFor="let s of paginatedData(); let i = index">
+              <td>{{ i + 1 + (page - 1) * pageSize }}</td>
+              <td><span class="badge-semestre">Semestre {{ s.numero }}</span></td>
               <td>{{ s.anneeAcademique?.libelle }}</td>
               <td class="text-end">
-
-                <button
-                  class="btn btn-action edit me-2"
-                  (click)="edit(s)"
-                  *ngIf="canEdit()"
-                >
-                  <i class="bi bi-pencil-fill"></i>
-                </button>
-
-                <button
-                  class="btn btn-action delete"
-                  (click)="delete(s.id!)"
-                  *ngIf="canEdit()"
-                >
-                  <i class="bi bi-trash-fill"></i>
-                </button>
-
+                <button class="icon-btn edit" (click)="edit(s)"><i class="bi bi-pencil-fill"></i></button>
+                <button class="icon-btn delete" (click)="delete(s.id!)"><i class="bi bi-trash-fill"></i></button>
               </td>
             </tr>
-
-            <!-- Aucun résultat -->
-            <tr *ngIf="semestres.length === 0">
-              <td colspan="4" class="text-center text-muted py-5">
-                <i class="bi bi-inbox-fill me-2"></i>
-                Aucun semestre trouvé
+            <tr *ngIf="filteredSemestres.length === 0">
+              <td colspan="4" class="empty-state">
+                <i class="bi bi-inbox-fill"></i> Aucun semestre trouvé
               </td>
             </tr>
-
           </tbody>
         </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination-bar">
+        <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">Précédent</button>
+        <span class="page-info">Page {{ page }} / {{ totalPages() }}</span>
+        <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages()">Suivant</button>
+        <select class="form-control page-size-select" [(ngModel)]="pageSize" (change)="page=1">
+          <option *ngFor="let size of pageSizes" [value]="size">{{ size }} / page</option>
+        </select>
       </div>
 
     </div>

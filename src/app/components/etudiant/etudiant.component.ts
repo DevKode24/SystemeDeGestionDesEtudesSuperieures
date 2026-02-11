@@ -1,46 +1,66 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EtudiantService } from '../../services/etudiant.service';
-import { ClasseService } from 'src/app/services/classe.service';
-import { Classe, Etudiant, Filiere, Niveau, AnneeAcademique } from 'src/app/models/etudiant';
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+import { EtudiantService } from 'src/app/services/etudiant.service';
+import { ClasseService } from 'src/app/services/classe.service';
+import { FiliereService } from 'src/app/services/filiere.service';
+import { NiveauService } from 'src/app/services/niveau.service';
+
+import { Etudiant } from 'src/app/models/etudiant';
+import { Classe } from 'src/app/models/classe';
+import { Filiere } from 'src/app/models/filiere';
+import { Niveau } from 'src/app/models/niveau';
+import { AnneeAcademique } from 'src/app/models/annee-academique';
+import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service';
 @Component({
   selector: 'app-etudiant',
   templateUrl: './etudiant.component.html',
   styleUrls: ['./etudiant.component.scss']
 })
+
 export class EtudiantComponent implements OnInit {
 
+  /* ================= DONNÉES ================= */
   etudiants: Etudiant[] = [];
   filteredEtudiants: Etudiant[] = [];
+
   classes: Classe[] = [];
+  filieres: Filiere[] = [];
+  niveaux: Niveau[] = [];
   anneesAcademiques: AnneeAcademique[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
   loading = false;
 
-  selectedClasse!: Classe;
+  /* ================= FILTRES ================= */
+  searchTerm = '';
+  filterClasseId: number | null = null;
+  filterNom = ''; // ✅ correction erreur [(ngModel)]="filterNom"
 
-  sexes = ['M', 'F', 'Pas de genre'];
-  etatsCivils = ['Marié', 'Célibataire', 'En couple', 'Conjoint'];
-  nationalites = [
-    'Gabonaise','Congolaise','Camerounaise','Ivoirienne','Sénégalaise',
-    'Française','Canadienne','Américaine','Chinoise','Marocaine',
-    'Algérienne','Tunisienne','Nigériane','Ghanéenne'
-  ];
+  /* ================= PAGINATION ================= */
+  page = 1;
+  pageSize = 5;
 
   constructor(
     private fb: FormBuilder,
     private etudiantService: EtudiantService,
-    private classeService: ClasseService
+    private classeService: ClasseService,
+    private filiereService: FiliereService,
+    private niveauService: NiveauService,
+    private anneeService: AnneeAcademiqueService
   ) {}
 
   ngOnInit(): void {
     this.initForm();
-    this.loadEtudiants();
-    this.loadClasses();
-    this.loadAnneesAcademiques();
+    this.loadAllData();
   }
 
   private initForm(): void {
@@ -51,124 +71,187 @@ export class EtudiantComponent implements OnInit {
       password: ['', Validators.required],
       matricule: ['', Validators.required],
       dateNaissance: [''],
-      dateInscription: [new Date().toISOString().substring(0,10)],
       sexe: ['', Validators.required],
       nationalite: ['', Validators.required],
       etatCivil: ['', Validators.required],
-      lieuNaissance: [''],
-      contactEtudiant: [''],
-      contactUrgence: [''],
-      nomTuteur: [''],
       classeId: [null, Validators.required],
+      filiereId: [null, Validators.required],
+      niveauId: [null, Validators.required],
+      contactEtudiant: ['', Validators.required],
+      lieuNaissance: ['', Validators.required],
+      contactUrgence: ['', Validators.required],
       anneeAcademiqueId: [null, Validators.required]
     });
   }
 
-  loadEtudiants(): void {
-    this.etudiantService.getAll().subscribe(data => {
-      this.etudiants = data;
-      this.applyFilters();
+  private loadAllData(): void {
+    this.loading = true;
+
+    forkJoin({
+      etudiants: this.etudiantService.getAll(),
+      classes: this.classeService.getAll(),
+      filieres: this.filiereService.getAll(),
+      niveaux: this.niveauService.getAll(),
+      annees: this.anneeService.getAll()
+    }).subscribe({
+      next: res => {
+        this.classes = res.classes;
+        this.filieres = res.filieres;
+        this.niveaux = res.niveaux;
+        this.anneesAcademiques = res.annees;
+
+        // ✅ mapping sécurisé des objets enrichis
+        this.etudiants = res.etudiants.map(e => ({
+          ...e,
+          classe: this.classes.find(c => c.id === e.classeId),
+          filiere: this.filieres.find(f => f.id === e.filiereId),
+          niveau: this.niveaux.find(n => n.id === e.niveauId),
+          anneeAcademique: this.anneesAcademiques.find(a => a.id === e.anneeAcademiqueId)
+        }));
+
+        this.applyFilters();
+      },
+      error: (err: HttpErrorResponse) => console.error(err),
+      complete: () => this.loading = false
     });
   }
 
-  loadClasses(): void {
-    this.classeService.getAll().subscribe(data => this.classes = data);
-  }
-
-  loadAnneesAcademiques(): void {
-    this.anneesAcademiques = [
-      { id: 1, libelle: '2025-2026' },
-      { id: 2, libelle: '2026-2027' }
-    ];
-  }
-
-  onClasseChange(): void {
-    const classeId = this.form.get('classeId')?.value;
-    this.selectedClasse = this.classes.find(c => c.id === +classeId)!;
-  }
-
   applyFilters(): void {
-    const nom = this.form.get('nom')?.value?.toLowerCase() || '';
-    const prenom = this.form.get('prenom')?.value?.toLowerCase() || '';
-    const matricule = this.form.get('matricule')?.value?.toLowerCase() || '';
+    const term = this.searchTerm.toLowerCase().trim();
 
     this.filteredEtudiants = this.etudiants.filter(e =>
-      (!nom || e.nom.toLowerCase().includes(nom)) &&
-      (!prenom || e.prenom.toLowerCase().includes(prenom)) &&
-      (!matricule || e.matricule.toLowerCase().includes(matricule))
+      (!term ||
+        (e.nom?.toLowerCase() ?? '').includes(term) ||
+        (e.prenom?.toLowerCase() ?? '').includes(term) ||
+        (e.email?.toLowerCase() ?? '').includes(term) ||
+        (e.matricule ?? '').toLowerCase().includes(term)
+      ) &&
+      (!this.filterClasseId || e.classeId === this.filterClasseId)
     );
+
+    this.page = 1;
+  }
+
+  onSearchChange(): void {
+    this.applyFilters();
+  }
+
+  get pagedEtudiants(): Etudiant[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredEtudiants.slice(start, start + this.pageSize);
   }
 
   save(): void {
-    if (this.form.invalid || !this.selectedClasse) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
+    if (this.form.invalid) return;
     this.loading = true;
 
-    const payload: Etudiant = {
-      id: this.editingId ?? undefined,
-      nom: this.form.value.nom,
-      prenom: this.form.value.prenom,
-      email: this.form.value.email,
-      password: this.form.value.password,
-      matricule: this.form.value.matricule,
-      dateNaissance: this.form.value.dateNaissance,
-      dateInscription: this.form.value.dateInscription,
-      sexe: this.form.value.sexe,
-      nationalite: this.form.value.nationalite,
-      etatCivil: this.form.value.etatCivil,
-      lieuNaissance: this.form.value.lieuNaissance,
-      contactEtudiant: this.form.value.contactEtudiant,
-      contactUrgence: this.form.value.contactUrgence,
-      nomTuteur: this.form.value.nomTuteur,
-      roles: ['ETUDIANT'],
-      actif: true,
-
-      // dérivation automatique depuis la classe sélectionnée
-      classe: this.selectedClasse,
-      filiere: { id: this.selectedClasse.filiereId, nom: this.selectedClasse.filiereNom },
-      niveau: { id: this.selectedClasse.niveauId, libelle: this.selectedClasse.niveauLibelle, filiereId: this.selectedClasse.filiereId },
-      anneeAcademique: { id: this.form.value.anneeAcademiqueId }
-    };
+    const payload: Etudiant = { ...this.form.value, roles: ['ROLE_ETUDIANT'] };
 
     const request$ = this.editingId
       ? this.etudiantService.modifier(this.editingId, payload)
       : this.etudiantService.creer(payload);
 
     request$.subscribe({
-      next: () => { this.resetForm(); this.loadEtudiants(); this.loading = false; },
-      error: () => this.loading = false
+      next: () => {
+        this.resetForm();
+        this.loadAllData();
+      },
+      error: (err: HttpErrorResponse) => console.error(err),
+      complete: () => this.loading = false
     });
   }
 
   edit(e: Etudiant): void {
     this.editingId = e.id!;
-    this.selectedClasse = e.classe;
-
     this.form.patchValue({
-      nom: e.nom,
-      prenom: e.prenom,
-      email: e.email,
-      matricule: e.matricule,
-      dateNaissance: e.dateNaissance,
-      dateInscription: e.dateInscription,
-      sexe: e.sexe,
-      nationalite: e.nationalite,
-      etatCivil: e.etatCivil,
-      lieuNaissance: e.lieuNaissance,
-      contactEtudiant: e.contactEtudiant,
-      contactUrgence: e.contactUrgence,
-      nomTuteur: e.nomTuteur,
-      classeId: e.classe.id,
-      anneeAcademiqueId: e.anneeAcademique?.id
+      ...e,
+      classeId: e.classeId ?? e.classe?.id,
+      filiereId: e.filiereId ?? e.filiere?.id,
+      niveauId: e.niveauId ?? e.niveau?.id,
+      anneeAcademiqueId: e.anneeAcademiqueId ?? e.anneeAcademique?.id
     });
+    window.scroll({ top: 0, behavior: 'smooth' });
+  }
+
+  delete(id: number): void {
+    if (!confirm('Supprimer cet étudiant ?')) return;
+    this.etudiantService.supprimer(id).subscribe(() => this.loadAllData());
   }
 
   resetForm(): void {
-    this.editingId = null;
     this.form.reset();
-    this.selectedClasse = {} as Classe; // safe pour TS
+    this.editingId = null;
+    this.loading = false;
   }
+
+  // ✅ EXPORT / IMPORT comme avant
+
+
+  /* ================= EXPORT ================= */
+
+  exportExcel(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredEtudiants.map(e => ({
+      Nom: e.nom,
+      Prénom: e.prenom,
+      Email: e.email,
+      Matricule: e.matricule,
+      Classe: e.classe?.code ?? '',
+Filière: e.filiere?.nom ?? '',
+Niveau: e.niveau?.libelle ?? '',
+Année: e.anneeAcademique?.libelle ?? ''
+
+    })));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Etudiants');
+    XLSX.writeFile(wb, 'etudiants.xlsx');
+  }
+
+  exportCSV(): void {
+    const ws = XLSX.utils.json_to_sheet(this.filteredEtudiants);
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'etudiants.csv');
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+
+    (doc as any).autoTable({
+      head: [['Nom', 'Prénom', 'Email', 'Matricule', 'Classe', 'Filière', 'Niveau', 'Année']],
+      body: this.filteredEtudiants.map(e => [
+        e.nom,
+        e.prenom,
+        e.email,
+        e.matricule,
+        e.classe?.code ?? '',
+        e.filiere?.nom ?? '',
+        e.niveau?.libelle ?? '',
+        e.anneeAcademique?.libelle ?? ''
+      ])
+    });
+
+    doc.save('etudiants.pdf');
+  }
+
+  /* ================= IMPORT (STRUCTURE PRÊTE) ================= */
+
+  importFile(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e: any) => {
+      const workbook = XLSX.read(e.target.result, { type: 'binary' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+
+      console.log('Import Étudiants détecté:', data);
+      alert('Import détecté – mapping backend à brancher');
+    };
+
+    reader.readAsBinaryString(file);
+  }
+
 }
