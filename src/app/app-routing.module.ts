@@ -21,6 +21,8 @@ import { ClasseComponent } from './components/classe/classe/classe.component';
 import { EnseignementComponent } from './components/enseignement/enseignement/enseignement.component';
 import { MatiereComponent } from './components/matiere/matiere/matiere.component';
 import { UeComponent } from './components/ue/ue.component';
+import { EtudiantComponent } from './components/etudiant/etudiant.component';
+import { StatistiquesComponent } from './components/statistiques/statistiques.component';
 
 const routes: Routes = [
 
@@ -44,7 +46,7 @@ const routes: Routes = [
       /* ----- DEFAULT ----- */
       {
         path: '',
-        redirectTo: '/dashboard',
+         component: StatistiquesComponent,
         pathMatch: 'full'
       },
 
@@ -84,6 +86,10 @@ const routes: Routes = [
           {
             path: 'ues',
             component: UeComponent
+          },
+          {
+            path: 'etudiants',
+            component: EtudiantComponent
           },
           {
             path: 'enseignant',

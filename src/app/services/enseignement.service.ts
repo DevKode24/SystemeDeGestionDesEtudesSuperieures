@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { Enseignement } from '../models/enseignement';
 import { TokenStorageService } from '../auth/token-storage.service';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -19,20 +18,18 @@ export class EnseignementService {
   }
 
   getAll(): Observable<Enseignement[]> {
-    return this.http.get<Enseignement[]>(this.baseUrl);
+    return this.http.get<Enseignement[]>(this.baseUrl, this.getHeaders());
   }
 
   creer(data: Enseignement): Observable<Enseignement> {
-    return this.http.post<Enseignement>(this.baseUrl, data);
+    return this.http.post<Enseignement>(this.baseUrl, data, this.getHeaders());
   }
 
   modifier(id: number, data: Enseignement): Observable<Enseignement> {
-    return this.http.put<Enseignement>(`${this.baseUrl}/${id}`, data);
+    return this.http.put<Enseignement>(`${this.baseUrl}/${id}`, data, this.getHeaders());
   }
 
   desactiver(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, this.getHeaders());
   }
-
-
 }

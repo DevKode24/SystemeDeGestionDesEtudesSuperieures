@@ -2,16 +2,18 @@ import { Ue } from './ue';
 import { Enseignant } from './enseignant';
 
 export interface Matiere {
-  id?: number;
+  id?: number;              // identifiant
   code: string;
-  intitule: string;
+  intitule: string;            // ✅ ALIGNÉ BACKEND
   coefficient: number;
 
-  // 🔹 utilisés UNIQUEMENT pour le formulaire
+  // utilisés pour la saisie
   ueId?: number;
-  enseignantId?: number;
+  enseignantId?: number | null;  // ✅ optionnel
 
-  // 🔹 relations complètes pour l'affichage
+  // relations pour affichage
   ue?: Ue;
-  enseignant?: Enseignant;
+  enseignant?: Enseignant | null;
 }
+
+

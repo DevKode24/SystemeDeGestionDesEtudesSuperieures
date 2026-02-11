@@ -10,5 +10,8 @@ export interface Enseignement {
   enseignantId: number;
   enseignantNom?: string;
 
+  anneeAcademiqueId?: number;
+  anneeAcademiqueLibelle?: string;
+
   actif: boolean;
 }

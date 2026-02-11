@@ -7,7 +7,7 @@ export interface Classe {
   code: string;
   active?: boolean;
 
-  filiere: Filiere;
-  niveau: Niveau;
+  filiere?: Filiere;
+  niveau?: Niveau;
   matiere?: Matiere | null;
 }

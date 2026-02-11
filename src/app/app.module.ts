@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { NgChartsModule } from 'ng2-charts';
 /* ===== INTERCEPTOR ===== */
 import { AuthInterceptor } from './auth/auth.interceptor';
 import { AppComponent } from './app.component';
@@ -29,6 +30,8 @@ import { UeComponent } from './components/ue/ue.component';
 import { BulletinComponent } from './components/bulletin/bulletin.component';
 import { ClasseComponent } from './components/classe/classe/classe.component';
 import { EnseignementComponent } from './components/enseignement/enseignement/enseignement.component';
+import { EtudiantComponent } from './components/etudiant/etudiant.component';
+import { StatistiquesComponent } from './components/statistiques/statistiques.component';
 
 @NgModule({
   declarations: [
@@ -48,8 +51,10 @@ import { EnseignementComponent } from './components/enseignement/enseignement/en
     SaisieNoteComponent,
     UeComponent,
     BulletinComponent,
+    EtudiantComponent,
     ClasseComponent,
-    EnseignementComponent
+    EnseignementComponent,
+    StatistiquesComponent
   ],
   imports: [
     BrowserModule,
@@ -58,8 +63,11 @@ import { EnseignementComponent } from './components/enseignement/enseignement/en
     HttpClientModule,
     FormsModule,
     CommonModule,
+    NgChartsModule,
     ReactiveFormsModule
   ],
+
+  
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
