@@ -21,9 +21,6 @@ export class SaisieNotesService {
     private tokenStorage: TokenStorageService
   ) {}
 
-  /* =========================
-     HEADERS
-     ========================= */
   private getHeaders(): { headers: HttpHeaders } {
     const token = this.tokenStorage.getAccessToken();
     return {
@@ -34,9 +31,7 @@ export class SaisieNotesService {
     };
   }
 
-  /* =========================
-     CONTEXTE ENSEIGNANT
-     ========================= */
+  /* ========================= CONTEXTE ENSEIGNANT ========================= */
   getMesClasses(): Observable<Classe[]> {
     return this.http.get<Classe[]>(
       `${this.API_BASE}/pedagogie/classes`,
@@ -58,37 +53,26 @@ export class SaisieNotesService {
     );
   }
 
-  /* =========================
-     RELEVÉS
-     ========================= */
-  enregistrerOuMettreAJourReleve(payload: SaisieNotes): Observable<void> {
-    return this.http.post<void>(
-      `${this.API_BASE}/ReleveNotes/releve`,
+  /* ========================= RELEVÉS ✅ NOUVELLE URL ========================= */
+  enregistrerOuMettreAJourReleve(payload: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.API_BASE}/releve`,  // ✅ Nouvelle URL
       payload,
       this.getHeaders()
     );
   }
 
-  chargerReleve(
-    classeId: number,
-    matiereId: number,
-    anneeAcademiqueId: number
-  ): Observable<SaisieNotes | null> {
-
-    const params = new HttpParams()
-      .set('classeId', classeId)
-      .set('matiereId', matiereId)
-      .set('anneeAcademiqueId', anneeAcademiqueId);
-
+  chargerReleve(classeId: number, matiereId: number, anneeAcademiqueId: number, semestreId: number): Observable<SaisieNotes | null> {
     return this.http.get<SaisieNotes | null>(
-      `${this.API_BASE}/ReleveNotes/charger`,
-      { ...this.getHeaders(), params }
+      `${this.API_BASE}/saisie-notes/classe/${classeId}/matiere/${matiereId}/annee/${anneeAcademiqueId}/semestre/${semestreId}`,  // ✅ Nouvelle URL
+      this.getHeaders()
     );
   }
+  getToutesLesNotes() {
+  return this.http.get<SaisieNotes[]>(`${this.API_BASE}/releve/toutes`);
+}
 
-  /* =========================
-     ANNÉES ACADÉMIQUES
-     ========================= */
+  /* ========================= ANNÉES ACADÉMIQUES ========================= */
   getAllAnneacademique(): Observable<AnneeAcademique[]> {
     return this.http.get<AnneeAcademique[]>(
       this.API_ANNEE,

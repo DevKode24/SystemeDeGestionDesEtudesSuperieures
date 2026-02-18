@@ -54,6 +54,7 @@ import { StatistiquesComponent } from './components/statistiques/statistiques.co
     EtudiantComponent,
     ClasseComponent,
     EnseignementComponent,
+    SaisieNoteComponent,
     StatistiquesComponent
   ],
   imports: [
@@ -63,8 +64,9 @@ import { StatistiquesComponent } from './components/statistiques/statistiques.co
     HttpClientModule,
     FormsModule,
     CommonModule,
-    NgChartsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgChartsModule
+    
   ],
 
   

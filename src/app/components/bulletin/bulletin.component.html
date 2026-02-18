@@ -1,1 +1,160 @@
-<p>bulletin works!</p>
+<div class="container mt-4">
+
+  <h3 class="mb-4">📘 Génération des bulletins</h3>
+
+  <!-- ========================= FILTRES ========================= -->
+
+  <div class="card p-3 shadow-sm mb-4">
+
+    <div class="row g-3">
+
+      <div class="col-md-4">
+        <label>Année académique</label>
+        <select class="form-select" [(ngModel)]="anneeId">
+          <option [ngValue]="undefined">-- Sélectionner --</option>
+          <option *ngFor="let a of annees" [ngValue]="a.id">
+            {{ a.libelle }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label>Classe</label>
+        <select class="form-select"
+                [(ngModel)]="classeId"
+                (change)="loadEtudiants()">
+          <option [ngValue]="undefined">-- Sélectionner --</option>
+          <option *ngFor="let c of classes" [ngValue]="c.id">
+            {{ c.code }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label>Étudiant (optionnel)</label>
+        <select class="form-select" [(ngModel)]="etudiantId">
+          <option [ngValue]="undefined">Tous les étudiants</option>
+          <option *ngFor="let e of etudiants" [ngValue]="e.id">
+            {{ e.nom }} {{ e.prenom }}
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="text-end mt-3">
+      <button class="btn btn-primary" (click)="generer()">
+        ⚙️ Générer
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ========================= LOADING ========================= -->
+
+  <div *ngIf="loading" class="text-center mt-5">
+    <div class="spinner-border text-primary"></div>
+  </div>
+
+  <!-- ========================= LISTE BULLETINS ========================= -->
+
+  <div *ngIf="bulletins.length > 0 && !loading">
+
+    <div *ngFor="let b of bulletins" class="card shadow mb-4 p-4">
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <strong>Étudiant :</strong>
+{{ b.etudiant?.nom }} {{ b.etudiant?.prenom }} <br>
+
+<strong>Classe :</strong>
+{{ b.classe?.code }} <br>
+
+<strong>Année :</strong>
+{{ b.anneeAcademique?.libelle }}
+
+        </div>
+        <div class="col-md-6 text-end">
+          <strong>Moyenne :</strong> {{ b.moyenneAnnuelle | number:'1.2-2' }} <br>
+          <strong>Rang :</strong> {{ b.rang }}<br>
+          <strong>Décision :</strong>
+          <span class="badge bg-success" *ngIf="b.decision==='ADMIS'">ADMIS</span>
+          <span class="badge bg-warning" *ngIf="b.decision==='AJOURNE'">AJOURNÉ</span>
+          <span class="badge bg-danger" *ngIf="b.decision==='REDOUBLE'">REDOUBLANT</span>
+        </div>
+      </div>
+
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Semestre</th>
+            <th>UE</th>
+            <th>Matière</th>
+            <th>Note</th>
+            <th>Coef</th>
+            <th>Note x Coef</th>
+            <th>Crédits</th>
+            <th>Session</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of b.lignesBulletin">
+          <td>{{ l.semestreId }}</td>
+<td>{{ getUeIntitule(l.matiereId) }}</td>
+<td>{{ getMatiereIntitule(l.matiereId) }}</td>
+
+<td>{{ l.noteFinale | number:'1.2-2' }}</td>
+<td>{{ l.coefficientMatiere | number:'1.2-2' }}</td>
+<td>{{ l.notePonderee | number:'1.2-2' }}</td>
+
+<td>{{ l.credits }}</td>
+<td>{{ l.session }}</td>
+
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ACTIONS -->
+
+      <div class="text-end mt-3">
+
+        <button class="btn btn-outline-primary me-2"
+                (click)="genererPDF(b)">
+          📄 PDF
+        </button>
+
+        <button class="btn btn-outline-warning me-2"
+                *ngIf="!b.verrouille"
+                (click)="verrouiller(b)">
+          🔒 Verrouiller
+        </button>
+
+        <button class="btn btn-outline-success me-2"
+                *ngIf="b.verrouille"
+                (click)="deverrouiller(b)">
+          🔓 Déverrouiller
+        </button>
+
+        <button class="btn btn-outline-danger"
+                (click)="supprimer(b)">
+          🗑 Supprimer
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================= MESSAGE ========================= -->
+
+  <div *ngIf="!loading && bulletins.length === 0"
+       class="alert alert-info text-center">
+    Aucun bulletin généré.
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger mt-4">
+    {{ error }}
+  </div>
+
+</div>

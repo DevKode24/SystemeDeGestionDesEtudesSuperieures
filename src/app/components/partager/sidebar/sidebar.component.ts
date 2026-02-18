@@ -54,7 +54,7 @@ export class SidebarComponent {
            { label: 'Gestion des enseignements', path: 'scolarite/enseignements', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Unité d\'enseignement', path: 'scolarite/ues', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Matière', path: 'scolarite/matieres', roles: [Role.Admin, Role.Scolarite] },
-          { label: 'Bulletin', path: '/login', roles: [Role.Admin, Role.Scolarite] },
+          { label: 'Bulletin', path: 'scolarite/bulletin', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Lister tous les Etudiants', path: '/login', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Dossier académique', path: '/login', roles: [Role.Admin, Role.Scolarite] }
 
@@ -63,6 +63,7 @@ export class SidebarComponent {
       {
         label: 'Enseignants',
         icon: 'bi-person-video3',
+        path: '/dashboard/enseignant',
         roles: [Role.Admin, Role.Enseignant],
         subMenus: [
           { label: 'Releve de note', path: 'enseignant/ReleveNotes', roles: [Role.Enseignant] },
@@ -82,14 +83,14 @@ export class SidebarComponent {
       },
       {
         label: 'Gestion des Notes',
+        path: '/dashboard/enseignant',
         icon: 'bi-journal-text',
         roles: [Role.Admin, Role.Etudiant, Role.Enseignant],
         subMenus: [
           { label: 'Enregistrement des notes', path: '/login', roles: [Role.Admin] },
           { label: 'Verrouillé notes', path: '/login', roles: [Role.Admin] },
-          { label: 'SM Générer bulletin', path: '/login', roles: [Role.Admin] },
           { label: 'SM Consulter notes', path: '/login', roles: [Role.Admin, Role.Etudiant] },
-          { label: 'Saisir notes', path: '/releve', roles: [Role.Admin, Role.Enseignant] },
+          { label: 'Saisir notes', path: 'enseignant/saisie', roles: [Role.Enseignant] },
           { label: 'Modifier notes', path: '/login', roles: [Role.Admin] }
         ]
       },

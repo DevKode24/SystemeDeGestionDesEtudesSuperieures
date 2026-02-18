@@ -10,6 +10,7 @@ export interface Matiere {
   // utilisés pour la saisie
   ueId?: number;
   enseignantId?: number | null;  // ✅ optionnel
+  semestreId?: number;
 
   // relations pour affichage
   ue?: Ue;

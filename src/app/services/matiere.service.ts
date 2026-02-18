@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Matiere } from '../models/matiere';
 import { TokenStorageService } from '../auth/token-storage.service';
 
@@ -16,86 +16,65 @@ export class MatiereService {
     private tokenStorage: TokenStorageService
   ) {}
 
-  /* ================= AUTH HEADERS ================= */
+  /* ==========================
+     HEADERS AUTH
+  ========================== */
   private getHeaders() {
     return {
       headers: this.tokenStorage.getAuthHeaders()
     };
   }
 
-  /* ==========================
-     CRÉATION
-     Enseignant optionnel
-  ========================== */
-  creer(m: Matiere): Observable<Matiere> {
-
-    const payload = {
-      code: m.code,
-      intitule: m.intitule,          // ✅ CORRIGÉ
-      coefficient: m.coefficient,
-      ueId: m.ueId,
-      enseignantId: m.enseignantId ?? null
-    };
-
-    return this.http
-      .post<any>(this.API_URL, payload, this.getHeaders())
-      .pipe(map(dto => this.mapToMatiere(dto)));
+ 
+  creer(payload: Matiere): Observable<Matiere> {
+    return this.http.post<Matiere>(
+      this.API_URL,
+      payload,
+      this.getHeaders()
+    );
   }
 
   /* ==========================
      MODIFICATION
   ========================== */
-  modifier(id: number, m: Matiere): Observable<Matiere> {
-
-    const payload = {
-      code: m.code,
-      intitule: m.intitule,          // ✅ CORRIGÉ
-      coefficient: m.coefficient,
-      ueId: m.ueId,
-      enseignantId: m.enseignantId ?? null
-    };
-
-    return this.http
-      .put<any>(`${this.API_URL}/${id}`, payload, this.getHeaders())
-      .pipe(map(dto => this.mapToMatiere(dto)));
+  modifier(id: number, payload: Matiere): Observable<Matiere> {
+    return this.http.put<Matiere>(
+      `${this.API_URL}/${id}`,
+      payload,
+      this.getHeaders()
+    );
   }
 
   /* ==========================
      CONSULTATION
   ========================== */
   getAll(): Observable<Matiere[]> {
-    return this.http
-      .get<any[]>(this.API_URL, this.getHeaders())
-      .pipe(map(data => data.map(dto => this.mapToMatiere(dto))));
+    return this.http.get<Matiere[]>(
+      this.API_URL,
+      this.getHeaders()
+    );
   }
 
   getByUE(ueId: number): Observable<Matiere[]> {
-    return this.http
-      .get<any[]>(`${this.API_URL}/ue/${ueId}`, this.getHeaders())
-      .pipe(map(data => data.map(dto => this.mapToMatiere(dto))));
+    return this.http.get<Matiere[]>(
+      `${this.API_URL}/ue/${ueId}`,
+      this.getHeaders()
+    );
   }
 
-  /* ================= SUPPRESSION ================= */
+  /* ==========================
+     SUPPRESSION
+  ========================== */
   supprimer(id: number): Observable<void> {
     return this.http.delete<void>(
       `${this.API_URL}/${id}`,
       this.getHeaders()
     );
   }
-
-  /* ==========================
-     🔧 MAPPER BACKEND → FRONT
-  ========================== */
-  private mapToMatiere(dto: any): Matiere {
-    return {
-      id: dto.id ?? dto.identifiant,
-      code: dto.code,
-      intitule: dto.intitule,        // ✅ PLUS DE titre
-      coefficient: dto.coefficient,
-      ueId: dto.ueId ?? dto.ue?.id,
-      enseignantId: dto.enseignantId ?? dto.enseignant?.id ?? null,
-      ue: dto.ue ?? null,
-      enseignant: dto.enseignant ?? null
-    };
-  }
+  getById(id: number): Observable<Matiere> {
+  return this.http.get<Matiere>(
+    `${this.API_URL}/${id}`,
+    this.getHeaders()
+  );
+}
 }

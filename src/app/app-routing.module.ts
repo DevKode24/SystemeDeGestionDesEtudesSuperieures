@@ -23,6 +23,8 @@ import { MatiereComponent } from './components/matiere/matiere/matiere.component
 import { UeComponent } from './components/ue/ue.component';
 import { EtudiantComponent } from './components/etudiant/etudiant.component';
 import { StatistiquesComponent } from './components/statistiques/statistiques.component';
+import { SaisieNoteComponent } from './components/enseignant/saisie-note/saisie-note.component';
+import { BulletinComponent } from './components/bulletin/bulletin.component';
 
 const routes: Routes = [
 
@@ -94,6 +96,10 @@ const routes: Routes = [
           {
             path: 'enseignant',
             component: EnseignantComponent
+          },
+          {
+            path: 'bulletin',
+            component: BulletinComponent
           }
         ]
       },
@@ -104,6 +110,7 @@ const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'ENSEIGNANT'] },
         children: [
+           { path: 'saisie', component: SaisieNoteComponent }
           // exemple futur
           // { path: 'ReleveNotes', component: ReleveNotesComponent }
         ]

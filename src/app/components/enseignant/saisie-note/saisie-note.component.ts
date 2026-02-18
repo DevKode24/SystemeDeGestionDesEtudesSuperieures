@@ -1,10 +1,7 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  FormArray
-} from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { distinctUntilChanged } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 import { Classe } from 'src/app/models/classe';
 import { Matiere } from 'src/app/models/matiere';
@@ -21,241 +18,256 @@ import { SaisieNotesService } from 'src/app/services/saisie-notes.service';
 })
 export class SaisieNoteComponent implements OnInit {
 
-  /* =========================
-     FORMULAIRE
-     ========================= */
   form!: FormGroup;
 
-  get lignesForm(): FormArray {
-    return this.form.get('lignes') as FormArray;
-  }
+  classes: Classe[] = [];
+  matieres: Matiere[] = [];
+  annees: AnneeAcademique[] = [];
 
-  /* =========================
-     STATE (Signals)
-     ========================= */
-  classes = signal<Classe[]>([]);
-  matieres = signal<Matiere[]>([]);
-  annees = signal<AnneeAcademique[]>([]);
-  lignes = signal<LigneNote[]>([]);
-  loading = signal(false);
+  lignes: LigneNote[] = [];
+  loading = false;
 
-  hasLignes = computed(() => this.lignes().length > 0);
+  currentPage = 1;
+  pageSize = 10;
 
   constructor(
     private fb: FormBuilder,
     private saisieNotesService: SaisieNotesService
   ) {}
 
-  /* =========================
-     INIT
-     ========================= */
   ngOnInit(): void {
+    this.initForm();
+    this.loadReferentiels();
+    this.listenChanges();
+  }
 
+  private initForm(): void {
     this.form = this.fb.group({
       classeId: [null, Validators.required],
       matiereId: [null, Validators.required],
       anneeAcademiqueId: [null, Validators.required],
+      semestreId: [{ value: null, disabled: true }, Validators.required],
       lignes: this.fb.array([])
     });
-
-    this.chargerClasses();
-    this.chargerAnnees();
-    this.ecouterChangements();
   }
 
-  /* =========================
-     CHARGEMENTS INITIAUX
-     ========================= */
-  private chargerClasses(): void {
-    this.saisieNotesService
-      .getMesClasses()
-      .subscribe(data => this.classes.set(data));
+  get lignesForm(): FormArray {
+    return this.form.get('lignes') as FormArray;
   }
 
-  private chargerAnnees(): void {
-    this.saisieNotesService
-      .getAllAnneacademique()
-      .subscribe(data => this.annees.set(data));
-  }
-
-  /* =========================
-     LISTENERS CIBLÉS (SAFE)
-     ========================= */
-  private ecouterChangements(): void {
-
-    // 🔹 Changement de classe
-    this.form.get('classeId')!.valueChanges.subscribe(classeId => {
-
-      this.resetTable();
-      this.matieres.set([]);
-      this.form.patchValue({ matiereId: null }, { emitEvent: false });
-
-      if (!classeId) return;
-
-      this.saisieNotesService
-        .getMesMatieresParClasse(classeId)
-        .subscribe(data => this.matieres.set(data));
-    });
-
-    // 🔹 Changement matière
-    this.form.get('matiereId')!.valueChanges.subscribe(() => {
-      this.tenterChargement();
-    });
-
-    // 🔹 Changement année académique
-    this.form.get('anneeAcademiqueId')!.valueChanges.subscribe(() => {
-      this.tenterChargement();
-    });
-  }
-
-  /* =========================
-     DÉCLENCHEUR CENTRAL
-     ========================= */
-  private tenterChargement(): void {
-
-    const classeId = this.form.get('classeId')!.value;
+  get semestre(): string {
     const matiereId = this.form.get('matiereId')!.value;
-    const anneeId = this.form.get('anneeAcademiqueId')!.value;
-
-    if (!classeId || !matiereId || !anneeId) {
-      return;
-    }
-
-    this.chargerReleveOuEtudiants(classeId, matiereId, anneeId);
+    const mat = this.matieres.find(m => m.id === matiereId);
+    return mat ? mat.semestreId?.toString() ?? '' : '';
   }
 
-  /* =========================
-     LOGIQUE MÉTIER
-     ========================= */
-  private chargerReleveOuEtudiants(
-    classeId: number,
-    matiereId: number,
-    anneeId: number
-  ): void {
+  totalPages(): number {
+    return Math.ceil(this.lignes.length / this.pageSize) || 1;
+  }
 
-    this.loading.set(true);
+  prevPage(event: Event): void {
+    event.preventDefault();
+    if (this.currentPage > 1) this.currentPage--;
+  }
 
-    this.saisieNotesService
-      .chargerReleve(classeId, matiereId, anneeId)
+  nextPage(event: Event): void {
+    event.preventDefault();
+    if (this.currentPage < this.totalPages()) this.currentPage++;
+  }
+
+  private loadReferentiels(): void {
+    forkJoin({
+      classes: this.saisieNotesService.getMesClasses(),
+      annees: this.saisieNotesService.getAllAnneacademique()
+    }).subscribe(res => {
+      this.classes = res.classes;
+      this.annees = res.annees;
+    });
+  }
+
+  private listenChanges(): void {
+    // 🔹 Changement de classe
+    this.form.get('classeId')!.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(classeId => {
+        this.resetTable();
+        this.matieres = [];
+        this.form.patchValue({ matiereId: null, semestreId: null }, { emitEvent: false });
+        if (!classeId) return;
+
+        this.saisieNotesService.getMesMatieresParClasse(classeId)
+          .subscribe(matieres => {
+            this.matieres = matieres;
+
+            // 🔹 Patch automatique du semestre si une matière est déjà sélectionnée
+            const matiereId = this.form.get('matiereId')!.value;
+            const mat = this.matieres.find(m => m.id === matiereId);
+            if (mat?.semestreId != null) {
+              this.form.get('semestreId')!.patchValue(mat.semestreId, { emitEvent: false });
+            }
+          });
+      });
+
+    // 🔹 Changement de matière
+    this.form.get('matiereId')!.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(matiereId => {
+        const matiere = this.matieres.find(m => m.id === matiereId);
+        if (matiere?.semestreId != null) {
+          // 🔹 On met à jour le semestreId du formulaire pour qu'il corresponde à la matière
+          this.form.get('semestreId')!.patchValue(matiere.semestreId, { emitEvent: false });
+        }
+      });
+
+    // 🔹 Sur tous les changements pertinents du formulaire
+    this.form.valueChanges
+      .pipe(distinctUntilChanged((prev, curr) =>
+        prev.matiereId === curr.matiereId &&
+        prev.semestreId === curr.semestreId &&
+        prev.anneeAcademiqueId === curr.anneeAcademiqueId
+      ))
+      .subscribe(() => this.verifierEtCharger());
+  }
+
+  private verifierEtCharger(): void {
+    const { classeId, matiereId, anneeAcademiqueId, semestreId } = this.form.getRawValue();
+    if (!classeId || !matiereId || !anneeAcademiqueId || !semestreId) return;
+    this.chargerReleveOuEtudiants(classeId, matiereId, anneeAcademiqueId, semestreId);
+  }
+
+  private chargerReleveOuEtudiants(classeId: number, matiereId: number, anneeId: number, semestreId: number): void {
+    this.loading = true;
+    this.saisieNotesService.getToutesLesNotes()
       .subscribe({
-        next: (releve: SaisieNotes | null) => {
+        next: (releves: SaisieNotes[]) => {
+          // 🔹 Filtrer uniquement la combinaison sélectionnée
+          const releve = releves.find(r =>
+            r.classeId === classeId &&
+            r.matiereId === matiereId &&
+            r.anneeAcademiqueId === anneeId &&
+            r.semestreId === semestreId
+          );
 
-          if (releve && releve.lignes && releve.lignes.length > 0) {
-  this.chargerEtudiantsAvecNotes(classeId, releve.lignes);
-}
- else {
-            // ✅ Aucun relevé → charger étudiants
+          if (releve?.lignes?.length) {
+            this.chargerEtudiantsAvecNotes(classeId, releve.lignes);
+          } else {
             this.chargerEtudiants(classeId);
           }
-
-          this.loading.set(false);
+          this.loading = false;
         },
         error: () => {
-          // 🔁 En cas d’erreur, on charge quand même les étudiants
           this.chargerEtudiants(classeId);
-          this.loading.set(false);
+          this.loading = false;
         }
       });
   }
-  private chargerEtudiantsAvecNotes(
-  classeId: number,
-  lignesReleve: LigneNote[]
-): void {
-
-  this.saisieNotesService
-    .getEtudiantsNoteDtoParClasse(classeId)
-    .subscribe(etudiants => {
-
-      const lignes: LigneNote[] = etudiants.map(e => {
-
-        const noteExistante = lignesReleve.find(
-          l => l.etudiantId === e.id
-        );
-
-        return {
-          etudiantId: e.id,
-          nomPrenom: `${e.nom} ${e.prenom}`,
-          noteCC: noteExistante?.noteCC ?? null,
-          noteDST: noteExistante?.noteDST ?? null,
-          noteSession: noteExistante?.noteSession ?? null,
-          valeur: noteExistante?.valeur ?? null
-        };
-      });
-
-      this.lignes.set(lignes);
-      this.construireFormArray(lignes);
-    });
-}
-
 
   private chargerEtudiants(classeId: number): void {
-
-    this.saisieNotesService
-      .getEtudiantsNoteDtoParClasse(classeId)
+    this.saisieNotesService.getEtudiantsNoteDtoParClasse(classeId)
       .subscribe(etudiants => {
-
-        const lignes: LigneNote[] = etudiants.map(e => ({
+        this.lignes = etudiants.map(e => ({
           etudiantId: e.id,
           nomPrenom: `${e.nom} ${e.prenom}`,
-          noteCC: null,
-          noteDST: null,
-          noteSession: null,
-          valeur: null
+          noteDevoir: null,
+          noteSessionOrdinaire: null,
+          noteSessionRattrapage: null,
+          noteFinale: null
         }));
-
-        this.lignes.set(lignes);
-        this.construireFormArray(lignes);
+        this.currentPage = 1;
+        this.construireFormArray();
       });
   }
 
-  /* =========================
-     FORM ARRAY
-     ========================= */
-  private construireFormArray(lignes: LigneNote[]): void {
+  private chargerEtudiantsAvecNotes(classeId: number, lignesReleve: LigneNote[]): void {
+    this.saisieNotesService.getEtudiantsNoteDtoParClasse(classeId)
+      .subscribe(etudiants => {
+        this.lignes = etudiants.map(e => {
+          const noteExistante = lignesReleve.find(l => l.etudiantId === e.id);
+          return {
+            etudiantId: e.id,
+            nomPrenom: `${e.nom} ${e.prenom}`,
+            noteDevoir: noteExistante?.noteDevoir ?? null,
+            noteSessionOrdinaire: noteExistante?.noteSessionOrdinaire ?? null,
+            noteSessionRattrapage: noteExistante?.noteSessionRattrapage ?? null,
+            noteFinale: noteExistante?.noteFinale ?? null
+          };
+        });
+        this.currentPage = 1;
+        this.construireFormArray();
+      });
+  }
 
+  private construireFormArray(): void {
     this.lignesForm.clear();
+    this.lignes.forEach((ligne, index) => {
+      const group = this.fb.group({
+        noteDevoir: [ligne.noteDevoir, [Validators.min(0), Validators.max(20)]],
+        noteSessionOrdinaire: [ligne.noteSessionOrdinaire, [Validators.min(0), Validators.max(20)]],
+        noteSessionRattrapage: [ligne.noteSessionRattrapage, [Validators.min(0), Validators.max(20)]]
+      });
 
-    lignes.forEach(ligne => {
-      this.lignesForm.push(
-        this.fb.group({
-          noteCC: [ligne.noteCC, [Validators.min(0), Validators.max(20)]],
-          noteDST: [ligne.noteDST, [Validators.min(0), Validators.max(20)]],
-          noteSession: [ligne.noteSession, [Validators.min(0), Validators.max(20)]]
-        })
-      );
+      // 🔹 Calcul automatique de la note finale
+      group.valueChanges.subscribe(val => {
+        this.lignes[index].noteFinale = this.calculerNoteFinale(
+          val.noteDevoir ?? null,
+          val.noteSessionOrdinaire ?? null,
+          val.noteSessionRattrapage ?? null
+        );
+      });
+
+      this.lignesForm.push(group);
     });
+  }
+
+  private calculerNoteFinale(noteDevoir: number | null, noteSO: number | null, noteSR: number | null): number | null {
+    const so = noteSO ?? 0;
+    const sr = noteSR ?? 0;
+    const devoir = noteDevoir ?? 0;
+
+    let finale = devoir + Math.max(so, sr);
+    if (finale === 0) return null;
+    return Math.min(finale, 20);
   }
 
   private resetTable(): void {
-    this.lignes.set([]);
+    this.lignes = [];
     this.lignesForm.clear();
+    this.currentPage = 1;
   }
 
-  /* =========================
-     ACTIONS
-     ========================= */
   enregistrer(): void {
+    if (this.form.invalid || this.lignes.length === 0) {
+      alert('⚠️ Veuillez remplir les notes avant d\'enregistrer');
+      return;
+    }
 
+    const raw = this.form.getRawValue();
     const payload: SaisieNotes = {
-      classeId: this.form.value.classeId,
-      matiereId: this.form.value.matiereId,
-      anneeAcademiqueId: this.form.value.anneeAcademiqueId,
-      lignes: this.lignes().map((l, i) => ({
+      classeId: raw.classeId,
+      matiereId: raw.matiereId,
+      anneeAcademiqueId: raw.anneeAcademiqueId,
+      semestreId: raw.semestreId,
+      lignes: this.lignes.map((l, i) => ({
         etudiantId: l.etudiantId,
-        nomPrenom: l.nomPrenom,
-        ...this.lignesForm.at(i).value
+        noteDevoir: this.lignesForm.at(i).value.noteDevoir ?? null,
+        noteSessionOrdinaire: this.lignesForm.at(i).value.noteSessionOrdinaire ?? null,
+        noteSessionRattrapage: this.lignesForm.at(i).value.noteSessionRattrapage ?? null
       }))
     };
 
-    this.saisieNotesService
-      .enregistrerOuMettreAJourReleve(payload)
+    this.saisieNotesService.enregistrerOuMettreAJourReleve(payload)
       .subscribe({
-        next: () => console.log('✅ Relevé enregistré'),
-        error: err => console.error('❌ Erreur enregistrement', err)
+        next: () => {
+          alert('✅ Notes enregistrées avec succès !');
+          this.verifierEtCharger();
+        },
+        error: err => {
+          alert('❌ Erreur: ' + (err.error?.message || 'Échec enregistrement'));
+        }
       });
   }
 
   imprimer(): void {
-    console.log('🖨️ Impression du relevé');
+    window.print();
   }
 }

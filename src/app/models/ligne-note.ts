@@ -7,21 +7,23 @@
  */
 export interface LigneNote {
 
-  /** Identifiant unique de l’étudiant (clé métier) */
+  /* =========================
+     IDENTITÉ
+     ========================= */
   etudiantId: number;
-
-  /** Nom complet de l’étudiant (UI uniquement) */
   nomPrenom?: string;
 
-  /** Note de contrôle continu */
-  noteCC?: number | null;
+  /* =========================
+     NOTES BACKEND
+     ========================= */
 
-  /** Note de devoir surveillé */
-  noteDST?: number | null;
+  noteDevoir?: number | null;
+  noteSessionOrdinaire?: number | null;
+  noteSessionRattrapage?: number | null;
 
-  /** Note de session (examen ou rattrapage) */
-  noteSession?: number | null;
+  /* =========================
+     CALCULÉ
+     ========================= */
 
-  /** Note finale calculée (backend uniquement) */
-  valeur?: number | null;
+  noteFinale?: number | null;
 }

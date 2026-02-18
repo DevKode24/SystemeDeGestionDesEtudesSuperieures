@@ -36,4 +36,11 @@ export class EtudiantService {
   supprimer(id: number): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}`, this.getHeaders());
   }
+  getByClasse(classeId: number): Observable<Etudiant[]> {
+  return this.http.get<Etudiant[]>(
+    `${this.API_URL}/classe/${classeId}`,
+    this.getHeaders()
+  );
+}
+
 }

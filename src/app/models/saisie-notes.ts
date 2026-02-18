@@ -1,23 +1,29 @@
 import { LigneNote } from './ligne-note';
+import { Classe } from './classe';
+import { Matiere } from './matiere';
+import { Enseignant } from './enseignant';
+import { AnneeAcademique } from './annee-academique';
 
 /**
- * Données envoyées par l’enseignant
- * pour créer ou mettre à jour un relevé
+ * Saisie des notes
+ * - IDs → utilisés pour POST / PUT
+ * - Objets → utilisés pour affichage
  */
 export interface SaisieNotes {
 
-  /** Déduit du token côté backend */
+  id?: number;
+
   enseignantId?: number;
-
-  /** Classe concernée */
   classeId: number;
-
-  /** Matière concernée */
   matiereId: number;
-
-  /** Année académique */
   anneeAcademiqueId: number;
+  semestreId?: number;
 
-  /** Lignes de notes saisies */
+  enseignant?: Enseignant;
+  classe?: Classe;
+  matiere?: Matiere;
+  anneeAcademique?: AnneeAcademique;
+
   lignes: LigneNote[];
 }
+
