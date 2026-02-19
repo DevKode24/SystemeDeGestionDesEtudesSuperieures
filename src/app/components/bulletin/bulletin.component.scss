@@ -1,0 +1,110 @@
+.bulletin-wrapper {
+  background: #fff;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  border-radius: 18px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.bulletin-wrapper.hover-shadow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 35px 70px rgba(0,0,0,0.12);
+}
+
+.bulletin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-left, .header-right {
+  width: 30%;
+  font-size: 0.9rem;
+}
+
+.header-center {
+  width: 30%;
+  text-align: center;
+}
+
+.logo {
+  width: 80px;
+}
+
+.bulletin-title {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.student-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.photo-box {
+  width: 20%;
+  text-align: center;
+}
+
+.photo-placeholder {
+  width: 120px;
+  height: 140px;
+  border: 2px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 2rem;
+  color: #9ca3af;
+}
+
+.student-info,
+.academic-info {
+  width: 35%;
+}
+
+.bulletin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.bulletin-table th {
+  background: linear-gradient(120deg, #3b82f6, #6366f1);
+  color: white;
+  padding: 0.8rem;
+}
+
+.bulletin-table td {
+  border: 1px solid #ddd;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.sem-row {
+  background: #eef2ff;
+  font-weight: bold;
+}
+
+.bilan-section {
+  display: flex;
+  justify-content: space-between;
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 14px;
+  font-size: 0.95rem;
+}
+
+.signature {
+  text-align: right;
+  margin-top: 2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.alert-info i {
+  font-size: 1.2rem;
+}

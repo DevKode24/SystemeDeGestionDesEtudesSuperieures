@@ -13,11 +13,10 @@ import { Ue } from 'src/app/models/ue';
 import { BulletinService } from 'src/app/services/bulletin.service';
 import { ClasseService } from 'src/app/services/classe.service';
 import { EtudiantService } from 'src/app/services/etudiant.service';
-import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service';
 import { MatiereService } from 'src/app/services/matiere.service';
 import { SemestreService } from 'src/app/services/semestre.service';
 import { UeService } from 'src/app/services/ue.service';
-import { formatDate } from '@angular/common';
+import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service';
 
 @Component({
   selector: 'app-bulletin',
@@ -26,10 +25,6 @@ import { formatDate } from '@angular/common';
 })
 export class BulletinComponent implements OnInit {
 
-  anneeId?: number;
-  classeId?: number;
-  etudiantId?: number;
-
   annees: AnneeAcademique[] = [];
   classes: Classe[] = [];
   etudiants: Etudiant[] = [];
@@ -37,304 +32,198 @@ export class BulletinComponent implements OnInit {
   semestres: Semestre[] = [];
   ues: Ue[] = [];
 
-  bulletins: Bulletin[] = [];
+  bulletins: any[] = [];
+
+  selectedClasseId!: number;
+  selectedAnneeId!: number;
+  selectedEtudiantId!: number;
 
   loading = false;
-  error = '';
+  message = '';
+  today = new Date();
 
   constructor(
-    private readonly bulletinService: BulletinService,
-    private readonly classeService: ClasseService,
-    private readonly etudiantService: EtudiantService,
-    private readonly anneeService: AnneeAcademiqueService,
-    private readonly matiereService: MatiereService,
-    private readonly semestreService: SemestreService,
-    private readonly ueService: UeService
+    private bulletinService: BulletinService,
+    private classeService: ClasseService,
+    private etudiantService: EtudiantService,
+    private anneeService: AnneeAcademiqueService,
+    private matiereService: MatiereService,
+    private semestreService: SemestreService,
+    private ueService: UeService
   ) {}
 
   ngOnInit(): void {
-    this.loadAnnees();
-    this.loadClasses();
-    this.loadMatieres();
-    this.loadSemestres();
-    this.loadUes();
+    this.loadInitialData();
   }
 
-  /* ========================= LOAD DATA ========================= */
-
-  loadAnnees(): void {
-    this.anneeService.getAll().subscribe(data => this.annees = data);
+  loadInitialData() {
+    this.anneeService.getAll().subscribe(d => this.annees = d);
+    this.classeService.getAll().subscribe(d => this.classes = d);
+    this.matiereService.getAll().subscribe(d => this.matieres = d);
+    this.semestreService.getAll().subscribe(d => this.semestres = d);
+    this.ueService.getAll().subscribe(d => this.ues = d);
   }
 
-  loadClasses(): void {
-    this.classeService.getAll().subscribe(data => this.classes = data);
+  onClasseChange() {
+    if (!this.selectedClasseId) return;
+    this.etudiantService.getByClasse(this.selectedClasseId)
+      .subscribe(d => this.etudiants = d);
   }
 
-  loadMatieres(): void {
-    this.matiereService.getAll().subscribe(data => this.matieres = data);
-  }
-
-  loadSemestres(): void {
-    this.semestreService.getAll().subscribe(data => this.semestres = data);
-  }
-
-  loadUes(): void {
-    this.ueService.getAll().subscribe(data => this.ues = data);
-  }
-
-  loadEtudiants(): void {
-    if (!this.classeId) {
-      this.etudiants = [];
+  chargerBulletins() {
+    if (!this.selectedClasseId || !this.selectedAnneeId) {
+      this.message = "Veuillez sélectionner une classe et une année";
       return;
     }
-    this.etudiantService.getByClasse(this.classeId)
-      .subscribe(data => this.etudiants = data);
-  }
-
-  /* ========================= FIND METHODS (100% INDEPENDANT) ========================= */
-
-  getEtudiantNom(id?: number): string {
-    const e = this.etudiants.find(x => x.id === id);
-    return e ? `${e.nom} ${e.prenom}` : '';
-  }
-
-  getClasseCode(id?: number): string {
-    const c = this.classes.find(x => x.id === id);
-    return c ? c.code : '';
-  }
-
-  getAnneeLibelle(id?: number): string {
-    const a = this.annees.find(x => x.id === id);
-    return a ? a.libelle : '';
-  }
-
-  getMatiereIntitule(id?: number): string {
-    const m = this.matieres.find(x => x.id === id);
-    return m ? m.intitule : '';
-  }
-
-  getUeIntitule(id?: number): string {
-    const ue = this.ues.find(x => x.id === id);
-    return ue ? ue.intitule : '';
-  }
-
-  getSemestreNumero(id?: number): string {
-    const s = this.semestres.find(x => x.id === id);
-    return s?.numero ? `S${s.numero}` : '';
-  }
-
-  /* ========================= GENERATION ========================= */
-
-  generer(): void {
-
-    if (!this.anneeId || !this.classeId) {
-      this.error = 'Veuillez sélectionner année et classe';
-      return;
-    }
-
     this.loading = true;
-
-    const action = this.etudiantId
-      ? this.bulletinService.genererBulletin(this.etudiantId, this.anneeId)
-      : this.bulletinService.genererBulletinsClasse(this.classeId, this.anneeId);
-
-    action.subscribe({
-      next: () => this.listerBulletins(),
-      error: () => {
-        this.error = 'Erreur génération';
-        this.loading = false;
-      }
-    });
-  }
-
-  listerBulletins(): void {
+    this.message = '';
     this.bulletinService
-      .getByClasseAndAnnee(this.classeId!, this.anneeId!)
+      .getByClasseAndAnnee(this.selectedClasseId, this.selectedAnneeId)
       .subscribe({
-        next: data => {
-          this.bulletins = data;
+        next: (data) => {
+          this.bulletins = data.map(b => ({
+            ...b,
+            semestresGroupes: this.regrouperParSemestre(b)
+          }));
           this.loading = false;
         },
-        error: () => this.loading = false
+        error: () => {
+          this.loading = false;
+          this.message = "Erreur lors du chargement";
+        }
       });
   }
 
-  /* ========================= ACTIONS ========================= */
-
-  verrouiller(b: Bulletin): void {
-    if (!b.id) return;
-    this.bulletinService.verrouiller(b.id)
-      .subscribe(() => b.verrouille = true);
+  genererClasse() {
+    if (!this.selectedClasseId || !this.selectedAnneeId) return;
+    this.bulletinService
+      .genererBulletinsClasse(this.selectedClasseId, this.selectedAnneeId)
+      .subscribe(() => this.chargerBulletins());
   }
 
-  deverrouiller(b: Bulletin): void {
-    if (!b.id) return;
-    this.bulletinService.deverrouiller(b.id)
-      .subscribe(() => b.verrouille = false);
+  genererEtudiant() {
+    if (!this.selectedEtudiantId || !this.selectedAnneeId) return;
+    this.bulletinService
+      .genererBulletin(this.selectedEtudiantId, this.selectedAnneeId)
+      .subscribe(() => this.chargerBulletins());
   }
 
-  supprimer(b: Bulletin): void {
-    if (!b.id || !confirm('Supprimer ce bulletin ?')) return;
-    this.bulletinService.supprimer(b.id)
-      .subscribe(() => {
-        this.bulletins = this.bulletins.filter(x => x.id !== b.id);
-      });
-  }
-
-  /* ========================= PDF ========================= */
-
-genererPDF(b: Bulletin): void {
-
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  const etudiant = this.etudiants.find(e => e.id === b.etudiantId);
-  const classe = this.classes.find(c => c.id === b.classeId);
-
-  /* ===================== ENTÊTE ===================== */
-
-  // Gauche
-  doc.setFontSize(11);
-  doc.text('UNIVERSITÉ OMAR BONGO', 14, 15);
-  doc.text('Faculté / École XYZ', 14, 22);
-
-  // Centre (Logo placeholder)
-  doc.setFontSize(10);
-  doc.text('[LOGO]', pageWidth / 2, 18, { align: 'center' });
-
-  // Droite
-  doc.text('RÉPUBLIQUE GABONAISE', pageWidth - 14, 15, { align: 'right' });
-  doc.text('Union – Travail – Justice', pageWidth - 14, 22, { align: 'right' });
-
-  /* ===================== TITRE ===================== */
-
-  doc.setFontSize(16);
-  doc.text('BULLETIN DE NOTES', pageWidth / 2, 35, { align: 'center' });
-
-  doc.setFontSize(11);
-  doc.text(
-    `Année Académique : ${this.getAnneeLibelle(b.anneeAcademiqueId)}`,
-    pageWidth / 2,
-    43,
-    { align: 'center' }
-  );
-
-  /* ===================== INFOS ETUDIANT ===================== */
-
-  let y = 55;
-
-  // Cadre photo
-  doc.rect(14, y, 30, 35);
-  doc.setFontSize(9);
-  doc.text('PHOTO', 29, y + 20, { align: 'center' });
-
-  // Infos gauche
-  doc.setFontSize(10);
-  doc.text(`Matricule : ${etudiant?.matricule ?? ''}`, 14, y + 42);
-  doc.text(`Nom : ${etudiant?.nom ?? ''}`, 14, y + 48);
-  doc.text(`Prénom : ${etudiant?.prenom ?? ''}`, 14, y + 54);
-
-  // Infos centre
-  doc.text(`Sexe : ${etudiant?.sexe ?? ''}`, 80, y + 42);
-  doc.text(
-    `Date Naissance : ${
-      etudiant?.dateNaissance
-        ? formatDate(etudiant.dateNaissance, 'dd/MM/yyyy', 'en')
-        : ''
-    }`,
-    80,
-    y + 48
-  );
-  doc.text(`Lieu Naissance : ${etudiant?.lieuNaissance ?? ''}`, 80, y + 54);
-
-  // Infos droite
-  doc.text(`Filière : ${etudiant?.filiereId ?? ''}`, pageWidth - 14, y + 42, { align: 'right' });
-  doc.text(`Niveau : ${etudiant?.niveauId?? ''}`, pageWidth - 14, y + 48, { align: 'right' });
-  doc.text(`Classe : ${classe?.code ?? ''}`, pageWidth - 14, y + 54, { align: 'right' });
-
-  /* ===================== TABLEAU ===================== */
-
-  
-// Regrouper les lignes par semestre
-const lignesParSemestre = b.lignesBulletin?.reduce((acc, ligne) => {
-  const sem = this.getSemestreNumero(ligne.semestreId);
-  if (!acc[sem]) acc[sem] = [];
-  acc[sem].push(ligne);
-  return acc;
-}, {} as { [semestre: string]: typeof b.lignesBulletin }) ?? {};
-
-// Construire tableData avec lignes de séparation par semestre
-const tableData: any[] = [];
-
-Object.keys(lignesParSemestre)
-  .sort((a, b) => parseInt(a) - parseInt(b)) // Tri par numéro de semestre
-  .forEach(semestre => {
-    // Ligne "Séparateur" pour le semestre
-    tableData.push([
-      { content: `Semestre ${semestre}`, colSpan: 8, styles: { halign: 'center', fillColor: [220, 220, 220], fontStyle: 'bold' } }
-    ]);
-
-    // Ajouter les lignes de ce semestre
-    lignesParSemestre[semestre].forEach(l => {
-      tableData.push([
-        semestre,
-        this.getUeIntitule(l.ueId),
-        this.getMatiereIntitule(l.matiereId),
-        l.credits,
-        l.noteFinale?.toFixed(2),
-        l.coefficientMatiere,
-        l.notePonderee?.toFixed(2),
-        l.session
-      ]);
+  regrouperParSemestre(b: Bulletin) {
+    if (!b?.lignesBulletin?.length) return [];
+    const map: Record<number, { numero: number; lignes: any[] }> = {};
+    b.lignesBulletin.forEach(l => {
+      const semestre = this.semestres.find(s => s.id === l.semestreId);
+      if (!semestre || semestre.numero == null) return;
+      if (!map[semestre.numero]) map[semestre.numero] = { numero: semestre.numero, lignes: [] };
+      map[semestre.numero].lignes.push(l);
     });
-  });
+    return Object.values(map).sort((a, b) => a.numero - b.numero);
+  }
 
-autoTable(doc, {
-  startY: y + 50,
-  head: [['Sem','UE','Matière','Cr','Note','Coef','Note x Coef','Session']],
-  body: tableData,
-  styles: { fontSize: 9 }
-});
+  getEtudiant(id?: number) {
+    return this.etudiants.find(e => e.id === id);
+  }
 
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  getClasse(id?: number) {
+    return this.classes.find(c => c.id === id);
+  }
 
-  /* ===================== SECTION BILAN ===================== */
+  getAnneeLibelle(id?: number) {
+    return this.annees.find(a => a.id === id)?.libelle ?? '';
+  }
 
-  doc.setFontSize(11);
-  doc.text('BILAN ANNUEL', pageWidth / 2, finalY, { align: 'center' });
+  getMatiereIntitule(id?: number) {
+    return this.matieres.find(m => m.id === id)?.intitule ?? '';
+  }
 
-  const recapY = finalY + 10;
+  getUeIntitule(id?: number) {
+    return this.ues.find(u => u.id === id)?.intitule ?? '';
+  }
 
-  // Gauche
-  doc.text(`UE validées : ${b.rang ?? 0}`, 14, recapY);
-  doc.text(`UE cumulées : ${b.rang ?? 0}`, 14, recapY + 7);
-  doc.text(`% Crédits requis : ${b.rang ?? 0}%`, 14, recapY + 14);
+  /* ====================== PDF OFFICIEL ====================== */
+  genererPDF(b: any) {
+    const doc = new jsPDF();
+    const width = doc.internal.pageSize.getWidth();
+    const etu = this.getEtudiant(b.etudiantId);
+    const classe = this.getClasse(b.classeId);
 
-  // Centre
-  doc.text(`Crédits obtenus : ${b.rang ?? 0}`, pageWidth / 2, recapY, { align: 'center' });
-  doc.text(`Total crédits cumulés : ${b.totalCreditsRequis ?? 0}`, pageWidth / 2, recapY + 7, { align: 'center' });
-  doc.text(`% Crédits cumulés : ${b.totalCreditsRequis ?? 0}%`, pageWidth / 2, recapY + 14, { align: 'center' });
+    // HEADER
+    doc.setFontSize(10);
+    doc.text("Université XYZ", 14, 10);
+    doc.text("RÉPUBLIQUE GABONAISE", width - 14, 10, { align: 'right' });
+    doc.text("Union - Travail - Justice", width - 14, 15, { align: 'right' });
+    doc.addImage("assets/logo.png", "PNG", width/2 - 15, 5, 30, 30);
 
-  // Droite
-  doc.text(`Moyenne : ${b.moyenneAnnuelle?.toFixed(2)}`, pageWidth - 14, recapY, { align: 'right' });
-  doc.text(`Grade : ${b.mention ?? ''}`, pageWidth - 14, recapY + 7, { align: 'right' });
-  doc.text(`Décision : ${b.decision ?? ''}`, pageWidth - 14, recapY + 14, { align: 'right' });
+    // TITRE
+    doc.setFontSize(14);
+    doc.text("BULLETIN DE NOTES", width/2, 40, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Année Académique: ${this.getAnneeLibelle(b.anneeAcademiqueId)}`, width/2, 46, { align: 'center' });
 
-  /* ===================== SIGNATURE ===================== */
+    // PHOTO & INFO ETUDIANT
+    doc.rect(14, 50, 30, 35); // cadre photo
+    doc.text("Photo", 16, 68);
+    doc.text(`Matricule: ${etu?.matricule}`, 14, 90);
 
-  const today = new Date();
-  const signatureY = recapY + 30;
+    doc.text(`Nom: ${etu?.nom}`, 50, 55);
+    doc.text(`Prénom: ${etu?.prenom}`, 50, 60);
+    doc.text(`Sexe: ${etu?.sexe}`, 50, 65);
+    doc.text(`Date Naissance: ${etu?.dateNaissance}`, 50, 70);
+    doc.text(`Lieu Naissance: ${etu?.lieuNaissance}`, 50, 75);
 
-  doc.text(
-    `Fait à Libreville, le ${formatDate(today, 'dd/MM/yyyy', 'en')}`,
-    pageWidth - 14,
-    signatureY,
-    { align: 'right' }
-  );
+    doc.text(`Filière: ${classe?.filiere}`, width-60, 55);
+    doc.text(`Niveau: ${classe?.niveau}`, width-60, 60);
+    doc.text(`Classe: ${classe?.code}`, width-60, 65);
 
-  /* ===================== SAVE ===================== */
+    // TABLEAU
+    const tableData: any[] = [];
+    b.semestresGroupes.forEach((sem: any) => {
+      tableData.push([{
+        content: `Semestre ${sem.numero}`,
+        colSpan: 8,
+        styles: { halign: 'center', fontStyle: 'bold', fillColor: [220,220,220] }
+      }]);
+      sem.lignes.forEach((l: any) => {
+        tableData.push([
+          `S${sem.numero}`,
+          this.getUeIntitule(l.ueId),
+          this.getMatiereIntitule(l.matiereId),
+          l.credits,
+          l.noteFinale?.toFixed(2),
+          l.coefficientMatiere,
+          l.notePonderee?.toFixed(2),
+          l.session
+        ]);
+      });
+    });
 
-  doc.save(`Bulletin_${etudiant?.nom}_${etudiant?.prenom}.pdf`);
-}
+    autoTable(doc, {
+      startY: 95,
+      head: [['Sem','UE','Matière','Cr','Note','Coef','Note x Coef','Session']],
+      body: tableData,
+      styles: { fontSize: 9 }
+    });
 
+    // BILAN
+    const yBilan = (doc as any).lastAutoTable.finalY + 5;
+    const colWidth = width/3 - 10;
+
+    doc.text(`UE validées: ${b.ueValidees}`, 14, yBilan);
+    doc.text(`UE cumulées: ${b.ueCumulees}`, 14, yBilan+6);
+    doc.text(`% Crédit requis: ${b.pourcentageCreditRequis}%`, 14, yBilan+12);
+
+    doc.text(`Crédits obtenus: ${b.creditsObtenus}`, width/3+5, yBilan);
+    doc.text(`Total crédits cumulés: ${b.totalCreditsCumules}`, width/3+5, yBilan+6);
+    doc.text(`% Crédit cumulé: ${b.pourcentageCreditCumule}%`, width/3+5, yBilan+12);
+
+    doc.text(`Moyenne: ${b.moyenneAnnuelle?.toFixed(2)}`, 2*width/3+5, yBilan);
+    doc.text(`Grade: ${b.grade}`, 2*width/3+5, yBilan+6);
+    doc.text(`Décision: ${b.decisionConseil}`, 2*width/3+5, yBilan+12);
+
+    // SIGNATURE
+    doc.text(`Fait à Libreville, le ${this.today.toLocaleDateString()}`, 14, yBilan+25);
+    doc.text("Le Président du Jury", width-60, yBilan+25);
+
+    doc.save(`Bulletin_${etu?.nom}.pdf`);
+  }
 }

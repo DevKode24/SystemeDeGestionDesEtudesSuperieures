@@ -1,160 +1,161 @@
 <div class="container mt-4">
 
-  <h3 class="mb-4">📘 Génération des bulletins</h3>
+  <h2 class="mb-4 text-primary fw-bold d-flex align-items-center">
+    <i class="bi bi-journal-text me-2"></i> Gestion des Bulletins
+  </h2>
 
-  <!-- ========================= FILTRES ========================= -->
-
-  <div class="card p-3 shadow-sm mb-4">
-
+  <!-- FILTRES -->
+  <div class="card shadow-sm p-4 mb-4">
     <div class="row g-3">
-
       <div class="col-md-4">
-        <label>Année académique</label>
-        <select class="form-select" [(ngModel)]="anneeId">
-          <option [ngValue]="undefined">-- Sélectionner --</option>
-          <option *ngFor="let a of annees" [ngValue]="a.id">
-            {{ a.libelle }}
-          </option>
+        <label class="fw-bold"><i class="bi bi-calendar-event me-1"></i> Année académique</label>
+        <select class="form-select" [(ngModel)]="selectedAnneeId">
+          <option value="">-- Sélectionner --</option>
+          <option *ngFor="let a of annees" [value]="a.id">{{ a.libelle }}</option>
         </select>
       </div>
-
       <div class="col-md-4">
-        <label>Classe</label>
-        <select class="form-select"
-                [(ngModel)]="classeId"
-                (change)="loadEtudiants()">
-          <option [ngValue]="undefined">-- Sélectionner --</option>
-          <option *ngFor="let c of classes" [ngValue]="c.id">
-            {{ c.code }}
-          </option>
+        <label class="fw-bold"><i class="bi bi-building me-1"></i> Classe</label>
+        <select class="form-select" [(ngModel)]="selectedClasseId" (change)="onClasseChange()">
+          <option value="">-- Sélectionner --</option>
+          <option *ngFor="let c of classes" [value]="c.id">{{ c.code }}</option>
         </select>
       </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary me-2" (click)="chargerBulletins()">
+          <i class="bi bi-eye me-1"></i> Afficher
+        </button>
+        <button class="btn btn-success" (click)="genererClasse()">
+          <i class="bi bi-file-earmark-plus me-1"></i> Générer Classe
+        </button>
+      </div>
+    </div>
+  </div>
 
-      <div class="col-md-4">
-        <label>Étudiant (optionnel)</label>
-        <select class="form-select" [(ngModel)]="etudiantId">
-          <option [ngValue]="undefined">Tous les étudiants</option>
-          <option *ngFor="let e of etudiants" [ngValue]="e.id">
-            {{ e.nom }} {{ e.prenom }}
-          </option>
+  <!-- GENERATION INDIVIDUELLE -->
+  <div class="card shadow-sm p-4 mb-4">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="fw-bold"><i class="bi bi-person-badge me-1"></i> Étudiant</label>
+        <select class="form-select" [(ngModel)]="selectedEtudiantId">
+          <option value="">-- Sélectionner --</option>
+          <option *ngFor="let e of etudiants" [value]="e.id">{{ e.nom }} {{ e.prenom }}</option>
         </select>
       </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button class="btn btn-warning w-100" (click)="genererEtudiant()">
+          <i class="bi bi-file-earmark-person me-1"></i> Générer Étudiant
+        </button>
+      </div>
+    </div>
+  </div>
 
+  <!-- MESSAGE -->
+  <div *ngIf="message" class="alert alert-info d-flex align-items-center">
+    <i class="bi bi-info-circle me-2"></i>{{ message }}
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="text-center my-4">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+
+  <!-- BULLETINS -->
+  <div *ngFor="let b of bulletins" class="bulletin-wrapper hover-shadow p-4 mb-5">
+
+    <!-- HEADER -->
+    <div class="bulletin-header mb-3">
+      <div class="header-left">
+        <i class="bi bi-building me-1"></i> Université XYZ<br>
+        Faculté des Sciences<br>
+        BP 1234 Libreville
+      </div>
+      <div class="header-center">
+        <img src="assets/logo.png" class="logo" alt="Logo">
+      </div>
+      <div class="header-right text-end">
+        <i class="bi bi-flag me-1"></i> RÉPUBLIQUE GABONAISE<br>
+        Union - Travail - Justice
+      </div>
+    </div>
+
+    <!-- TITRE -->
+    <div class="bulletin-title mb-4">
+      <h3><i class="bi bi-journal-text me-1"></i> BULLETIN DE NOTES</h3>
+      <small><i class="bi bi-calendar me-1"></i>{{ getAnneeLibelle(b.anneeAcademiqueId) }}</small>
+    </div>
+
+    <!-- ETUDIANT -->
+    <div class="student-section mb-4">
+      <div class="photo-box me-3">
+        <div class="photo-placeholder border p-3 text-center">
+          <i class="bi bi-person-circle fs-1 text-secondary"></i>
+        </div>
+        <small><i class="bi bi-card-text me-1"></i> Matricule: {{ getEtudiant(b.etudiantId)?.matricule }}</small>
+      </div>
+      <div class="student-info me-3">
+        <p><i class="bi bi-person me-1"></i><strong>Nom:</strong> {{ getEtudiant(b.etudiantId)?.nom }}</p>
+        <p><i class="bi bi-person me-1"></i><strong>Prénom:</strong> {{ getEtudiant(b.etudiantId)?.prenom }}</p>
+        <p><i class="bi bi-gender-ambiguous me-1"></i><strong>Sexe:</strong> {{ getEtudiant(b.etudiantId)?.sexe }}</p>
+        <p><i class="bi bi-calendar me-1"></i><strong>Date Naissance:</strong> {{ getEtudiant(b.etudiantId)?.dateNaissance }}</p>
+        <p><i class="bi bi-geo-alt me-1"></i><strong>Lieu Naissance:</strong> {{ getEtudiant(b.etudiantId)?.lieuNaissance }}</p>
+      </div>
+      <div class="academic-info">
+        <p><i class="bi bi-book me-1"></i><strong>Filière:</strong> {{ getClasse(b.classeId)?.filiere }}</p>
+        <p><i class="bi bi-layers me-1"></i><strong>Niveau:</strong> {{ getClasse(b.classeId)?.niveau }}</p>
+        <p><i class="bi bi-diagram-3 me-1"></i><strong>Classe:</strong> {{ getClasse(b.classeId)?.code }}</p>
+      </div>
+    </div>
+
+    <!-- TABLEAU -->
+    <table class="table bulletin-table">
+      <thead>
+        <tr>
+          <th>Sem</th><th>UE</th><th>Matière</th><th>Cr</th>
+          <th>Note</th><th>Coef</th><th>Note x Coef</th><th>Session</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let sem of b.semestresGroupes">
+          <tr class="sem-row"><td colspan="8"><i class="bi bi-grid-1x2 me-1"></i> Semestre {{ sem.numero }}</td></tr>
+          <tr *ngFor="let l of sem.lignes">
+            <td>S{{ sem.numero }}</td>
+            <td>{{ getUeIntitule(l.ueId) }}</td>
+            <td>{{ getMatiereIntitule(l.matiereId) }}</td>
+            <td>{{ l.credits }}</td>
+            <td>{{ l.noteFinale | number:'1.2-2' }}</td>
+            <td>{{ l.coefficientMatiere }}</td>
+            <td>{{ l.notePonderee | number:'1.2-2' }}</td>
+            <td>{{ l.session }}</td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+
+    <!-- BILAN -->
+    <div class="bilan-section mb-4">
+      <div><i class="bi bi-check-circle me-1 text-success"></i>UE validées: {{ b.ueValidees }}<br>
+           UE cumulées: {{ b.ueCumulees }}<br>
+           % Crédit requis: {{ b.pourcentageCreditRequis }}%</div>
+      <div><i class="bi bi-bar-chart me-1 text-info"></i>Crédits obtenus: {{ b.creditsObtenus }}<br>
+           Total crédits cumulés: {{ b.totalCreditsCumules }}<br>
+           % Crédit cumulé: {{ b.pourcentageCreditCumule }}%</div>
+      <div><i class="bi bi-star me-1 text-warning"></i>Moyenne: {{ b.moyenneAnnuelle | number:'1.2-2' }}<br>
+           Grade: {{ b.grade }}<br>
+           Décision: {{ b.decisionConseil }}</div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="signature">
+      <i class="bi bi-pencil-square me-1"></i> Fait à Libreville, le {{ today | date:'dd/MM/yyyy' }}<br>
+      <i class="bi bi-person-check me-1"></i> Le Président du Jury
     </div>
 
     <div class="text-end mt-3">
-      <button class="btn btn-primary" (click)="generer()">
-        ⚙️ Générer
+      <button class="btn btn-primary" (click)="genererPDF(b)">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Générer PDF
       </button>
     </div>
-
-  </div>
-
-  <!-- ========================= LOADING ========================= -->
-
-  <div *ngIf="loading" class="text-center mt-5">
-    <div class="spinner-border text-primary"></div>
-  </div>
-
-  <!-- ========================= LISTE BULLETINS ========================= -->
-
-  <div *ngIf="bulletins.length > 0 && !loading">
-
-    <div *ngFor="let b of bulletins" class="card shadow mb-4 p-4">
-
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <strong>Étudiant :</strong>
-{{ b.etudiant?.nom }} {{ b.etudiant?.prenom }} <br>
-
-<strong>Classe :</strong>
-{{ b.classe?.code }} <br>
-
-<strong>Année :</strong>
-{{ b.anneeAcademique?.libelle }}
-
-        </div>
-        <div class="col-md-6 text-end">
-          <strong>Moyenne :</strong> {{ b.moyenneAnnuelle | number:'1.2-2' }} <br>
-          <strong>Rang :</strong> {{ b.rang }}<br>
-          <strong>Décision :</strong>
-          <span class="badge bg-success" *ngIf="b.decision==='ADMIS'">ADMIS</span>
-          <span class="badge bg-warning" *ngIf="b.decision==='AJOURNE'">AJOURNÉ</span>
-          <span class="badge bg-danger" *ngIf="b.decision==='REDOUBLE'">REDOUBLANT</span>
-        </div>
-      </div>
-
-      <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-          <tr>
-            <th>Semestre</th>
-            <th>UE</th>
-            <th>Matière</th>
-            <th>Note</th>
-            <th>Coef</th>
-            <th>Note x Coef</th>
-            <th>Crédits</th>
-            <th>Session</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let l of b.lignesBulletin">
-          <td>{{ l.semestreId }}</td>
-<td>{{ getUeIntitule(l.matiereId) }}</td>
-<td>{{ getMatiereIntitule(l.matiereId) }}</td>
-
-<td>{{ l.noteFinale | number:'1.2-2' }}</td>
-<td>{{ l.coefficientMatiere | number:'1.2-2' }}</td>
-<td>{{ l.notePonderee | number:'1.2-2' }}</td>
-
-<td>{{ l.credits }}</td>
-<td>{{ l.session }}</td>
-
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ACTIONS -->
-
-      <div class="text-end mt-3">
-
-        <button class="btn btn-outline-primary me-2"
-                (click)="genererPDF(b)">
-          📄 PDF
-        </button>
-
-        <button class="btn btn-outline-warning me-2"
-                *ngIf="!b.verrouille"
-                (click)="verrouiller(b)">
-          🔒 Verrouiller
-        </button>
-
-        <button class="btn btn-outline-success me-2"
-                *ngIf="b.verrouille"
-                (click)="deverrouiller(b)">
-          🔓 Déverrouiller
-        </button>
-
-        <button class="btn btn-outline-danger"
-                (click)="supprimer(b)">
-          🗑 Supprimer
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- ========================= MESSAGE ========================= -->
-
-  <div *ngIf="!loading && bulletins.length === 0"
-       class="alert alert-info text-center">
-    Aucun bulletin généré.
-  </div>
-
-  <div *ngIf="error" class="alert alert-danger mt-4">
-    {{ error }}
   </div>
 
 </div>
