@@ -1,29 +1,18 @@
-
 /**
- * Ligne de note d’un étudiant
- * Utilisée pour :
- * - saisie des notes (enseignant)
- * - consultation des résultats (étudiant)
+ * Modèle Angular aligné sur LigneNoteDto (backend Java)
+ * Champs exacts : etudiantNom (pas nomPrenom)
  */
 export interface LigneNote {
+  id?:                    number;
+  releveId?:              number;
 
-  /* =========================
-     IDENTITÉ
-     ========================= */
-  etudiantId: number;
-  nomPrenom?: string;
+  // ✅ Étudiant
+  etudiantId:             number;
+  etudiantNom?:           string;   // ← LigneNoteDto.etudiantNom
 
-  /* =========================
-     NOTES BACKEND
-     ========================= */
-
-  noteDevoir?: number | null;
-  noteSessionOrdinaire?: number | null;
+  // ✅ Notes
+  noteDevoir?:            number | null;
+  noteSessionOrdinaire?:  number | null;
   noteSessionRattrapage?: number | null;
-
-  /* =========================
-     CALCULÉ
-     ========================= */
-
-  noteFinale?: number | null;
+  noteFinale?:            number | null;
 }

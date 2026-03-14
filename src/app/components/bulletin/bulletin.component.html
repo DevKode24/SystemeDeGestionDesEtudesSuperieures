@@ -101,8 +101,8 @@
         <p><i class="bi bi-geo-alt me-1"></i><strong>Lieu Naissance:</strong> {{ getEtudiant(b.etudiantId)?.lieuNaissance }}</p>
       </div>
       <div class="academic-info">
-        <p><i class="bi bi-book me-1"></i><strong>Filière:</strong> {{ getClasse(b.classeId)?.filiere }}</p>
-        <p><i class="bi bi-layers me-1"></i><strong>Niveau:</strong> {{ getClasse(b.classeId)?.niveau }}</p>
+        <p><i class="bi bi-book me-1"></i><strong>Filière:</strong> {{ getEtudiant(b.etudiantId)?.filiereId }}</p>
+        <p><i class="bi bi-layers me-1"></i><strong>Niveau:</strong> {{ getEtudiant(b.etudiantId)?.niveauId }}</p>
         <p><i class="bi bi-diagram-3 me-1"></i><strong>Classe:</strong> {{ getClasse(b.classeId)?.code }}</p>
       </div>
     </div>
@@ -136,13 +136,13 @@
     <div class="bilan-section mb-4">
       <div><i class="bi bi-check-circle me-1 text-success"></i>UE validées: {{ b.ueValidees }}<br>
            UE cumulées: {{ b.ueCumulees }}<br>
-           % Crédit requis: {{ b.pourcentageCreditRequis }}%</div>
-      <div><i class="bi bi-bar-chart me-1 text-info"></i>Crédits obtenus: {{ b.creditsObtenus }}<br>
-           Total crédits cumulés: {{ b.totalCreditsCumules }}<br>
-           % Crédit cumulé: {{ b.pourcentageCreditCumule }}%</div>
+            Crédit requis: {{ b.totalCreditsRequis }}</div>
+      <div><i class="bi bi-bar-chart me-1 text-info"></i>Crédits obtenus: {{ b.totalCreditsObtenus }} / {{ b.totalCreditsRequis }}<br>
+           Total crédits cumulés: {{ b.totalCreditsObtenus }} / {{ b.totalCreditsRequis }}<br>
+           % Crédit cumulé: {{ b.pourcentageCreditCumule | number:'1.0-2' }}%</div>
       <div><i class="bi bi-star me-1 text-warning"></i>Moyenne: {{ b.moyenneAnnuelle | number:'1.2-2' }}<br>
-           Grade: {{ b.grade }}<br>
-           Décision: {{ b.decisionConseil }}</div>
+           Mention: {{ b.mention }}<br>
+           Décision: {{ b.decision }}</div>
     </div>
 
     <!-- SIGNATURE -->

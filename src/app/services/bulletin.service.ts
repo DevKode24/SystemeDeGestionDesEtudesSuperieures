@@ -75,4 +75,3 @@ export class BulletinService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`, this.getHeaders());
   }
 }
-

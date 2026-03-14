@@ -1,42 +1,53 @@
-// src/app/core/models/releve-notes.model.ts
-
-import { LigneNote, StatutReleve, TypeReleve } from "./ligne-note";
-
-
 /**
- * Relevé de notes officiel
- * Généré et piloté par le backend
+ * ReleveNotesModel
+ * STRICTEMENT aligné avec ReleveNotesDto Backend
  */
+
+import { LigneNote } from './ligne-note';
+import { StatutReleve } from './statut-releve';
+
 export interface ReleveNotes {
 
-  /** Identifiant du relevé */
-  id: number;
+  /* =========================
+     IDENTIFIANT
+     (Absent en création, présent en lecture/update)
+  ========================== */
+  id?: number;
 
-  /** Enseignant */
+  /* =========================
+     CONTEXTE PEDAGOGIQUE
+  ========================== */
+
   enseignantId: number;
-  enseignantNom: string;
-
-  /** Classe */
   classeId: number;
-  classeLibelle: string;
-
-  /** Matière */
   matiereId: number;
-  matiereLibelle: string;
-
-  /** Année académique */
   anneeAcademiqueId: number;
-  anneeAcademiqueLibelle: string;
+  semestreId: number;
 
-  /** Type de relevé */
-  typeReleve: TypeReleve;
+  /* =========================
+     STATUT
+  ========================== */
 
-  /** Statut du relevé */
   statut: StatutReleve;
 
-  /** Date de création */
-  dateCreation: string;
+  /* =========================
+     VERROUILLAGE
+  ========================== */
 
-  /** Lignes de notes */
-  lignes?: LigneNote[];
+  verrouille?: boolean;
+  dateVerrouillage?: string;   // ISO 8601
+  verrouillePar?: string;
+
+  /* =========================
+     METADATA
+  ========================== */
+
+  dateCreation?: string;       // ISO 8601
+  dateModification?: string;   // ISO 8601
+
+  /* =========================
+     LIGNES
+  ========================== */
+
+  lignes: LigneNote[];
 }

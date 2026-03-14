@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { TokenStorageService } from '../token-storage.service';
 
@@ -20,7 +20,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private tokenStorage: TokenStorageService,
-    private router: Router
+    private router: Router,
+    private route:        ActivatedRoute    // ← AJOUTER
   ) {}
 
   ngOnInit(): void {
@@ -44,47 +45,42 @@ export class LoginComponent implements OnInit {
 
   // 🔐 Soumission formulaire
   onSubmit(): void {
-    localStorage.clear();
-sessionStorage.clear();
-    console.log('Form submitted!', this.loginForm.value);
+  localStorage.clear();
+  sessionStorage.clear();
 
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
-    this.loading = true;
-    this.errorMessage = '';
-
-    const credentials = {
-      email: this.loginForm.value.email,
-      password: this.loginForm.value.password
-    };
-
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
-
-        // 🔑 Sauvegarde tokens
-
-        this.tokenStorage.saveAccessToken(response.accessToken);
-        this.tokenStorage.saveRefreshToken(response.refreshToken);
-        console.log('Utilisateur connecté avec rôle :', this.tokenStorage.getUserRole());
-
-        // ✅ Redirection sécurisée
-        this.router.navigate(['/dashboard']);
-
-      },
-      error: (err) => {
-        this.loading = false;
-
-        if (err.status === 403 || err.status === 401) {
-          this.errorMessage = 'Email ou mot de passe incorrect';
-        } else {
-          this.errorMessage = 'Erreur serveur. Veuillez réessayer.';
-        }
-      }
-    });
+  if (this.loginForm.invalid) {
+    this.loginForm.markAllAsTouched();
+    return;
   }
+
+  this.loading      = true;
+  this.errorMessage = '';
+
+  const credentials = {
+    email:    this.loginForm.value.email,
+    password: this.loginForm.value.password
+  };
+
+  this.authService.login(credentials).subscribe({
+    next: (response) => {
+      this.tokenStorage.saveAccessToken(response.accessToken);
+      this.tokenStorage.saveRefreshToken(response.refreshToken);
+
+      // ✅ SEUL CHANGEMENT : returnUrl au lieu de '/dashboard' en dur
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl')
+                        ?? '/dashboard';
+      this.router.navigateByUrl(returnUrl);
+    },
+    error: (err) => {
+      this.loading = false;
+      if (err.status === 403 || err.status === 401) {
+        this.errorMessage = 'Email ou mot de passe incorrect';
+      } else {
+        this.errorMessage = 'Erreur serveur. Veuillez réessayer.';
+      }
+    }
+  });
+}
 
   // 👁️ Toggle mot de passe
   togglePassword(): void {

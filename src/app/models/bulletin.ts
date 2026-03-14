@@ -55,6 +55,8 @@ export interface Bulletin {
   effectifClasse: number;
 
   fichierPdfPath: string;
+
+  totalCreditsObtenus: number;
   totalCreditsRequis: number;
 
   lignesBulletin: LigneBulletin[];

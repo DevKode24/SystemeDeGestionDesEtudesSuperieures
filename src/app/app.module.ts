@@ -32,6 +32,12 @@ import { ClasseComponent } from './components/classe/classe/classe.component';
 import { EnseignementComponent } from './components/enseignement/enseignement/enseignement.component';
 import { EtudiantComponent } from './components/etudiant/etudiant.component';
 import { StatistiquesComponent } from './components/statistiques/statistiques.component';
+import { UserComponent } from './components/user/user.component';
+import { InfoEtudiantComponent } from './components/etudiant/info-etudiant/info-etudiant.component';
+import { VerrouilleNoteComponent } from './components/verrouille-note/verrouille-note.component';
+import { LogincomponentComponent } from './auth/login/logincomponent/logincomponent.component';
+
+
 
 @NgModule({
   declarations: [
@@ -55,7 +61,11 @@ import { StatistiquesComponent } from './components/statistiques/statistiques.co
     ClasseComponent,
     EnseignementComponent,
     SaisieNoteComponent,
-    StatistiquesComponent
+    VerrouilleNoteComponent,
+    StatistiquesComponent,
+    LogincomponentComponent,
+    InfoEtudiantComponent,
+    UserComponent
   ],
   imports: [
     BrowserModule,
@@ -65,7 +75,8 @@ import { StatistiquesComponent } from './components/statistiques/statistiques.co
     FormsModule,
     CommonModule,
     ReactiveFormsModule,
-    NgChartsModule
+    NgChartsModule,
+   
     
   ],
 

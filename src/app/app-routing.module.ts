@@ -24,7 +24,11 @@ import { UeComponent } from './components/ue/ue.component';
 import { EtudiantComponent } from './components/etudiant/etudiant.component';
 import { StatistiquesComponent } from './components/statistiques/statistiques.component';
 import { SaisieNoteComponent } from './components/enseignant/saisie-note/saisie-note.component';
+import { RelevenoteComponent } from './components/relevenote/relevenote.component';
 import { BulletinComponent } from './components/bulletin/bulletin.component';
+import { VerrouilleNoteComponent } from './components/verrouille-note/verrouille-note.component';
+import { InfoEtudiantComponent } from './components/etudiant/info-etudiant/info-etudiant.component';
+import { UserComponent } from './components/user/user.component';
 
 const routes: Routes = [
 
@@ -86,12 +90,23 @@ const routes: Routes = [
             component: MatiereComponent
           },
           {
+            path: 'VerrouilleNote',
+            component: VerrouilleNoteComponent
+          },
+          {
             path: 'ues',
             component: UeComponent
           },
           {
             path: 'etudiants',
             component: EtudiantComponent
+          },
+          {
+            path: 'etudiant/info/:id',
+            component: InfoEtudiantComponent
+          },{
+            path: 'utilisateurs',
+            component: UserComponent
           },
           {
             path: 'enseignant',
@@ -108,11 +123,14 @@ const routes: Routes = [
       {
         path: 'enseignant',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'ENSEIGNANT'] },
+        data: { roles: ['ENSEIGNANT'] },
         children: [
-           { path: 'saisie', component: SaisieNoteComponent }
+
+          // APRÈS — aligner avec ce que relevenote appelle
+            { path: 'saisie-note', component: SaisieNoteComponent },
           // exemple futur
-          // { path: 'ReleveNotes', component: ReleveNotesComponent }
+          { path: 'relevenotes', component: RelevenoteComponent }
+          
         ]
       },
 

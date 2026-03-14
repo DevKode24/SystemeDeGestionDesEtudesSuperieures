@@ -1,0 +1,67 @@
+<div id="studentCard" class="document-wrapper" *ngIf="etudiant && !isLoading">
+  <!-- HEADER -->
+  <div class="info-header fade-in">
+    <div>
+      <h4>MINISTÈRE DE L'ENSEIGNEMENT SUPÉRIEUR</h4>
+      <small>Institut Supérieur des Études Technologiques</small>
+    </div>
+    <div class="badge-academique">{{ anneeLibelle }}</div>
+  </div>
+
+  <!-- PRINCIPAL -->
+  <div class="badge-card fade-in">
+    <div class="badge-left">
+      <div class="user-avatar">
+        <svg viewBox="0 0 80 100" class="user-icon">
+          <circle cx="40" cy="25" r="18" fill="#1e3a8a"/>
+          <path d="M20 45 Q40 60 60 45 Q65 50 65 65 Q65 80 40 80 Q15 80 15 65 Q15 50 20 45 Z" fill="#3b82f6"/>
+          <circle cx="32" cy="55" r="2.5" fill="#374151"/>
+          <circle cx="48" cy="55" r="2.5" fill="#374151"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="badge-center">
+      <h2>{{ etudiant.nom }} {{ etudiant.prenom }}</h2>
+      <p class="filiere">Filiere :{{ filiereNom }}</p>
+      <p class="niveau">Niveau : {{ niveauLibelle }}</p>
+      <p class="classe">Classe : {{ classeCode }}</p>
+      <p class="matricule">Matricule : {{ etudiant.matricule }}</p>
+      <canvas id="barcode" width="400" height="80" class="barcode-canvas"></canvas>
+    </div>
+
+    <div class="badge-right">
+      <img [src]="qrCodeImage" class="qr-code" alt="QR Code" *ngIf="qrCodeImage">
+    </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="info-card fade-in">
+    <div class="info-grid">
+      <div><span class="label">Date naissance</span>{{ etudiant.dateNaissance }}</div>
+      <div><span class="label">Lieu naissance</span>{{ etudiant.lieuNaissance }}</div>
+      <div><span class="label">Nationalité</span>{{ etudiant.nationalite }}</div>
+      <div><span class="label">Sexe</span>{{ etudiant.sexe }}</div>
+      <div><span class="label">État civil</span>{{ etudiant.etatCivil }}</div>
+      <div><span class="label">Classe</span>{{ classeCode }}</div>
+      <div><span class="label">Email</span>{{ etudiant.email }}</div>
+      <div><span class="label">Contact</span>{{ etudiant.contactEtudiant }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" *ngIf="isLoading">
+  <div class="spinner">Chargement fiche étudiant...</div>
+</div>
+
+<div class="action-panel">
+  <button class="action-btn" (click)="printPage()">
+    <span>🖨</span> Imprimer
+  </button>
+  <button class="action-btn" (click)="generatePDF()">
+    <span>📄</span> PDF
+  </button>
+  <button class="action-btn" (click)="toggleTheme()">
+    <span>🌗</span> Mode
+  </button>
+</div>

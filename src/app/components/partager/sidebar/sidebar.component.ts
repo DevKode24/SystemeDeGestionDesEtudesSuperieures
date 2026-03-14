@@ -66,7 +66,7 @@ export class SidebarComponent {
         path: '/dashboard/enseignant',
         roles: [Role.Admin, Role.Enseignant],
         subMenus: [
-          { label: 'Releve de note', path: 'enseignant/ReleveNotes', roles: [Role.Enseignant] },
+          { label: 'Mes Releve de note', path: 'enseignant/relevenotes', roles: [Role.Enseignant] },
           { label: 'Répartition des cours', path: '/login', roles: [Role.Admin, Role.Enseignant] },
           { label: 'Enseignant', path: 'scolarite/enseignant', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Lister les étudiants par classe', path: 'scolarite/enseignant', roles: [Role.Admin, Role.Scolarite] }
@@ -78,7 +78,9 @@ export class SidebarComponent {
         roles: [Role.Admin, Role.Etudiant],
         subMenus: [
           { label: 'Inscription', path: 'scolarite/etudiants', roles: [Role.Admin, Role.Etudiant] },
-          { label: 'Emploi du temps', path: 'scolarite/enseignant/listEtudiant', roles: [Role.Admin, Role.Scolarite] }
+          { label: 'Emploi du temps', path: 'scolarite/enseignant/listEtudiant', roles: [Role.Admin, Role.Scolarite] },
+          { label: 'Informations de Etudiant', path: 'etudiant/info/:id', roles: [Role.Admin, Role.Scolarite] }
+
         ]
       },
       {
@@ -88,9 +90,9 @@ export class SidebarComponent {
         roles: [Role.Admin, Role.Etudiant, Role.Enseignant],
         subMenus: [
           { label: 'Enregistrement des notes', path: '/login', roles: [Role.Admin] },
-          { label: 'Verrouillé notes', path: '/login', roles: [Role.Admin] },
+          { label: 'Verrouillé notes', path: 'scolarite/VerrouilleNote', roles: [Role.Admin] },
           { label: 'SM Consulter notes', path: '/login', roles: [Role.Admin, Role.Etudiant] },
-          { label: 'Saisir notes', path: 'enseignant/saisie', roles: [Role.Enseignant] },
+          { label: 'Saisir notes', path: 'enseignant/saisie-note', roles: [Role.Enseignant] },
           { label: 'Modifier notes', path: '/login', roles: [Role.Admin] }
         ]
       },

@@ -81,10 +81,11 @@ export class BulletinComponent implements OnInit {
       .getByClasseAndAnnee(this.selectedClasseId, this.selectedAnneeId)
       .subscribe({
         next: (data) => {
-          this.bulletins = data.map(b => ({
-            ...b,
-            semestresGroupes: this.regrouperParSemestre(b)
-          }));
+         this.bulletins = data.map(b => ({
+  ...b,
+  semestresGroupes: this.regrouperParSemestre(b),
+  pourcentageCreditCumule: this.calculerPourcentageCreditCumule(b)
+}));
           this.loading = false;
         },
         error: () => {
@@ -139,6 +140,16 @@ export class BulletinComponent implements OnInit {
   getUeIntitule(id?: number) {
     return this.ues.find(u => u.id === id)?.intitule ?? '';
   }
+  calculerPourcentageCreditCumule(b: any): number {
+  if (!b || !b.totalCreditsRequis || b.totalCreditsRequis === 0) {
+    return 0;
+  }
+
+  const pourcentage =
+    (b.totalCreditsObtenus / b.totalCreditsRequis) * 100;
+
+  return Math.round(pourcentage * 100) / 100; // 2 décimales
+}
 
   /* ====================== PDF OFFICIEL ====================== */
   genererPDF(b: any) {
@@ -146,6 +157,9 @@ export class BulletinComponent implements OnInit {
     const width = doc.internal.pageSize.getWidth();
     const etu = this.getEtudiant(b.etudiantId);
     const classe = this.getClasse(b.classeId);
+    const pourcentageCreditCumule =
+  b.pourcentageCreditCumule ??
+  this.calculerPourcentageCreditCumule(b);
 
     // HEADER
     doc.setFontSize(10);
@@ -212,7 +226,7 @@ export class BulletinComponent implements OnInit {
     doc.text(`UE cumulées: ${b.ueCumulees}`, 14, yBilan+6);
     doc.text(`% Crédit requis: ${b.pourcentageCreditRequis}%`, 14, yBilan+12);
 
-    doc.text(`Crédits obtenus: ${b.creditsObtenus}`, width/3+5, yBilan);
+    doc.text(`Crédits obtenus: ${b.totalCreditsObtenus}`, width/3+5, yBilan);
     doc.text(`Total crédits cumulés: ${b.totalCreditsCumules}`, width/3+5, yBilan+6);
     doc.text(`% Crédit cumulé: ${b.pourcentageCreditCumule}%`, width/3+5, yBilan+12);
 

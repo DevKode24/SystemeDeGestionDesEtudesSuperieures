@@ -1,1 +1,383 @@
-<p>relevenote works!</p>
+<div class="mrn-page" translate="no">
+
+  <!-- ══════ HEADER ══════ -->
+  <header class="mrn-header">
+    <div class="mrn-header__left">
+      <div class="mrn-header__icon">📋</div>
+      <div>
+        <h1 class="mrn-header__title">Mes Relevés de Notes</h1>
+        <p class="mrn-header__sub">Vue hiérarchique · Classe → Matière → Étudiants</p>
+      </div>
+    </div>
+    <div class="mrn-header__actions">
+      <button class="btn-h btn-h--ghost" [class.btn-h--loading]="loading"
+              (click)="chargerReleves()" [disabled]="loading">
+        <span *ngIf="loading" class="spin">⟳</span>
+        <span *ngIf="!loading">⟳</span> Actualiser
+      </button>
+      <div class="export-wrap" (click)="$event.stopPropagation()">
+        <button class="btn-h btn-h--export" [class.active]="showExportMenu"
+                (click)="toggleExportMenu()" [disabled]="tousLesReleves.length === 0">
+          ↓ Exporter <span class="chevron">{{ showExportMenu ? '▲' : '▼' }}</span>
+        </button>
+        <div class="export-menu" *ngIf="showExportMenu">
+          <p class="export-menu__title">FORMAT D'EXPORT</p>
+          <button (click)="exporterExcel(); closeExportMenu()"><span>📊</span> Excel (.xlsx)</button>
+          <button (click)="exporterCSV(); closeExportMenu()"><span>📄</span> CSV (.csv)</button>
+          <button (click)="exporterPDF(); closeExportMenu()"><span>🖨</span> PDF</button>
+        </div>
+        <div class="export-overlay" *ngIf="showExportMenu" (click)="closeExportMenu()"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════ STATS ══════ -->
+  <div class="mrn-stats">
+    <div class="stat-chip stat-chip--indigo">
+      <div class="stat-chip__icon-wrap stat-chip__icon-wrap--indigo">📋</div>
+      <div><span class="stat-chip__label">Total relevés</span><span class="stat-chip__val">{{ totalReleves }}</span></div>
+    </div>
+    <div class="stat-chip stat-chip--emerald">
+      <div class="stat-chip__icon-wrap stat-chip__icon-wrap--emerald">✅</div>
+      <div><span class="stat-chip__label">Validés</span><span class="stat-chip__val">{{ totalValides }}</span></div>
+    </div>
+    <div class="stat-chip stat-chip--amber">
+      <div class="stat-chip__icon-wrap stat-chip__icon-wrap--amber">⏳</div>
+      <div><span class="stat-chip__label">En attente</span><span class="stat-chip__val">{{ totalAttente }}</span></div>
+    </div>
+    <div class="stat-chip stat-chip--rose">
+      <div class="stat-chip__icon-wrap stat-chip__icon-wrap--rose">❌</div>
+      <div><span class="stat-chip__label">Rejetés</span><span class="stat-chip__val">{{ totalRejetes }}</span></div>
+    </div>
+  </div>
+
+  <!-- ══════ FILTRES ══════ -->
+  <div class="mrn-filters">
+    <p class="mrn-filters__legend">🔍 Filtres</p>
+    <form [formGroup]="filterForm" class="mrn-filters__grid">
+      <div class="f-field">
+        <label>Classe</label>
+        <select formControlName="classeId">
+          <option [ngValue]="null">Toutes les classes</option>
+          <option *ngFor="let c of classes" [ngValue]="c.id">{{ c.code }}</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label>Matière <span *ngIf="loadingMatieres" class="f-hint">⟳ chargement…</span></label>
+        <select formControlName="matiereId" [disabled]="!filterForm.get('classeId')?.value">
+          <option [ngValue]="null">Toutes les matières</option>
+          <option *ngFor="let m of matieresFiltrees" [ngValue]="m.id">{{ m.intitule }}</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label>Année académique</label>
+        <select formControlName="anneeId">
+          <option [ngValue]="null">Toutes les années</option>
+          <option *ngFor="let a of annees" [ngValue]="a.id">{{ a.libelle }}</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label>Semestre</label>
+        <select formControlName="semestreId">
+          <option [ngValue]="null">Tous</option>
+          <option [ngValue]="1">Semestre 1</option>
+          <option [ngValue]="2">Semestre 2</option>
+        </select>
+      </div>
+      <div class="f-field">
+        <label>Statut</label>
+        <select formControlName="statut">
+          <option [ngValue]="null">Tous les statuts</option>
+          <option value="EN_ATTENTE">En attente</option>
+          <option value="VALIDE">Validé</option>
+          <option value="REJETE">Rejeté</option>
+        </select>
+      </div>
+      <div class="f-field f-field--actions">
+        <label>&nbsp;</label>
+        <button type="button" class="btn-filter btn-filter--reset" (click)="reinitialiserFiltres()">✕ Réinitialiser</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ══════ PIVOT BAR ══════ -->
+  <div class="mrn-pivot-bar">
+    <span class="pivot-label">Vue :</span>
+    <button class="pivot-btn" [class.active]="vuePivot === 'classe'" (click)="vuePivot = 'classe'">≡ Par Classe</button>
+    <button class="pivot-btn" [class.active]="vuePivot === 'matiere'" (click)="vuePivot = 'matiere'">≡ Par Matière</button>
+    <span class="pivot-spacer"></span>
+    <ng-container *ngIf="vuePivot === 'classe'">
+      <button class="btn-sm-ghost" (click)="developperTout()">↕ Tout développer</button>
+      <button class="btn-sm-ghost" (click)="reduireTout()">↕ Tout réduire</button>
+    </ng-container>
+    <span class="mrn-count-badge" *ngIf="relevesFiltres.length !== totalReleves">
+      {{ relevesFiltres.length }} / {{ totalReleves }} résultat(s)
+    </span>
+  </div>
+
+  <!-- ══════ SPINNER ══════ -->
+  <div class="rna-spinner-wrap" *ngIf="loading">
+    <div class="rna-spinner"></div>
+    <span>Chargement des relevés…</span>
+  </div>
+
+  <!-- ══════ EMPTY ══════ -->
+  <div class="rna-empty" *ngIf="!loading && tousLesReleves.length === 0">
+    <span class="empty-icon">📭</span>
+    <p>Aucun relevé trouvé.</p>
+    <p class="empty-hint">Commencez une saisie ou vérifiez vos filtres.</p>
+  </div>
+
+  <!-- ══════ VUE PAR CLASSE ══════ -->
+  <ng-container *ngIf="!loading && vuePivot === 'classe'">
+
+    <div class="rna-empty" *ngIf="classeNodesFiltres.length === 0 && tousLesReleves.length > 0">
+      <span class="empty-icon">🔍</span>
+      <p>Aucun résultat pour ces filtres.</p>
+      <button class="btn-filter btn-filter--reset" (click)="reinitialiserFiltres()">Réinitialiser</button>
+    </div>
+
+    <div class="classe-block"
+         *ngFor="let node of classeNodesFiltres; trackBy: trackByClasseId"
+         [class.expanded]="node.expanded">
+
+      <div class="classe-head" (click)="toggleClasse(node)">
+        <div class="classe-head__left">
+          <span class="toggle-icon">{{ node.expanded ? '▾' : '▸' }}</span>
+          <span class="classe-nom">{{ node.classeNom }}</span>
+          <span class="badge badge-meta">{{ node.nombreReleves }} matière{{ node.nombreReleves > 1 ? 's' : '' }}</span>
+        </div>
+        <div class="classe-head__actions" (click)="$event.stopPropagation()">
+          <button class="act-classe act-classe--print" (click)="imprimerParClasse(node)" title="Imprimer toute la classe">🖨</button>
+        </div>
+      </div>
+
+      <div class="matieres-wrap" *ngIf="node.expanded">
+        <div class="matiere-row"
+             *ngFor="let mat of node.matieres; trackBy: trackByMatiereId"
+             [class.matiere-row--locked]="mat.releve?.verrouille">
+
+          <div class="matiere-head" (click)="toggleMatiere(mat)">
+            <span class="indent-icon">└</span>
+            <span class="matiere-toggle">{{ mat.expanded ? '▾' : '▸' }}</span>
+<span class="matiere-nom">{{ mat.matiereNom }}</span>            <span class="badge badge-meta">S{{ mat.releve?.semestreId }} · {{ resolveAnneeLabel(mat.releve?.anneeAcademiqueId ?? 0) }}</span>
+            <span class="badge" [ngClass]="statutClass(mat.releve?.statut)">{{ statutLabel(mat.releve?.statut) }}</span>
+            <span class="badge badge-verrou" *ngIf="mat.releve?.verrouille">🔒 Verrouillé</span>
+            <span class="loading-sm" *ngIf="mat.loading"><span class="sm-spinner"></span> chargement…</span>
+            <span class="lignes-count" *ngIf="mat.lignesChargees">{{ mat.lignes.length }} étud.</span>
+            <div class="matiere-actions" (click)="$event.stopPropagation()">
+              <button class="act-sm act-sm--info"   (click)="visualiser(mat)" title="Visualiser">👁</button>
+              <button class="act-sm act-sm--edit"   [disabled]="mat.releve?.verrouille" (click)="mat.releve && modifierReleve(mat.releve)" [title]="mat.releve?.verrouille ? '🔒 Verrouillé' : 'Modifier'">✏️</button>
+              <button class="act-sm act-sm--print"  (click)="imprimerParMatiere(mat)" title="Imprimer">🖨</button>
+              <button class="act-sm act-sm--delete" [disabled]="mat.releve?.verrouille" (click)="mat.releve && supprimerReleve(mat.releve)" [title]="mat.releve?.verrouille ? '🔒 Verrouillé' : 'Supprimer'">🗑</button>
+            </div>
+          </div>
+
+          <div class="lignes-wrap" *ngIf="mat.expanded">
+            <div class="lignes-loading" *ngIf="mat.loading">
+              <span class="sm-spinner"></span> Chargement des lignes…
+            </div>
+            <ng-container *ngIf="!mat.loading && mat.lignesChargees">
+              <div class="empty-row" *ngIf="mat.lignes.length === 0">Aucun étudiant dans ce relevé.</div>
+              <table class="lignes-table" *ngIf="mat.lignes.length > 0">
+                <thead>
+                  <tr>
+                    <th class="td-num">#</th>
+                    <th>Étudiant</th>
+                    <th class="th-note">Devoir</th>
+                    <th class="th-note">Session</th>
+                    <th class="th-note">Rattrapage</th>
+                    <th class="th-finale th-note">Note Finale</th>
+                    <th class="th-note">Mention</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let l of mat.lignes; let i = index; trackBy: trackByLigneId">
+                    <td class="td-num">{{ i + 1 }}</td>
+                    <td class="td-etudiant">{{ l.etudiantNom }}</td>
+                    <td class="td-note">{{ l.noteDevoir ?? 0 }}</td>
+                    <td class="td-note">{{ l.noteSessionOrdinaire ?? 0 }}</td>
+                    <td class="td-note">{{ l.noteSessionRattrapage ?? 0 }}</td>
+                    <td class="td-note td-finale" [ngClass]="mentionClass(l.noteFinale)">{{ l.noteFinale ?? 0 }}</td>
+                    <td class="td-note">
+                      <span class="mention" [ngClass]="mentionClass(l.noteFinale)">{{ getMention(l.noteFinale) }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="lignes-locked-notice" *ngIf="mat.releve?.verrouille">
+                🔒 Ce relevé est verrouillé par l'administration.
+              </div>
+            </ng-container>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══════ VUE PAR MATIÈRE ══════ -->
+  <div class="rna-table-card" *ngIf="!loading && vuePivot === 'matiere' && tousLesReleves.length > 0">
+    <div class="table-toolbar">
+      <span class="table-count">{{ relevesFiltres.length }} relevé(s)</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:.8rem;color:#64748b;">Par page :</label>
+        <select class="sel-page" [(ngModel)]="pageSize">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="15">15</option>
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="pivot-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="trier('classe')">Classe <span>{{ triIcon('classe') }}</span></th>
+            <th class="sortable" (click)="trier('matiere')">Matière <span>{{ triIcon('matiere') }}</span></th>
+            <th>Année · Sem.</th>
+            <th class="sortable th-center" (click)="trier('statut')">Statut <span>{{ triIcon('statut') }}</span></th>
+            <th class="th-center">Verrou</th>
+            <th class="th-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of relevesPagines; trackBy: trackByReleveId" [class.row-locked]="r.verrouille">
+            <td><span class="badge-classe">{{ resolveClasseNom(r.classeId) }}</span></td>
+            <td class="td-matiere">{{ resolveMatiereNom(r.matiereId) }}</td>
+            <td class="td-meta">{{ resolveAnneeLabel(r.anneeAcademiqueId) }} <span class="badge badge-meta">S{{ r.semestreId }}</span></td>
+            <td class="td-center"><span class="badge" [ngClass]="statutClass(r.statut)">{{ statutLabel(r.statut) }}</span></td>
+            <td class="td-center">
+              <span *ngIf="r.verrouille"  class="badge badge-verrou">🔒</span>
+              <span *ngIf="!r.verrouille" class="badge badge-open">🔓</span>
+            </td>
+            <td class="td-center">
+              <div class="actions-pivot">
+                <button class="act-sm act-sm--info"   (click)="visualiser(getMatiereNodeByReleve(r))" title="Visualiser">👁</button>
+                <button class="act-sm act-sm--edit"   [disabled]="r.verrouille" (click)="modifierReleve(r)" [title]="r.verrouille ? '🔒' : 'Modifier'">✏️</button>
+                <button class="act-sm act-sm--print"  (click)="imprimerParMatiere(getMatiereNodeByReleve(r))" title="Imprimer">🖨</button>
+                <button class="act-sm act-sm--delete" [disabled]="r.verrouille" (click)="supprimerReleve(r)" [title]="r.verrouille ? '🔒' : 'Supprimer'">🗑</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rna-pagination" *ngIf="totalPages > 1">
+      <span class="pg-info">{{ (pageActuelle - 1) * pageSize + 1 }}–{{ minVal(pageActuelle * pageSize, relevesFiltres.length) }} sur {{ relevesFiltres.length }}</span>
+      <div class="pg-nav">
+        <button class="pg-btn" [disabled]="pageActuelle === 1" (click)="pageActuelle = pageActuelle - 1">‹</button>
+        <button class="pg-btn" *ngFor="let p of pageNumbers" [class.pg-btn--active]="p === pageActuelle" (click)="pageActuelle = p">{{ p }}</button>
+        <button class="pg-btn" [disabled]="pageActuelle === totalPages" (click)="pageActuelle = pageActuelle + 1">›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ MODAL VISUALISATION ══════ -->
+  <div class="modal-backdrop" *ngIf="releveVisualise" (click)="fermerVisualisation()">
+    <div class="modal-card modal-card--large" (click)="$event.stopPropagation()">
+
+      <div class="modal-header-band">
+        <div class="modal-header-band__left">
+          <div class="modal-icon">📋</div>
+          <div>
+            <h2 class="modal-title">
+              {{ resolveClasseNom(releveVisualise.classeId) }} — {{ resolveMatiereNom(releveVisualise.matiereId) }}
+            </h2>
+            <p class="modal-sub">{{ resolveAnneeLabel(releveVisualise.anneeAcademiqueId) }} · S{{ releveVisualise.semestreId }}</p>
+          </div>
+        </div>
+        <div class="modal-header-band__right">
+          <span class="modal-releve-id">RN-{{ releveVisualise.id }}</span>
+          <button class="modal-close" (click)="fermerVisualisation()">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-badges">
+        <span class="badge" [ngClass]="statutClass(releveVisualise.statut)">{{ statutLabel(releveVisualise.statut) }}</span>
+        <span class="badge badge-verrou" *ngIf="releveVisualise.verrouille">🔒 Verrouillé par l'administration</span>
+      </div>
+
+      <div class="modal-meta-grid">
+        <div class="meta-bloc">
+          <p class="meta-section-title">📌 Contexte pédagogique</p>
+          <div class="meta-row"><span class="meta-label">Classe :</span><span class="meta-val">{{ resolveClasseNom(releveVisualise.classeId) }}</span></div>
+          <div class="meta-row"><span class="meta-label">Matière :</span><span class="meta-val">{{ resolveMatiereNom(releveVisualise.matiereId) }}</span></div>
+          <div class="meta-row"><span class="meta-label">Année :</span><span class="meta-val">{{ resolveAnneeLabel(releveVisualise.anneeAcademiqueId) }}</span></div>
+          <div class="meta-row"><span class="meta-label">Semestre :</span><span class="meta-val">S{{ releveVisualise.semestreId }}</span></div>
+        </div>
+        <div class="meta-bloc">
+          <p class="meta-section-title">📅 Informations</p>
+          <div class="meta-row"><span class="meta-label">Statut :</span><span class="meta-val">{{ statutLabel(releveVisualise.statut) }}</span></div>
+          <div class="meta-row">
+            <span class="meta-label">Verrouillé :</span>
+            <span class="meta-val" [class.text-danger]="releveVisualise.verrouille" [class.text-success]="!releveVisualise.verrouille">
+              {{ releveVisualise.verrouille ? '🔒 Oui' : '🔓 Non' }}
+            </span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Créé le :</span><span class="meta-val">{{ formatDate(releveVisualise.dateCreation) }}</span></div>
+        </div>
+      </div>
+
+      <div class="modal-notice" *ngIf="releveVisualise.verrouille">
+        🔒 Ce relevé est verrouillé. Modification désactivée.
+      </div>
+
+      <div class="modal-table-title">
+        📊 Détail des notes — {{ lignesVisualise.length }} étudiant(s)
+      </div>
+      <div class="modal-table-wrap">
+        <ng-container *ngIf="lignesVisualise.length > 0; else noLinesModal">
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th class="tc">#</th>
+                <th>Étudiant</th>
+                <th class="tc">Devoir</th>
+                <th class="tc">Session</th>
+                <th class="tc">Rattrapage</th>
+                <th class="tc">Note Finale</th>
+                <th class="tc">Mention</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let l of lignesVisualise; let i = index; trackBy: trackByLigneId">
+                <td class="tc td-num">{{ i + 1 }}</td>
+                <td class="td-etudiant">{{ l.etudiantNom }}</td>
+                <td class="tc">{{ l.noteDevoir ?? 0 }}</td>
+                <td class="tc">{{ l.noteSessionOrdinaire ?? 0 }}</td>
+                <td class="tc">{{ l.noteSessionRattrapage ?? 0 }}</td>
+                <td class="tc td-finale" [ngClass]="mentionClass(l.noteFinale)">{{ l.noteFinale ?? 0 }}</td>
+                <td class="tc">
+                  <span class="mention" [ngClass]="mentionClass(l.noteFinale)">{{ getMention(l.noteFinale) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
+        <ng-template #noLinesModal>
+          <div class="empty-row">Aucune ligne disponible pour ce relevé.</div>
+        </ng-template>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-modal btn-modal--close" (click)="fermerVisualisation()">Fermer</button>
+        <button class="btn-modal btn-modal--print"
+                (click)="imprimerParMatiere(getMatiereNodeByReleve(releveVisualise))">🖨 Imprimer</button>
+        <button class="btn-modal btn-modal--edit"
+                [disabled]="releveVisualise.verrouille"
+                (click)="modifierReleve(releveVisualise)"
+                [title]="releveVisualise.verrouille ? '🔒 Verrouillé' : 'Modifier'">✏️ Modifier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ TOAST STACK ══════ -->
+  <div class="toast-stack">
+    <div class="toast" *ngFor="let t of toasts" [ngClass]="'toast--' + t.type" (click)="dismissToast(t.id)">
+      {{ t.message }}
+    </div>
+  </div>
+
+</div>

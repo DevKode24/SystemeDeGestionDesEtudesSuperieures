@@ -1,165 +1,566 @@
-<div class="page-wrapper">
-  <div class="modern-card">
+<div class="saisie-note-container">
 
-    <!-- HEADER -->
-    <div class="card-header text-center">
-      <div class="icon-circle">
-        <i class="bi bi-journal-check"></i>
+  <!-- ════════ HEADER ════════ -->
+  <div class="header-principal">
+    <div class="header-content">
+
+      <div class="header-left">
+        <div class="header-icon">📓</div>
+        <div>
+          <h1 class="page-title">Saisie des Notes</h1>
+          <p class="page-subtitle">Gestion intelligente des évaluations par classe et matière</p>
+        </div>
       </div>
-      <h3 class="fw-bold mt-2">Saisie des notes</h3>
-      <p>Gestion des évaluations par classe et matière</p>
+
+      <div class="header-stats">
+
+        <div class="stat-item">
+          <span class="stat-label">Étudiants</span>
+          <span class="stat-value">{{ lignes.length }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Période</span>
+          <span class="stat-value">{{ semestre || '--' }}</span>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-label">Statut</span>
+
+          <!-- 🔒 Verrouillé par admin -->
+          <span class="stat-badge status-locked" *ngIf="releveVerrouille">
+            🔒 Verrouillé
+          </span>
+
+          <!-- En cours de sauvegarde -->
+          <span class="stat-badge status-saving" *ngIf="!releveVerrouille && saving">
+            ⏳ En cours
+          </span>
+
+          <!-- Validé -->
+          <span class="stat-badge status-valid" *ngIf="!releveVerrouille && !saving && releveValide">
+            ✓ Validé
+          </span>
+
+          <!-- Normal -->
+          <span class="stat-badge status-active"
+                *ngIf="!releveVerrouille && !saving && !releveValide">
+            ✏️ Prêt
+          </span>
+        </div>
+
+      </div>
     </div>
+  </div>
 
-    <div class="card-body">
 
-      <!-- FORMULAIRE -->
-      <form [formGroup]="form" class="modern-form mb-4">
-        <div class="row g-3">
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- 🔒 BANNIÈRE VERROUILLAGE ADMIN                  -->
+  <!-- Visible uniquement quand releveVerrouille=true  -->
+  <!-- ════════════════════════════════════════════════ -->
 
-          <div class="col-md-3">
-            <label class="form-label">
-              <i class="bi bi-mortarboard-fill me-1 text-primary"></i>
-              Classe
-            </label>
+  <div class="lock-banner" *ngIf="releveVerrouille">
+    <div class="lock-banner__icon">🔒</div>
+    <div class="lock-banner__content">
+      <strong class="lock-banner__title">Relevé verrouillé par l'administration</strong>
+      <p class="lock-banner__msg">
+        Ce relevé a été verrouillé par un administrateur ou le service de scolarité.
+        Les notes sont en <strong>lecture seule</strong> et ne peuvent pas être modifiées.
+        Contactez l'administration pour demander le déverrouillage.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ════════ FORMULAIRE DE SÉLECTION ════════ -->
+  <div class="form-section">
+    <form [formGroup]="form" class="selection-form">
+
+      <div class="form-grid">
+
+        <!-- Classe -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-text">Classe <span class="required">*</span></span>
+            <span class="label-icon"><i class="bi bi-building"></i></span>
+          </label>
+          <div class="select-wrapper">
             <select class="form-control" formControlName="classeId">
-              <option [ngValue]="null">Sélectionner une classe</option>
-              <option *ngFor="let c of classes" [ngValue]="c.id">
-                {{ c.code }}
-              </option>
+              <option [ngValue]="null" disabled>Sélectionner une classe</option>
+              <option *ngFor="let c of classes" [ngValue]="c.id">{{ c.code }}</option>
             </select>
+            <span class="select-icon"><i class="bi bi-chevron-down"></i></span>
           </div>
+        </div>
 
-          <div class="col-md-3">
-            <label class="form-label">
-              <i class="bi bi-book-fill me-1 text-primary"></i>
-              Matière
-            </label>
+        <!-- Matière -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-text">Matière <span class="required">*</span></span>
+            <span class="label-icon"><i class="bi bi-book"></i></span>
+          </label>
+          <div class="select-wrapper">
             <select class="form-control" formControlName="matiereId">
-              <option [ngValue]="null">Sélectionner une matière</option>
+              <option [ngValue]="null" disabled>Sélectionner une matière</option>
               <option *ngFor="let m of matieres" [ngValue]="m.id">
                 {{ m.intitule }} ({{ m.code }})
               </option>
             </select>
+            <span class="select-icon"><i class="bi bi-chevron-down"></i></span>
           </div>
+        </div>
 
-          <div class="col-md-3">
-            <label class="form-label">
-              <i class="bi bi-calendar-event-fill me-1 text-primary"></i>
-              Semestre
-            </label>
-            <input type="text" class="form-control bg-light" [value]="semestre" disabled>
+        <!-- Semestre (auto) -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-text">Semestre</span>
+            <span class="label-badge">Auto</span>
+          </label>
+          <div class="input-readonly">
+            <input type="text" class="form-control-readonly"
+                   [value]="semestre || 'Non défini'" disabled>
+            <i class="bi bi-calendar-event"></i>
           </div>
+        </div>
 
-          <div class="col-md-3">
-            <label class="form-label">
-              <i class="bi bi-calendar-check-fill me-1 text-primary"></i>
-              Année académique
-            </label>
+        <!-- Année académique -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-text">Année académique <span class="required">*</span></span>
+            <span class="label-icon"><i class="bi bi-calendar-range"></i></span>
+          </label>
+          <div class="select-wrapper">
             <select class="form-control" formControlName="anneeAcademiqueId">
-              <option [ngValue]="null">Sélectionner l'année</option>
-              <option *ngFor="let a of annees" [ngValue]="a.id">
-                {{ a.libelle }}
-              </option>
+              <option [ngValue]="null" disabled>Sélectionner l'année</option>
+              <option *ngFor="let a of annees" [ngValue]="a.id">{{ a.libelle }}</option>
             </select>
+            <span class="select-icon"><i class="bi bi-chevron-down"></i></span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Actions du formulaire -->
+      <div class="form-actions">
+
+        <button type="button" (click)="reinitialiser()"
+                class="btn btn-secondary"
+                [disabled]="saving || validating">
+          <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+        </button>
+
+        <div class="import-export-group">
+
+          <!-- Importer -->
+          <div class="dropdown" [ngClass]="{ 'show': showImportMenu }">
+            <button type="button" (click)="toggleImportMenu()"
+                    class="btn btn-info dropdown-toggle"
+                    [disabled]="saving || validating || releveVerrouille"
+                    [title]="releveVerrouille ? 'Import impossible : relevé verrouillé' : 'Importer des notes'">
+              <i class="bi bi-download"></i> Importer
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu import-menu" *ngIf="showImportMenu">
+              <div class="dropdown-item-group">
+                <label class="dropdown-item">
+                  <i class="bi bi-file-earmark-spreadsheet"></i>
+                  <span>Excel (.xlsx, .xls)</span>
+                  <input type="file" accept=".xlsx,.xls"
+                         (change)="onFileImport($event, 'excel')" hidden>
+                </label>
+                <label class="dropdown-item">
+                  <i class="bi bi-file-text"></i>
+                  <span>CSV (.csv)</span>
+                  <input type="file" accept=".csv"
+                         (change)="onFileImport($event, 'csv')" hidden>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exporter -->
+          <div class="dropdown" [ngClass]="{ 'show': showExportMenu }">
+            <button type="button" (click)="toggleExportMenu()"
+                    class="btn btn-success dropdown-toggle"
+                    [disabled]="saving || validating || lignes.length === 0">
+              <i class="bi bi-upload"></i> Exporter
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="dropdown-menu export-menu" *ngIf="showExportMenu">
+              <div class="dropdown-item-group">
+                <button type="button" (click)="exportExcel()" class="dropdown-item">
+                  <i class="bi bi-file-earmark-spreadsheet"></i>
+                  <div><span>Excel</span><small>Tableur modifiable</small></div>
+                </button>
+                <button type="button" (click)="exportCSV()" class="dropdown-item">
+                  <i class="bi bi-file-text"></i>
+                  <div><span>CSV</span><small>Données brutes</small></div>
+                </button>
+                <button type="button" (click)="exportPDF()" class="dropdown-item">
+                  <i class="bi bi-file-earmark-pdf"></i>
+                  <div><span>PDF</span><small>Document imprimable</small></div>
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
-      </form>
-
-      <!-- SPINNER -->
-      <div *ngIf="loading" class="text-center my-5">
-        <div class="spinner-border text-primary"></div>
       </div>
 
-      <!-- TABLE -->
-      <div *ngIf="lignes.length > 0 && !loading" class="table-container">
-
-        <form [formGroup]="form">
-          <table class="modern-table">
-            <thead class="notes-thead">
-              <tr>
-                <th>#</th>
-                <th class="text-start">
-                  <i class="bi bi-person-fill me-1"></i> Étudiant
-                </th>
-                <th>
-                  <i class="bi bi-pencil-square me-1"></i> Devoir
-                </th>
-                <th>
-                  <i class="bi bi-check-circle me-1"></i> Session Ordinaire
-                </th>
-                <th>
-                  <i class="bi bi-arrow-repeat me-1"></i> Rattrapage
-                </th>
-                <th>
-                  <i class="bi bi-award-fill me-1"></i> Note Finale
-                </th>
-              </tr>
-            </thead>
-
-            <tbody formArrayName="lignes">
-              <tr *ngFor="let control of lignesForm.controls; let i = index" [formGroupName]="i">
-
-                <td>{{ i + 1 }}</td>
-
-                <td class="text-start fw-semibold">
-                  <i class="bi bi-person-circle me-1 text-primary"></i>
-                  {{ lignes[i].nomPrenom }}
-                </td>
-
-                <td>
-                  <input type="number" min="0" max="20"
-                         class="form-control"
-                         formControlName="noteDevoir">
-                </td>
-
-                <td>
-                  <input type="number" min="0" max="20"
-                         class="form-control"
-                         formControlName="noteSessionOrdinaire">
-                </td>
-
-                <td>
-                  <input type="number" min="0" max="20"
-                         class="form-control"
-                         formControlName="noteSessionRattrapage">
-                </td>
-
-                <td class="fw-bold">
-                  {{ lignes[i].noteFinale }}
-                </td>
-
-              </tr>
-            </tbody>
-          </table>
-        </form>
-
-        <!-- PAGINATION -->
-        <div class="pagination-bar" *ngIf="lignes.length > pageSize">
-          <button class="page-btn" (click)="prevPage($event)" [disabled]="currentPage === 1">←</button>
-          <span class="page-info">{{ currentPage }} / {{ totalPages() }}</span>
-          <button class="page-btn" (click)="nextPage($event)" [disabled]="currentPage === totalPages()">→</button>
-        </div>
-
-        <!-- ACTION BUTTONS -->
-        <div class="btn-center mt-4 text-end">
-          <button class="btn-gradient me-2" (click)="enregistrer()" [disabled]="form.invalid || loading">
-            <i class="bi bi-save-fill"></i> Enregistrer
-          </button>
-          <button class="btn-gradient" (click)="imprimer()">
-            <i class="bi bi-printer-fill"></i> Imprimer
-          </button>
-        </div>
-
+      <!-- Info chargement -->
+      <div class="form-info-badge" *ngIf="lignes.length > 0">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>{{ lignes.length }} ligne(s) chargée(s)</span>
       </div>
 
-      <!-- MESSAGE -->
-      <div *ngIf="!loading && lignes.length === 0"
-           class="alert text-center mt-4"
-           style="background:#eef2ff; border-radius:14px;">
-        Sélectionnez classe + matière + année académique.
+      <div class="form-loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <span>Chargement des données...</span>
+      </div>
+
+    </form>
+  </div>
+
+
+  <!-- ════════ TABLE ════════ -->
+  <div class="table-section" *ngIf="!loading && lignes.length > 0">
+
+    <div class="table-header">
+      <div class="table-title">
+        <h2>Liste des étudiants</h2>
+        <p>{{ selectedClasse }} — {{ selectedMatiere }}</p>
+      </div>
+      <div class="table-info">
+        <span class="badge-count">{{ lignes.length }} entrées</span>
+        <button type="button" class="btn-icon"
+                title="Actualiser"
+                (click)="actualisarDonnees()"
+                [disabled]="saving || validating">
+          <i class="bi bi-arrow-repeat"></i>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- Table -->
+    <div class="table-wrapper"
+         [ngClass]="{
+           'locked-state':  releveVerrouille,
+           'valid-state':   releveValide && !releveVerrouille
+         }">
+      <table class="notes-table">
+
+        <thead>
+          <tr>
+            <th class="col-number">#</th>
+            <th class="col-student">Étudiant</th>
+            <th class="col-devoir">
+              Devoir <span class="max-note">/20</span>
+            </th>
+            <th class="col-ordinaire">
+              Session Ordinaire <span class="max-note">/20</span>
+            </th>
+            <th class="col-rattrapage">
+              Rattrapage <span class="max-note">/20</span>
+            </th>
+            <th class="col-finale">
+              Note Finale <span class="max-note">/20</span>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <ng-container *ngFor="let ligne of lignes; let i = index">
+            <tr *ngIf="i >= (currentPage - 1) * pageSize && i < currentPage * pageSize"
+    [ngClass]="i % 2 === 0 ? 'row-even' : 'row-odd'"
+    class="note-row"
+    [class.row-locked]="releveVerrouille"
+    [class.row-valid]="releveValide && !releveVerrouille"
+    [class.releve-verrouille]="releveVerrouille">
+              <!-- # -->
+              <td class="col-number">
+                <span class="row-number">{{ i + 1 }}</span>
+              </td>
+
+              <!-- Étudiant -->
+              <td class="col-student">
+                <div class="student-info">
+                  <div class="student-avatar">
+                    {{ ligne.etudiantNom?.charAt(0)?.toUpperCase() || '?' }}
+                  </div>
+                  <div class="student-details">
+                    <span class="student-name">{{ ligne.etudiantNom }}</span>
+                    <span class="student-id">ID: {{ ligne.etudiantId }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Devoir -->
+              <td class="col-devoir">
+                <div class="input-group">
+                  <input type="number"
+                         [formControl]="getControl(i, 'noteDevoir')"
+                         [attr.readonly]="releveVerrouille ? true : null"
+                         min="0" max="20" step="0.5"
+                         placeholder="--"
+                         class="input-note"
+                         [class.input-locked]="releveVerrouille">
+                  <span class="input-unit">/20</span>
+                </div>
+              </td>
+
+              <!-- Session Ordinaire -->
+              <td class="col-ordinaire">
+                <div class="input-group">
+                  <input type="number"
+                         [formControl]="getControl(i, 'noteSessionOrdinaire')"
+                         [attr.readonly]="releveVerrouille ? true : null"
+                         min="0" max="20" step="0.5"
+                         placeholder="--"
+                         class="input-note"
+                         [class.input-locked]="releveVerrouille">
+                  <span class="input-unit">/20</span>
+                </div>
+              </td>
+
+              <!-- Rattrapage -->
+              <td class="col-rattrapage">
+                <div class="input-group">
+                  <input type="number"
+                         [formControl]="getControl(i, 'noteSessionRattrapage')"
+                         [attr.readonly]="releveVerrouille ? true : null"
+                         min="0" max="20" step="0.5"
+                         placeholder="--"
+                         class="input-note"
+                         [class.input-locked]="releveVerrouille">
+                  <span class="input-unit">/20</span>
+                </div>
+              </td>
+
+              <!-- Note Finale -->
+              <td class="col-finale">
+                <div class="note-finale-display"
+                     [ngClass]="getNoteFinaleCssClass(getControl(i,'noteFinale')?.value ?? null)">
+                  <div class="note-value">
+                    <span class="note-number">
+                      {{ getControl(i,'noteFinale')?.value != null
+                        ? (getControl(i,'noteFinale')?.value | number:'1.2-2')
+                        : '--' }}
+                    </span>
+                    <span *ngIf="getControl(i,'noteFinale')?.value != null"
+                          class="note-max">/20</span>
+                  </div>
+                  <div class="note-icon">
+                    <i class="bi"
+                       [ngClass]="getNoteFinaleIconClass(getControl(i,'noteFinale')?.value ?? null)">
+                    </i>
+                  </div>
+                </div>
+              </td>
+
+            </tr>
+          </ng-container>
+        </tbody>
+
+      </table>
+    </div>
+
+
+    <!-- Footer stats + pagination -->
+    <div class="table-footer">
+
+      <div class="stats-container">
+        <div class="stat-box">
+          <span class="stat-name">Moyenne Devoir</span>
+          <span class="stat-value">{{ getMoyenne('devoir') }}</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-name">Moy. Ordinaire</span>
+          <span class="stat-value">{{ getMoyenne('ordinaire') }}</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-name">Moy. Rattrapage</span>
+          <span class="stat-value">{{ getMoyenne('rattrapage') }}</span>
+        </div>
+        <div class="stat-box stat-finale">
+          <span class="stat-name">Moyenne Finale</span>
+          <span class="stat-value">{{ getMoyenne('finale') }}</span>
+        </div>
+      </div>
+
+      <div class="pagination-container">
+        <span class="pagination-info">
+          Affichage de {{ (currentPage - 1) * pageSize + 1 }} à
+          {{ currentPage * pageSize > lignes.length ? lignes.length : currentPage * pageSize }}
+          sur {{ lignes.length }} résultats
+        </span>
+
+        <nav class="pagination">
+          <button (click)="firstPage($event)" [disabled]="currentPage === 1"
+                  class="btn-pagination" title="Première page">
+            <i class="bi bi-chevron-bar-left"></i>
+          </button>
+          <button (click)="prevPage($event)" [disabled]="currentPage === 1"
+                  class="btn-pagination">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+
+          <button *ngFor="let page of getPageNumbers()"
+                  (click)="goToPage(page, $event)"
+                  [disabled]="page === -1"
+                  [class.active]="page === currentPage"
+                  class="btn-pagination-number">
+            {{ page === -1 ? '...' : page }}
+          </button>
+
+          <button (click)="nextPage($event)"
+                  [disabled]="currentPage === totalPages()"
+                  class="btn-pagination">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button (click)="lastPage($event)"
+                  [disabled]="currentPage === totalPages()"
+                  class="btn-pagination">
+            <i class="bi bi-chevron-bar-right"></i>
+          </button>
+        </nav>
+
+        <div class="page-size-selector">
+          <label>Lignes / page :</label>
+          <select [(ngModel)]="pageSize" class="form-control-sm">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
       </div>
 
     </div>
   </div>
+
+
+  <!-- ════════ ACTIONS FINALES ════════ -->
+  <div class="actions-section" *ngIf="lignes.length > 0">
+
+    <div class="actions-group">
+
+      <button type="button" (click)="annuler()"
+              class="btn btn-outline"
+              [disabled]="saving || validating || releveVerrouille">
+        <i class="bi bi-x-circle"></i> Annuler
+      </button>
+
+      <button type="button" (click)="imprimer()"
+              class="btn btn-outline"
+              [disabled]="saving || validating">
+        <i class="bi bi-printer"></i> Imprimer
+      </button>
+
+      <button type="button" (click)="recalculerNotes()"
+              class="btn btn-warning"
+              [disabled]="saving || validating || !releveId || releveVerrouille"
+              [title]="releveVerrouille ? 'Impossible : relevé verrouillé' : 'Recalculer'">
+        <i class="bi bi-calculator"></i> Recalculer
+      </button>
+
+      <!-- ════ BOUTON ENREGISTRER ════
+           Désactivé si verrouillé, avec tooltip explicatif -->
+      <button type="button" (click)="enregistrer()"
+              class="btn"
+              [ngClass]="releveVerrouille ? 'btn-locked' : 'btn-primary'"
+              [disabled]="saving || validating || form.invalid || releveVerrouille"
+              [title]="releveVerrouille
+                ? '🔒 Ce relevé est verrouillé par l\'administration'
+                : 'Enregistrer les notes'">
+        <i class="bi"
+           [ngClass]="releveVerrouille
+             ? 'bi-lock-fill'
+             : (saving ? 'bi-hourglass-split' : 'bi-check-lg')">
+        </i>
+        {{ releveVerrouille ? 'Verrouillé' : (saving ? 'Enregistrement...' : 'Enregistrer') }}
+      </button>
+
+    </div>
+
+    <!-- Actions supplémentaires (si relevé existe) -->
+    <div class="additional-actions" *ngIf="releveId">
+
+      <button type="button" (click)="validerReleve()"
+              class="btn btn-success"
+              [disabled]="saving || validating || releveValide || releveVerrouille"
+              [title]="releveVerrouille ? 'Impossible : relevé verrouillé' : 'Valider'">
+        <i class="bi"
+           [ngClass]="validating ? 'bi-hourglass-split' : 'bi-check-double'">
+        </i>
+        {{ validating ? 'Validation...' : (releveValide ? '✓ Validé' : 'Valider') }}
+      </button>
+
+      <button type="button" (click)="supprimerReleve()"
+              class="btn btn-danger"
+              [disabled]="saving || validating || releveVerrouille"
+              [title]="releveVerrouille
+                ? 'Impossible : relevé verrouillé par l\'administration'
+                : 'Supprimer le relevé'">
+        <i class="bi bi-trash"></i> Supprimer
+      </button>
+
+    </div>
+
+    <!-- Indicateur sauvegarde -->
+    <div class="saving-alert" *ngIf="saving || validating">
+      <div class="saving-content">
+        <div class="spinner-mini"></div>
+        <span>{{ saving ? 'Enregistrement en cours' : 'Validation en cours' }}.
+              Ne fermez pas cette page.</span>
+      </div>
+    </div>
+
+    <!-- 🔒 Indicateur verrouillage (persistent) -->
+    <div class="locked-alert" *ngIf="releveVerrouille">
+      <div class="locked-content">
+        <i class="bi bi-lock-fill"></i>
+        <span>
+          <strong>Relevé verrouillé par l'administration</strong> —
+          La saisie et la modification des notes sont désactivées.
+          Contactez un administrateur pour déverrouiller.
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ════════ EMPTY STATE ════════ -->
+  <div class="empty-state" *ngIf="!loading && lignes.length === 0">
+    <div class="empty-content">
+
+      <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+      <h3>Aucune donnée disponible</h3>
+      <p>Sélectionnez une classe, une matière et une année pour afficher les étudiants.</p>
+
+      <div class="empty-steps">
+        <div class="empty-step" [class.active]="form.get('classeId')?.value">
+          <i class="bi" [ngClass]="form.get('classeId')?.value ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Sélectionnez une classe</span>
+        </div>
+        <div class="empty-step" [class.active]="form.get('matiereId')?.value">
+          <i class="bi" [ngClass]="form.get('matiereId')?.value ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Choisissez une matière</span>
+        </div>
+        <div class="empty-step" [class.active]="form.get('anneeAcademiqueId')?.value">
+          <i class="bi" [ngClass]="form.get('anneeAcademiqueId')?.value ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Définissez l'année académique</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="version-badge">v2026.2.0</div>
+
+
+ 
+
 </div>
