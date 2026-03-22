@@ -36,6 +36,15 @@ import { UserComponent } from './components/user/user.component';
 import { InfoEtudiantComponent } from './components/etudiant/info-etudiant/info-etudiant.component';
 import { VerrouilleNoteComponent } from './components/verrouille-note/verrouille-note.component';
 import { LogincomponentComponent } from './auth/login/logincomponent/logincomponent.component';
+import { TypeFraisComponent } from './components/facturation/type-frais/type-frais.component';
+import { FraisAcademiquesComponent } from './components/facturation/frais-academiques/frais-academiques.component';
+import { FacturesEtudiantComponent } from './components/facturation/factures-etudiant/factures-etudiant.component';
+import { PaiementsEtudiantComponent } from './components/facturation/paiements-etudiant/paiements-etudiant.component';
+import { AjustementsEtudiantComponent } from './components/facturation/ajustements-etudiant/ajustements-etudiant.component';
+import { JournalComptableComponent } from './components/facturation/journal-comptable/journal-comptable.component';
+import { SituationFinanciereEtudiantComponent } from './components/facturation/situation-financiere-etudiant/situation-financiere-etudiant.component';
+import { StatistiqueFinanciereEtudiantComponent } from './components/facturation/statistique-financiere-etudiant/statistique-financiere-etudiant.component';
+import { EcheanciersPaiementComponent } from './components/facturation/echeanciers-paiement/echeanciers-paiement.component';
 
 
 
@@ -65,7 +74,16 @@ import { LogincomponentComponent } from './auth/login/logincomponent/logincompon
     StatistiquesComponent,
     LogincomponentComponent,
     InfoEtudiantComponent,
-    UserComponent
+    UserComponent,
+    TypeFraisComponent,
+    FraisAcademiquesComponent,
+    FacturesEtudiantComponent,
+    PaiementsEtudiantComponent,
+    AjustementsEtudiantComponent,
+    JournalComptableComponent,
+    SituationFinanciereEtudiantComponent,
+    StatistiqueFinanciereEtudiantComponent,
+    EcheanciersPaiementComponent
   ],
   imports: [
     BrowserModule,

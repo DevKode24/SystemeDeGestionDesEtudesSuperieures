@@ -55,20 +55,36 @@ export class SidebarComponent {
           { label: 'Unité d\'enseignement', path: 'scolarite/ues', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Matière', path: 'scolarite/matieres', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Bulletin', path: 'scolarite/bulletin', roles: [Role.Admin, Role.Scolarite] },
-          { label: 'Lister tous les Etudiants', path: '/login', roles: [Role.Admin, Role.Scolarite] },
           { label: 'Dossier académique', path: '/login', roles: [Role.Admin, Role.Scolarite] }
 
         ]
       },
+       {
+    label: 'Facturation',
+    icon: 'bi-cash-stack',
+    path: '/dashboard/facturation',
+    roles: [Role.Admin, Role.Scolarite],
+    subMenus: [
+      { label: 'Types de frais', path: 'facturation/type-frais', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Frais académiques', path: 'facturation/frais-academiques', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Facturation des étudiants', path: 'facturation/factures', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Paiements', path: 'facturation/paiements', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Ajustements financiers', path: 'facturation/ajustements', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Journal comptable', path: 'facturation/journal', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Situation financière étudiant', path: 'facturation/situation-financiere', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Statistiques financières', path: 'facturation/statistiques', roles: [Role.Admin, Role.Scolarite] },
+      { label: 'Échéanciers de paiement', path: 'facturation/echeanciers', roles: [Role.Admin, Role.Scolarite] }
+    ]
+  },
       {
         label: 'Enseignants',
         icon: 'bi-person-video3',
         path: '/dashboard/enseignant',
         roles: [Role.Admin, Role.Enseignant],
         subMenus: [
-          { label: 'Mes Releve de note', path: 'enseignant/relevenotes', roles: [Role.Enseignant] },
-          { label: 'Répartition des cours', path: '/login', roles: [Role.Admin, Role.Enseignant] },
-          { label: 'Enseignant', path: 'scolarite/enseignant', roles: [Role.Admin, Role.Scolarite] },
+          { label: 'Creer un Enseignant', path: 'scolarite/enseignant', roles: [Role.Admin, Role.Scolarite] },
+          { label: 'Releve de note', path: 'enseignant/ReleveNotes', roles: [Role.Enseignant] },
+          { label: 'Répartition des cours', path: '/login', roles: [Role.Admin, Role.Enseignant] },   
           { label: 'Lister les étudiants par classe', path: 'scolarite/enseignant', roles: [Role.Admin, Role.Scolarite] }
         ]
       },
@@ -78,12 +94,11 @@ export class SidebarComponent {
         roles: [Role.Admin, Role.Etudiant],
         subMenus: [
           { label: 'Inscription', path: 'scolarite/etudiants', roles: [Role.Admin, Role.Etudiant] },
-          { label: 'Emploi du temps', path: 'scolarite/enseignant/listEtudiant', roles: [Role.Admin, Role.Scolarite] },
-          { label: 'Informations de Etudiant', path: 'etudiant/info/:id', roles: [Role.Admin, Role.Scolarite] }
-
+          { label: 'Emploi du temps', path: 'scolarite/enseignant/listEtudiant', roles: [Role.Etudiant] },
+          { label: 'Lister tous les Etudiants', path: 'scolarite/listeEtudiants', roles: [Role.Admin, Role.Scolarite] }
         ]
       },
-      {
+    {
         label: 'Gestion des Notes',
         path: '/dashboard/enseignant',
         icon: 'bi-journal-text',

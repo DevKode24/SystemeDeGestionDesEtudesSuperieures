@@ -1,0 +1,235 @@
+<div class="tf-page">
+
+  <!-- ================= HEADER + CARD ================= -->
+  <div class="tf-header-card">
+    <div class="tf-header-card__content">
+      <div class="tf-header-icon mb-3">
+        💳
+      </div>
+      <div>
+        <h1 class="h5 text-dark fw-semibold">Types de frais</h1>
+        <p class="text-muted small">
+          Configuration des types de frais appliqués sur les factures étudiants.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOASTS (top right) ================= -->
+  <div class="tf-toasts">
+    <div
+      *ngFor="let t of toasts"
+      [class]="'tf-toast ' + getClassForToast(t.type) + ' shadow-sm text-white p-2 small rounded'"
+      (click)="dismissToast(t.id)"
+    >
+      {{ t.message }}
+    </div>
+  </div>
+
+  <div class="row gy-4">
+
+    <!-- ================= COLONNE 1 — FORMULAIRE, FILTRES, STATS ================= -->
+    <div class="col-12 col-lg-4">
+
+      <!-- STATS -->
+      <div class="card mb-4 overflow-hidden" *ngIf="isVueTable()">
+        <div class="card-body p-3 d-flex align-items-center gap-3">
+          <span class="d-flex align-items-center justify-content-center rounded-circle p-2 bg-primary text-white fs-5">📊</span>
+          <div>
+            <p class="m-0 small text-muted">Types de frais</p>
+            <p class="m-0 fs-6 fw-bold">{{ filteredTypeFrais.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTRES -->
+      <div class="card mb-4" *ngIf="isVueTable()">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 text-secondary"><i class="bi bi-search"></i> Filtres</h6>
+        </div>
+        <div class="card-body p-3">
+          <div class="mb-3">
+            <label class="form-label text-muted small">Nom</label>
+            <input
+              type="text"
+              class="form-control form-control-sm border-muted-2"
+              [(ngModel)]="searchNom"
+              (input)="onSearchChange()"
+              placeholder="Filtrer par nom…"
+            />
+          </div>
+
+          <div class="d-flex justify-content-end mt-2">
+            <button type="button" class="btn btn-sm btn-outline-muted-2" (click)="onSearchChange()">
+              <i class="bi bi-x-circle"></i> Réinitialiser
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULAIRE AJOUT / MODIFICATION -->
+      <div class="card mb-4" *ngIf="isVueTable()">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 text-secondary">
+            <i *ngIf="editingId" class="bi bi-pencil-square"></i>
+            <i *ngIf="!editingId" class="bi bi-plus-circle"></i>
+            {{ editingId ? 'Modifier le type de frais' : 'Nouveau type de frais' }}
+          </h6>
+        </div>
+        <div class="card-body p-3">
+          <form [formGroup]="form" (ngSubmit)="save()">
+
+            <div class="mb-3">
+              <label class="form-label text-muted small">Nom du type de frais</label>
+              <input
+                type="text"
+                class="form-control form-control-sm border-muted-2"
+                formControlName="nom"
+                placeholder="Ex: Inscription, Fonds de bibliothèque…"
+                [class.is-invalid]="form.get('nom')?.invalid && form.get('nom')?.touched"
+              />
+              <div
+                class="invalid-feedback small"
+                *ngIf="form.get('nom')?.invalid && form.get('nom')?.touched"
+              >
+                Veuillez saisir un nom.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-muted small">Description</label>
+              <textarea
+                class="form-control form-control-sm border-muted-2"
+                formControlName="description"
+                placeholder="Décrivez le type de frais (facultatif)"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-muted-2"
+                (click)="resetForm()"
+                [disabled]="loading"
+              >
+                <i class="bi bi-x-circle"></i> Annuler
+              </button>
+              <button
+                type="submit"
+                class="btn btn-sm btn-primary"
+                [disabled]="form.invalid || loading"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+                <span *ngIf="!editingId"><i class="bi bi-plus-circle"></i> Ajouter</span>
+                <span *ngIf="editingId"><i class="bi bi-save"></i> Mettre à jour</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= COLONNE 2 — TABLEAU + PAGINATION ================= -->
+    <div class="col-12 col-lg-8">
+
+      <!-- VIEW TOGGLE -->
+      <div class="mb-3" *ngIf="isVueTable()">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="text-muted small">Vue :</span>
+          <button
+            class="badge btn-sm rounded-pill"
+            [class.bg-primary]="isVueTable()"
+            [class.bg-light]="!isVueTable()"
+            (click)="setVue('table')"
+            [disabled]="isVueTable()"
+          >
+            <i class="bi bi-table"></i> Tableau
+          </button>
+          <button
+            class="badge btn-sm rounded-pill"
+            [class.bg-primary]="isVueGrid()"
+            [class.bg-light]="!isVueGrid()"
+            (click)="setVue('grid')"
+            [disabled]="isVueGrid()"
+          >
+            <i class="bi bi-grid"></i> Grille
+          </button>
+          <span class="ms-3 small text-muted">
+            Total trouvés : {{ filteredTypeFrais.length }}
+          </span>
+        </div>
+      </div>
+
+      <!-- LOADER -->
+      <div *ngIf="loading" class="rna-spinner-wrap">
+        <div class="rna-spinner"></div>
+        <p class="text-muted small mt-1">Chargement des types de frais…</p>
+      </div>
+
+      <!-- TABLEAU -->
+      <div *ngIf="isVueTable() && !loading" class="card shadow-sm border-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-muted small">ID</th>
+                <th class="text-muted small">Nom</th>
+                <th class="text-muted small">Description</th>
+                <th class="text-muted small text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of paginated">
+                <td class="small">{{ t.id }}</td>
+                <td class="fw-medium">{{ t.nom }}</td>
+                <td class="small text-muted">
+                  {{ t.description || '—' }}
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-muted-2 me-1" (click)="edit(t)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="delete(t.id!)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="card-footer py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="small">
+            Page <strong>{{ page }}</strong> / <strong>{{ totalPages }}</strong>
+          </div>
+
+          <div class="btn-group">
+            <button
+              class="btn btn-sm btn-outline-muted-2"
+              [disabled]="page <= 1"
+              (click)="changePage(page - 1)"
+            >
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button
+              class="btn btn-sm btn-outline-muted-2"
+              [disabled]="page >= totalPages"
+              (click)="changePage(page + 1)"
+            >
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VUE GRILLE (placeholder) -->
+      <div *ngIf="isVueGrid()" class="alert alert-info d-flex align-items-center">
+        <i class="bi bi-info-circle me-2"></i>
+        Vue en grille en développement — pour une présentation visuelle des types de frais.
+      </div>
+    </div>
+  </div>
+
+</div>

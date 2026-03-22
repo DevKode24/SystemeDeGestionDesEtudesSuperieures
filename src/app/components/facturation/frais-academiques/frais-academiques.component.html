@@ -1,0 +1,135 @@
+<div class="tf-page">
+
+  <!-- HEADER -->
+  <div class="tf-header-card">
+    <div class="tf-header-card__content">
+      <div class="tf-header-icon">🎓</div>
+      <div>
+        <h1 class="h5 fw-semibold">Frais académiques</h1>
+        <p class="text-muted small">
+          Gestion des frais par filière, niveau et année académique.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row gy-4">
+
+    <!-- ================= FORM + FILTER ================= -->
+    <div class="col-lg-4">
+
+      <!-- FILTER -->
+      <div class="card mb-4">
+        <div class="card-body">
+
+          <select class="form-control mb-2" [(ngModel)]="selectedTypeFrais" (change)="applyFilter()">
+            <option value="">Type de frais</option>
+            <option *ngFor="let t of typesFrais" [value]="t.id">{{ t.nom }}</option>
+          </select>
+
+          <select class="form-control mb-2" [(ngModel)]="selectedFiliere" (change)="applyFilter()">
+            <option value="">Filière</option>
+            <option *ngFor="let f of filieres" [value]="f.id">{{ f.nom }}</option>
+          </select>
+
+          <select class="form-control mb-2" [(ngModel)]="selectedNiveau" (change)="applyFilter()">
+            <option value="">Niveau</option>
+            <option *ngFor="let n of niveaux" [value]="n.id">{{ n.nom }}</option>
+          </select>
+
+          <select class="form-control" [(ngModel)]="selectedAnnee" (change)="applyFilter()">
+            <option value="">Année académique</option>
+            <option *ngFor="let a of annees" [value]="a.id">{{ a.libelle }}</option>
+          </select>
+
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="form" (ngSubmit)="save()">
+
+            <input type="number" class="form-control mb-2" formControlName="montant" placeholder="Montant">
+
+            <select class="form-control mb-2" formControlName="typeFraisId">
+              <option value="">Type de frais</option>
+              <option *ngFor="let t of typesFrais" [value]="t.id">{{ t.nom }}</option>
+            </select>
+
+            <select class="form-control mb-2" formControlName="filiereId">
+              <option value="">Filière</option>
+              <option *ngFor="let f of filieres" [value]="f.id">{{ f.nom }}</option>
+            </select>
+
+            <select class="form-control mb-2" formControlName="niveauId">
+              <option value="">Niveau</option>
+              <option *ngFor="let n of niveaux" [value]="n.id">{{ n.nom }}</option>
+            </select>
+
+            <select class="form-control mb-3" formControlName="anneeAcademiqueId">
+              <option value="">Année académique</option>
+              <option *ngFor="let a of annees" [value]="a.id">{{ a.libelle }}</option>
+            </select>
+
+            <button class="btn btn-primary w-100">
+              {{ editingId ? 'Modifier' : 'Ajouter' }}
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= TABLE ================= -->
+    <div class="col-lg-8">
+
+      <div class="card">
+        <div class="table-responsive">
+
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Filière</th>
+                <th>Niveau</th>
+                <th>Année</th>
+                <th>Montant</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let f of paginated">
+
+                <td>{{ f.typeFrais?.nom }}</td>
+                <td>{{ f.filiere?.nom }}</td>
+                <td>{{ f.niveau?.nom }}</td>
+                <td>{{ f.anneeAcademique?.libelle }}</td>
+
+                <td class="fw-bold text-primary">
+                  {{ f.montant | number }} FCFA
+                </td>
+
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-primary me-1" (click)="edit(f)">
+                    ✏️
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="delete(f.id!)">
+                    🗑️
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+
+          </table>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

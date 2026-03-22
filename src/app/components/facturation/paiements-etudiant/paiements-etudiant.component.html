@@ -1,0 +1,121 @@
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <!-- HEADER -->
+    <div class="card-header text-center">
+      <div class="icon-circle">
+        <i class="bi bi-credit-card"></i>
+      </div>
+      <h3 class="fw-bold mt-2">Enregistrement de paiement</h3>
+      <p>Enregistrez un paiement pour un étudiant</p>
+    </div>
+
+    <div class="card-body">
+
+      <!-- FORM -->
+      <form [formGroup]="paiementForm" class="modern-form mb-4">
+        <div class="row g-3">
+
+          <!-- ETUDIANT -->
+          <div class="col-md-6">
+            <label class="form-label small">Étudiant</label>
+            <select class="form-control"
+                    formControlName="etudiantId"
+                    (change)="onSelectEtudiant()">
+              <option [ngValue]="null">-- Sélectionner --</option>
+              <option *ngFor="let e of etudiants" [value]="e.id">
+                {{ e.nom }} {{ e.prenom }} • {{ e.matricule }}
+              </option>
+            </select>
+          </div>
+
+          <!-- FACTURE -->
+          <div class="col-md-6">
+            <label class="form-label small">Facture</label>
+            <select class="form-control"
+                    formControlName="factureId">
+              <option [ngValue]="null">-- Choisir --</option>
+              <option *ngFor="let f of factures" [value]="f.id">
+                {{ f.numeroFacture }} • {{ formatAmount(f.montantTotal) }} XAF
+              </option>
+            </select>
+          </div>
+
+          <!-- MONTANT -->
+          <div class="col-md-6">
+            <label class="form-label small">Montant</label>
+            <input type="number" class="form-control" formControlName="montant"/>
+          </div>
+
+          <!-- MODE -->
+          <div class="col-md-6">
+            <label class="form-label small">Mode</label>
+            <select class="form-control" formControlName="modePaiement">
+              <option value="ESPECE">Espèce</option>
+              <option value="VIREMENT">Virement</option>
+              <option value="CARTE">Carte</option>
+              <option value="MOBILE_MONEY">Mobile Money</option>
+            </select>
+          </div>
+
+          <!-- REF -->
+          <div class="col-12">
+            <label class="form-label small">Référence</label>
+            <input type="text" class="form-control" formControlName="referenceTransaction"/>
+          </div>
+
+          <!-- BOUTON PREVIEW -->
+          <div class="col-12">
+            <button type="button"
+                    class="btn btn-primary w-100"
+                    (click)="previewPaiement()"
+                    [disabled]="paiementForm.invalid || loading">
+              👁️ Prévisualiser
+            </button>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- PREVIEW -->
+      <div *ngIf="showPreview" class="card mt-4">
+        <div class="card-header bg-dark text-white">
+          🧾 Prévisualisation du reçu
+        </div>
+
+        <div class="card-body">
+
+          <h5 class="text-center">REÇU</h5>
+          <p class="text-center">N° {{ previewRecu.numeroRecu }}</p>
+
+          <p><strong>Étudiant :</strong> {{ previewRecu.etudiant }}</p>
+          <p><strong>Facture :</strong> {{ previewRecu.facture }}</p>
+          <p><strong>Date :</strong> {{ previewRecu.date | date }}</p>
+
+          <hr>
+
+          <p><strong>Montant :</strong>
+            <span class="text-success">
+              {{ formatAmount(previewRecu.montant) }} XAF
+            </span>
+          </p>
+
+          <p><strong>Mode :</strong> {{ previewRecu.mode }}</p>
+          <p><strong>Référence :</strong> {{ previewRecu.reference }}</p>
+
+          <div class="text-end">
+            <button class="btn btn-secondary me-2" (click)="showPreview=false">
+              Annuler
+            </button>
+
+            <button class="btn btn-success" (click)="enregistrerPaiement()">
+              ✅ Confirmer
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

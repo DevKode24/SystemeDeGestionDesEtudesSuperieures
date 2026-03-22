@@ -29,6 +29,15 @@ import { BulletinComponent } from './components/bulletin/bulletin.component';
 import { VerrouilleNoteComponent } from './components/verrouille-note/verrouille-note.component';
 import { InfoEtudiantComponent } from './components/etudiant/info-etudiant/info-etudiant.component';
 import { UserComponent } from './components/user/user.component';
+import { TypeFraisComponent } from './components/facturation/type-frais/type-frais.component';
+import { FraisAcademiquesComponent } from './components/facturation/frais-academiques/frais-academiques.component';
+import { FacturesEtudiantComponent } from './components/facturation/factures-etudiant/factures-etudiant.component';
+import { PaiementsEtudiantComponent } from './components/facturation/paiements-etudiant/paiements-etudiant.component';
+import { AjustementsEtudiantComponent } from './components/facturation/ajustements-etudiant/ajustements-etudiant.component';
+import { JournalComptableComponent } from './components/facturation/journal-comptable/journal-comptable.component';
+import { SituationFinanciereEtudiantComponent } from './components/facturation/situation-financiere-etudiant/situation-financiere-etudiant.component';
+import { StatistiqueFinanciereEtudiantComponent } from './components/facturation/statistique-financiere-etudiant/statistique-financiere-etudiant.component';
+import { EcheanciersPaiementComponent } from './components/facturation/echeanciers-paiement/echeanciers-paiement.component';
 
 const routes: Routes = [
 
@@ -117,6 +126,28 @@ const routes: Routes = [
             component: BulletinComponent
           }
         ]
+      },
+         /* ========= FACTURATION ========= */
+      {
+        path: 'facturation',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'SCOLARITE'] },
+        children: [
+          // 1. Configuration des frais
+          { path: 'type-frais', component: TypeFraisComponent },
+          { path: 'frais-academiques', component: FraisAcademiquesComponent }, 
+
+          // 2. Facturation, paiements, ajustements, journal
+          { path: 'factures', component: FacturesEtudiantComponent }, 
+          { path: 'paiements', component: PaiementsEtudiantComponent }, 
+          { path: 'ajustements', component: AjustementsEtudiantComponent },
+          { path: 'journal', component: JournalComptableComponent }, 
+
+          // 3. Situations et statistiques
+          { path: 'situation-financiere', component: SituationFinanciereEtudiantComponent }, // situation étudiant
+          { path: 'statistiques', component: StatistiqueFinanciereEtudiantComponent }, // stats financières
+          { path: 'echeanciers', component: EcheanciersPaiementComponent }, // echeanciers de paiement
+        ],
       },
 
       /* ========= ENSEIGNANT ========= */

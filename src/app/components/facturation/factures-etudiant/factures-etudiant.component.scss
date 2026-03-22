@@ -1,0 +1,157 @@
+:root {
+  --modern-primary: #0d6efd;
+  --modern-success: #198754;
+  --modern-warning: #ffc107;
+  --modern-light: #f8f9fa;
+  --modern-dark: #212529;
+  --modern-gray-100: #f8f9fa;
+  --modern-gray-200: #e9ecef;
+  --modern-gray-300: #dee2e6;
+  --modern-border-radius: 0.5rem;
+}
+
+.page-wrapper {
+  padding: 1rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.modern-card {
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 1.25rem;
+}
+
+.modern-form {
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 0 !important;
+}
+
+/* Tableau "historique des factures" */
+.table-sm {
+  font-size: 0.85rem;
+}
+
+.table td,
+.table th {
+  padding: 0.4rem 0.5rem;
+}
+
+.card-header .mb-0 {
+  margin-bottom: 0 !important;
+}
+
+/* Tableau "toutes les factures" */
+.modern-table {
+  --bs-table-bg: var(--modern-light);
+  font-size: 0.9rem;
+}
+
+.modern-table thead th {
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 500;
+  color: #495057;
+}
+
+.modern-table tbody td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.modern-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+/* Pagination et boutons précédent/suivant */
+.page-wrapper .btn-outline-secondary {
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.page-wrapper .btn-outline-secondary:disabled {
+  opacity: 0.6;
+}
+
+/* Badge de statut facture */
+.badge.text-capitalize {
+  text-transform: capitalize;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Alert info pour infos étudiant */
+.alert-light {
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Spinner de chargement */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Style global des formulaires select/input */
+.form-control,
+.form-select {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.75rem;
+}
+
+/* Petite marge entre sections */
+.card.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Tableau responsive pour petits écrans */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Icônes Bootstrap */
+.bi {
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .card-body {
+    padding: 0.5rem 0.5rem 1rem;
+  }
+
+  .modern-table th,
+  .modern-table td {
+    font-size: 0.85rem;
+    padding: 0.3rem;
+  }
+}
