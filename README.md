@@ -1,290 +1,172 @@
 SGES — Système de Gestion des Études Supérieures
-Le SGES est une plateforme complète de gestion académique destinée aux établissements d’enseignement supérieur.
-Elle couvre l’ensemble du cycle académique et financier, depuis l’inscription des étudiants jusqu’à la génération des bulletins, en passant par la gestion des notes, des paiements et du suivi administratif.
-
-1. Objectifs du système
-Le SGES a pour objectifs de :
-
-Centraliser la gestion académique et financière.
-
-Automatiser le calcul des notes, moyennes et classements.
-
-Garantir la fiabilité, la cohérence et la sécurité des données.
-
-Faciliter l’accès aux informations académiques et administratives.
-
-Générer automatiquement les documents officiels au format PDF.
-
-Assurer le suivi des paiements, des soldes et des échéances étudiants.
-
-2. Acteurs et rôles
-Enseignant
-L’enseignant peut :
-
-Consulter ses classes et ses matières.
-
-Saisir les notes de :
-
-Contrôle continu.
-
-Examen.
-
-Évaluations spécifiques, comme le rattrapage.
-
-Consulter les statistiques liées à ses classes.
-
-Chef de département
-Le chef de département peut :
-
-Affecter les enseignants, les classes et les matières.
-
-Valider les notes saisies.
-
-Lancer les délibérations.
-
-Verrouiller les résultats.
-
-Service de scolarité
-Le service de scolarité peut :
-
-Gérer les étudiants et les inscriptions.
-
-Gérer les années académiques.
-
-Générer et archiver les bulletins.
-
-Superviser les documents académiques.
-
-Service de comptabilité
-Le service de comptabilité peut :
-
-Gérer la facturation.
-
-Suivre les paiements.
-
-Gérer les relances.
-
-Produire les rapports financiers.
-
-Étudiant
-L’étudiant peut :
-
-Consulter ses notes en temps réel.
-
-Télécharger ses bulletins PDF.
-
-Consulter son historique académique.
-
-Suivre sa situation financière.
-
-Système automatisé
-Le système prend en charge :
-
-Le calcul des notes finales.
-
-Le calcul des moyennes par UE, semestre et année.
-
-Le calcul des rangs.
-
-La génération automatique des documents PDF.
-
-3. Fonctionnement académique global
-1. Collecte des données
-Le système rassemble :
-
-Les informations de l’étudiant.
-
-Les notes par matière et par semestre.
-
-Les UE et les coefficients.
-
-L’année académique active.
-
-2. Calculs automatiques
-Le système effectue automatiquement :
-
-Le calcul de la note finale par matière.
-
-Le calcul de la moyenne par UE.
-
-Le calcul de la moyenne semestrielle.
-
-Le calcul de la moyenne annuelle.
-
-Le classement des étudiants.
-
-3. Décision académique
-À partir des résultats calculés, le système détermine :
-
-Admis.
-
-Ajourné.
-
-Redoublant.
-
-4. Génération des bulletins
-Le système assure :
-
-La mise en forme officielle des résultats.
-
-L’intégration des notes et moyennes.
-
-La génération automatique du bulletin PDF.
-
-L’ajout du logo, des cachets et des mentions officielles.
-
-5. Stockage et accès
-Les documents générés sont :
-
-Archivés de manière sécurisée.
-
-Accessibles via un lien de téléchargement.
-
-Associés au statut académique de l’étudiant.
-
-4. Module Facturation et Finances
-Gestion des frais
-Le système permet de gérer :
-
-Les frais d’inscription.
-
-Les frais de scolarité semestriels ou annuels.
-
-Les frais annexes, comme laboratoire ou assurance.
-
-La tarification peut dépendre de :
-
-La filière.
-
-Le niveau.
-
-Le statut de l’étudiant, par exemple nouveau ou redoublant.
-
-Facturation
-Le module prend en charge :
-
-La facture pro forma.
-
-La facture définitive.
-
-La facturation échelonnée.
-
-Paiements
-Le système permet :
-
-Le paiement total ou partiel.
-
-Plusieurs modes de paiement :
-
-Espèces.
-
-Mobile Money.
-
-Virement.
-
-Carte bancaire.
-
-Chaque transaction dispose d’une référence unique et peut générer automatiquement un reçu PDF.
-
-Suivi financier
-Le module permet aussi de suivre :
-
-Le solde étudiant, créditeur ou débiteur.
-
-L’historique complet des paiements.
-
-L’échéancier personnalisé.
-
-Les relances automatiques par email ou SMS.
-
-Verrouillages conditionnels
-Le système peut bloquer certains accès selon la situation financière :
-
-Blocage de l’inscription en cas d’impayé.
-
-Blocage du téléchargement des bulletins.
-
-Accès aux notes conditionné au paiement.
-
-5. Flux financier global
-Le fonctionnement financier suit généralement cette chaîne :
-
-Inscription administrative
-→ création de l’étudiant et génération de la facture initiale.
-
-Facturation
-→ génération automatique des montants dus.
-
-Paiement
-→ enregistrement de la transaction et émission du reçu PDF.
-
-Mise à jour du solde
-→ calcul du reste à payer en temps réel.
-
-Contrôle d’accès académique
-→ vérification du statut financier avant certaines opérations.
-
-Reporting financier
-→ suivi des paiements, des impayés et des soldes.
-
-6. Documents générés
-Le SGES peut générer plusieurs documents officiels :
-
-Facture PDF, en version pro forma ou définitive.
-
-Reçu de paiement avec QR Code.
-
-Attestation de paiement.
-
-Bulletin de notes.
-
-Relances de paiement.
-
-7. Sécurité et conformité
-Le système intègre plusieurs mécanismes de sécurité :
-
-Contrôle d’accès par rôle.
-
-Séparation stricte entre scolarité et comptabilité.
-
-Verrouillage des documents générés.
-
-QR Code de vérification.
-
-Journal d’audit complet.
-
-Traçabilité des actions utilisateurs.
-
-8. Technologies utilisées
-Exemple d’architecture technique :
-
-Backend : Spring Boot ou Node.js.
-
-Frontend : Angular ou React.
-
-Base de données : MySQL ou PostgreSQL.
-
-Génération PDF : iText ou JasperReports.
-
-Authentification : JWT ou OAuth2.
-
-9. Évolutions possibles
-Le SGES peut évoluer vers :
-
-Un tableau de bord analytique.
-
-Des notifications intelligentes.
-
-L’export Excel.
-
-La signature électronique.
-
-L’intégration avec un LMS, par exemple Moodle.
-
-10. Licence
-Ce projet est destiné à un usage académique et institutionnel.
-Toute utilisation commerciale nécessite une autorisation préalable.
-
-11. Auteur
-SERVICE KING DIGITAL / SGES
-Plateforme dédiée à la digitalisation de l’enseignement supérieur.
+Plateforme intelligente de digitalisation académique et financière
+1. Présentation générale
+
+Le SGES est une plateforme numérique intégrée conçue pour répondre aux besoins des établissements d’enseignement supérieur modernes.
+
+Elle centralise, automatise et sécurise l’ensemble des processus académiques, administratifs et financiers, depuis l’inscription des étudiants jusqu’à la production des documents officiels.
+
+Pensé pour les réalités africaines et internationales, le SGES permet aux institutions de gagner en efficacité, en transparence et en performance.
+
+2. Vision du système
+
+Le SGES ambitionne de devenir une référence en matière de gestion académique en Afrique et à l’international, en offrant :
+
+Une digitalisation complète des établissements
+Une réduction drastique des erreurs humaines
+Une amélioration de la gouvernance académique
+Une expérience utilisateur moderne pour étudiants et personnel
+3. Objectifs stratégiques
+
+Le SGES vise à :
+
+Centraliser toutes les données académiques et financières
+Automatiser les processus critiques (notes, facturation, classement)
+Garantir la fiabilité, la traçabilité et la sécurité des informations
+Simplifier la gestion administrative
+Accélérer la génération des documents officiels
+Optimiser le suivi financier des étudiants
+4. Acteurs et rôles
+🎓 Enseignant
+Consultation des classes et matières
+Saisie des notes (CC, examens, rattrapage)
+Accès aux statistiques pédagogiques
+🏫 Chef de département
+Affectation des enseignants et matières
+Validation des notes
+Lancement des délibérations
+Verrouillage des résultats
+🗂️ Service de scolarité
+Gestion des étudiants et inscriptions
+Administration des années académiques
+Génération et archivage des bulletins
+Supervision des documents officiels
+💰 Service comptable
+Gestion de la facturation
+Suivi des paiements
+Gestion des relances
+Production des rapports financiers
+👨‍🎓 Étudiant
+Consultation des notes en temps réel
+Téléchargement des bulletins
+Accès à l’historique académique
+Suivi de la situation financière
+⚙️ Système automatisé
+Calcul des moyennes et classements
+Génération automatique des documents PDF
+Contrôle des accès conditionnels
+5. Fonctionnement académique
+🔹 Collecte des données
+
+Le système centralise :
+
+Informations étudiantes
+Notes par matière
+Unités d’enseignement (UE)
+Coefficients et semestres
+🔹 Traitements automatiques
+
+Le SGES calcule automatiquement :
+
+Notes finales
+Moyennes par UE
+Moyennes semestrielles et annuelles
+Classement des étudiants
+🔹 Décision académique
+
+Résultats générés :
+
+Admis
+Ajourné
+Redoublant
+🔹 Génération des documents
+Bulletins conformes aux normes
+Intégration des mentions officielles
+Génération PDF automatisée
+🔹 Archivage sécurisé
+Stockage sécurisé
+Accès contrôlé
+Historique conservé
+6. Module Facturation & Finances
+💳 Gestion des frais
+Frais d’inscription
+Frais académiques
+Frais annexes
+
+👉 Tarification dynamique selon :
+
+Filière
+Niveau
+Statut étudiant
+🧾 Facturation
+Factures pro forma
+Factures définitives
+Facturation échelonnée
+💰 Paiements
+Paiement partiel ou total
+Modes multiples :
+Espèces
+Mobile Money
+Virement
+Carte bancaire
+
+👉 Chaque paiement génère :
+
+Une référence unique
+Un reçu PDF sécurisé
+📊 Suivi financier
+Solde en temps réel
+Historique complet
+Échéancier personnalisé
+Relances automatiques
+🔒 Contrôle d’accès intelligent
+Blocage en cas d’impayé
+Restriction d’accès aux documents
+Conditions d’accès aux notes
+7. Flux global du système
+Inscription → Facturation → Paiement → Mise à jour → Accès académique → Reporting
+8. Documents générés
+Factures (PDF)
+Reçus de paiement avec QR Code
+Bulletins académiques
+Attestations
+Relances
+9. Sécurité & conformité
+
+Le SGES garantit :
+
+Authentification sécurisée
+Gestion des rôles et permissions
+Journalisation complète (audit)
+QR Code de vérification
+Traçabilité des opérations
+10. Architecture technique
+Backend : Spring Boot / Node.js
+Frontend : Angular / React
+Base de données : PostgreSQL / MySQL
+PDF : iText / JasperReports
+Sécurité : JWT / OAuth2
+11. Évolutions futures
+Tableau de bord intelligent
+Intelligence artificielle (analyse prédictive)
+Notifications automatisées
+Signature électronique
+Intégration LMS (ex : Moodle)
+12. Valeur ajoutée du SGES
+
+👉 Le SGES offre :
+
+Gain de temps opérationnel
+Réduction des erreurs humaines
+Amélioration de la transparence
+Meilleure gestion financière
+Expérience utilisateur moderne
+13. Licence & exploitation
+
+Le SGES est destiné aux établissements académiques.
+Toute exploitation commerciale est soumise à autorisation.
+
+14. Auteur
+
+SERVICE KING DIGITAL
+Solution technologique dédiée à la transformation numérique de l’enseignement supérieur.
