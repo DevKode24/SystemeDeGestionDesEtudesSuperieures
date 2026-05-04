@@ -1,121 +1,351 @@
-<div class="page-wrapper">
+<form [formGroup]="paiementForm" class="page-wrapper">
   <div class="modern-card">
 
-    <!-- HEADER -->
-    <div class="card-header text-center">
-      <div class="icon-circle">
-        <i class="bi bi-credit-card"></i>
-      </div>
-      <h3 class="fw-bold mt-2">Enregistrement de paiement</h3>
-      <p>Enregistrez un paiement pour un étudiant</p>
+    <div class="card-header">
+      <div class="icon-circle"><i class="bi bi-cash-coin"></i></div>
+      <h3>CAISSE — Encaissement</h3>
+      <p>Gestion intelligente des paiements par échéancier</p>
     </div>
 
     <div class="card-body">
+      <div class="pay-container">
 
-      <!-- FORM -->
-      <form [formGroup]="paiementForm" class="modern-form mb-4">
-        <div class="row g-3">
-
-          <!-- ETUDIANT -->
-          <div class="col-md-6">
-            <label class="form-label small">Étudiant</label>
-            <select class="form-control"
-                    formControlName="etudiantId"
-                    (change)="onSelectEtudiant()">
-              <option [ngValue]="null">-- Sélectionner --</option>
-              <option *ngFor="let e of etudiants" [value]="e.id">
-                {{ e.nom }} {{ e.prenom }} • {{ e.matricule }}
-              </option>
-            </select>
+        <!-- LEFT -->
+        <div class="pay-left">
+          <div class="form-group">
+             <label class="form-label">Étudiant</label>
+            <div class="select-wrap">
+              <i class="bi bi-person-circle select-icon"></i>
+              <select class="form-control" formControlName="etudiantId" (change)="onSelectEtudiant()">
+                <option [ngValue]="null">— Sélectionner un étudiant —</option>
+                <option *ngFor="let e of etudiants" [value]="e.id">
+                  {{ e.nom }} {{ e.prenom }} · {{ e.matricule }}
+                </option>
+              </select>
+            </div>
           </div>
 
-          <!-- FACTURE -->
-          <div class="col-md-6">
-            <label class="form-label small">Facture</label>
-            <select class="form-control"
-                    formControlName="factureId">
-              <option [ngValue]="null">-- Choisir --</option>
-              <option *ngFor="let f of factures" [value]="f.id">
-                {{ f.numeroFacture }} • {{ formatAmount(f.montantTotal) }} XAF
-              </option>
-            </select>
+          <div class="pay-etudiant-badge" *ngIf="selectedEtudiant">
+            <div class="pay-avatar">{{ initiale(selectedEtudiant.nom, selectedEtudiant.prenom) }}</div>
+            <div class="badge-info">
+              <strong>{{ selectedEtudiant.nom }} {{ selectedEtudiant.prenom }}</strong>
+              <small>{{ selectedEtudiant.matricule }}</small>
+            </div>
+            <div class="badge-solde" *ngIf="soldeRestant !== null">
+              <span class="solde-lbl">Solde restant</span>
+              <span class="solde-val" [class.solde-danger]="soldeRestant > 0" [class.solde-ok]="soldeRestant <= 0">
+                {{ formatAmount(soldeRestant) }} XAF
+              </span>
+            </div>
           </div>
 
-          <!-- MONTANT -->
-          <div class="col-md-6">
-            <label class="form-label small">Montant</label>
-            <input type="number" class="form-control" formControlName="montant"/>
+          <div class="form-group">
+             <label class="form-label">Facture</label>
+            <div class="select-wrap">
+              <i class="bi bi-receipt select-icon"></i>
+              <select class="form-control"
+                      formControlName="factureId"
+                      (change)="onSelectFacture()"
+                      [disabled]="!selectedEtudiant">
+                <option [ngValue]="null">— Choisir une facture —</option>
+                <option *ngFor="let f of factures" [value]="f.id">
+                  {{ f.numeroFacture }} — {{ formatAmount(f.montantTotal) }} XAF
+                </option>
+              </select>
+            </div>
           </div>
 
-          <!-- MODE -->
-          <div class="col-md-6">
-            <label class="form-label small">Mode</label>
-            <select class="form-control" formControlName="modePaiement">
-              <option value="ESPECE">Espèce</option>
-              <option value="VIREMENT">Virement</option>
-              <option value="CARTE">Carte</option>
-              <option value="MOBILE_MONEY">Mobile Money</option>
-            </select>
+          <div class="facture-chips" *ngIf="selectedFacture">
+            <div class="chip chip--neutral">
+              <span class="chip-lbl">Total</span>
+              <span class="chip-val">{{ formatAmount(selectedFacture.montantTotal) }}</span>
+            </div>
+            <div class="chip chip--success">
+              <span class="chip-lbl">Payé</span>
+              <span class="chip-val">{{ formatAmount(selectedFacture.montantPaye || 0) }}</span>
+            </div>
+            <div class="chip chip--danger">
+              <span class="chip-lbl">Reste</span>
+              <span class="chip-val">{{ formatAmount(resteAPayer) }}</span>
+            </div>
           </div>
 
-          <!-- REF -->
-          <div class="col-12">
-            <label class="form-label small">Référence</label>
-            <input type="text" class="form-control" formControlName="referenceTransaction"/>
+          <div class="form-group">
+             <label class="form-label">
+              Montant à verser (XAF)
+              <span class="form-hint">sélectionne automatiquement les tranches</span>
+            </label>
+            <div class="montant-wrap">
+              <input type="number"
+                     class="montant-input"
+                     formControlName="montant"
+                     (input)="onMontantChange()"
+                     min="1"
+                     placeholder="0" />
+              <span class="montant-ccy">XAF</span>
+            </div>
           </div>
 
-          <!-- BOUTON PREVIEW -->
-          <div class="col-12">
+          <div class="form-group">
+             <label class="form-label">Référence transaction</label>
+            <div class="select-wrap">
+              <i class="bi bi-hash select-icon"></i>
+              <input
+  type="text"
+  class="form-control form-control--icon"
+  formControlName="referenceTransaction"
+  readonly
+/>
+            </div>
+          </div>
+
+          <div class="form-group">
+             <label class="form-label">Mode de paiement</label>
+            <div class="pay-modes">
+              <button *ngFor="let m of modesDisponibles"
+                      type="button"
+                      class="mode-btn"
+                      [attr.data-mode]="m.value"
+                      [class.active]="paiementForm.value.modePaiement === m.value"
+                      (click)="setMode(m.value)">
+                <i class="bi {{ m.icon }}"></i>
+                <span>{{ m.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="btn-zone">
             <button type="button"
-                    class="btn btn-primary w-100"
-                    (click)="previewPaiement()"
-                    [disabled]="paiementForm.invalid || loading">
-              👁️ Prévisualiser
+                    class="btn-gradient btn-large"
+                    [disabled]="paiementForm.invalid"
+                    (click)="previewPaiement()">
+              <i class="bi bi-eye"></i>
+              Prévisualiser le reçu
             </button>
           </div>
-
-        </div>
-      </form>
-
-      <!-- PREVIEW -->
-      <div *ngIf="showPreview" class="card mt-4">
-        <div class="card-header bg-dark text-white">
-          🧾 Prévisualisation du reçu
         </div>
 
-        <div class="card-body">
-
-          <h5 class="text-center">REÇU</h5>
-          <p class="text-center">N° {{ previewRecu.numeroRecu }}</p>
-
-          <p><strong>Étudiant :</strong> {{ previewRecu.etudiant }}</p>
-          <p><strong>Facture :</strong> {{ previewRecu.facture }}</p>
-          <p><strong>Date :</strong> {{ previewRecu.date | date }}</p>
-
-          <hr>
-
-          <p><strong>Montant :</strong>
-            <span class="text-success">
-              {{ formatAmount(previewRecu.montant) }} XAF
-            </span>
-          </p>
-
-          <p><strong>Mode :</strong> {{ previewRecu.mode }}</p>
-          <p><strong>Référence :</strong> {{ previewRecu.reference }}</p>
-
-          <div class="text-end">
-            <button class="btn btn-secondary me-2" (click)="showPreview=false">
-              Annuler
-            </button>
-
-            <button class="btn btn-success" (click)="enregistrerPaiement()">
-              ✅ Confirmer
-            </button>
+        <!-- CENTER -->
+        <div class="pay-center">
+          <div class="section-header">
+            <h4 class="section-title">
+              <i class="bi bi-calendar2-check"></i> Échéances liées à la facture
+            </h4>
+            <div class="selection-counter" *ngIf="selectedEcheancier?.echeances?.length">
+              <span class="counter-sel">{{ (paiementForm.value.echeancesSelectionnees || []).length }}</span>
+              <span class="counter-sep">/</span>
+              <span class="counter-tot">{{ selectedEcheancier!.echeances!.length }}</span>
+              <span class="counter-lbl">sélectionnées</span>
+            </div>
           </div>
 
+          <div class="echeances-empty" *ngIf="!selectedFacture">
+            <i class="bi bi-calendar2-week"></i>
+            <p>Sélectionnez une facture<br>pour afficher les échéances</p>
+          </div>
+
+          <div class="echeances-list" *ngIf="selectedEcheancier?.echeances?.length; else noEcheance">
+            <ng-container *ngFor="let group of echeancesGroupees">
+              <div class="echeance-group-header">
+                <span class="nature-pill nature-pill--{{ group.nature | lowercase }}">
+                  <i class="bi"
+                     [class.bi-mortarboard-fill]="group.nature === 'INSCRIPTION'"
+                     [class.bi-calendar-range]="group.nature === 'TRANCHE_SCOLARITE'"
+                     [class.bi-file-earmark-plus]="group.nature === 'ANNEXE'"></i>
+                  {{ getNatureLabel(group.nature) }}
+                </span>
+                <div class="group-line"></div>
+              </div>
+
+              <div *ngFor="let e of group.items"
+                   class="echeance-item"
+                   [class.echeance-item--selected]="isSelected(e.id!)"
+                   [class.echeance-item--paye]="e.statut === 'PAYE'"
+                   [class.echeance-item--retard]="isRetard(e)"
+                   [class.echeance-item--partiel]="e.statut === 'PARTIEL'"
+                   [class.echeance-item--clickable]="e.statut !== 'PAYE'"
+                   (click)="e.statut !== 'PAYE' ? toggleEcheance(e) : null">
+
+                <div class="custom-check"
+                     [class.custom-check--selected]="isSelected(e.id!) && e.statut !== 'PAYE'"
+                     [class.custom-check--paye]="e.statut === 'PAYE'">
+                  <i class="bi bi-check2" *ngIf="isSelected(e.id!) || e.statut === 'PAYE'"></i>
+                </div>
+
+                <div class="echeance-info">
+                  <div class="echeance-top">
+                    <span class="echeance-num">{{ e.numero }}</span>
+                    <span class="echeance-libelle">{{ e.libelle }}</span>
+                  </div>
+
+                  <div class="echeance-date">
+                    <i class="bi bi-calendar3"></i>
+                    {{ e.dateEcheance | date:'dd MMM yyyy' }}
+                    <span class="tag-retard" *ngIf="isRetard(e)">En retard</span>
+                  </div>
+
+                  <div class="echeance-progress" *ngIf="e.statut === 'PARTIEL' && e.montantPaye">
+                    <div class="progress-track">
+                      <div class="progress-fill" [style.width.%]="getProgressPercent(e)"></div>
+                    </div>
+                    <span class="progress-txt">
+                      {{ formatAmount(e.montantPaye) }} / {{ formatAmount(e.montant) }} XAF
+                    </span>
+                  </div>
+                </div>
+
+                <div class="echeance-right">
+                  <div class="echeance-montant">{{ formatAmount(e.montant) }}<small> XAF</small></div>
+                  <div class="statut-pill"
+                       [class.statut-pill--paye]="e.statut === 'PAYE'"
+                       [class.statut-pill--partiel]="e.statut === 'PARTIEL'"
+                       [class.statut-pill--retard]="isRetard(e) && e.statut !== 'PAYE'"
+                       [class.statut-pill--attente]="e.statut === 'EN_ATTENTE' && !isRetard(e)">
+                    {{ getStatutLabel(e) }}
+                  </div>
+                </div>
+
+              </div>
+            </ng-container>
+          </div>
+
+          <ng-template #noEcheance>
+            <div class="echeances-empty" *ngIf="selectedFacture">
+              <i class="bi bi-inbox"></i>
+              <p>Aucune échéance disponible pour cette facture</p>
+            </div>
+          </ng-template>
+
+          <div class="selection-resume" *ngIf="(paiementForm.value.echeancesSelectionnees || []).length">
+            <div class="resume-row">
+              <span>Tranches sélectionnées</span>
+              <strong>{{ (paiementForm.value.echeancesSelectionnees || []).length }}</strong>
+            </div>
+            <div class="resume-row resume-row--total">
+              <span>Total à encaisser</span>
+              <strong>{{ formatAmount(paiementForm.value.montant) }} XAF</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="pay-right">
+          <div class="section-header">
+            <h4 class="section-title">
+              <i class="bi bi-clock-history"></i> Historique
+            </h4>
+            <span class="hist-count" *ngIf="paiements.length">{{ paiements.length }}</span>
+          </div>
+
+          <div class="search-wrap" *ngIf="paiements.length">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text"
+                   class="search-input"
+                   placeholder="Référence, nom…"
+                   [(ngModel)]="recherchePaiement"
+                   [ngModelOptions]="{standalone: true}"
+                   (input)="filtrerPaiements()" />
+          </div>
+
+          <div class="history-list" *ngIf="paiementsFiltres.length; else noHist">
+            <div *ngFor="let p of paiementsFiltres" class="history-item">
+              <div class="history-item__meta">
+                <span class="history-date">{{ p.datePaiement | date:'dd/MM/yy HH:mm' }}</span>
+                <span class="history-ref">{{ p.referenceTransaction || '—' }}</span>
+                <span class="history-nom">{{ p.etudiant?.nom }}</span>
+              </div>
+              <div class="history-item__right">
+                <span class="history-mode">{{ p.modePaiement }}</span>
+                <span class="history-amount">+{{ formatAmount(p.montant) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noHist>
+            <div class="history-empty">
+              <i class="bi"
+                 [class.bi-person-dash]="!selectedEtudiant"
+                 [class.bi-inbox]="selectedEtudiant"></i>
+              <p>{{ !selectedEtudiant ? 'Sélectionnez un étudiant' : 'Aucun paiement enregistré' }}</p>
+            </div>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" *ngIf="showPreview && previewRecu" (click)="closePreview()">
+    <div class="pay-recu-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="bi bi-receipt-cutoff"></i></div>
+        <div>
+          <h4 class="modal-title">Confirmation du paiement</h4>
+          <div class="modal-sub">{{ previewRecu.date | date:'dd MMMM yyyy · HH:mm' }}</div>
+        </div>
+        <button class="modal-close" type="button" (click)="closePreview()">×</button>
+      </div>
+
+      <div class="modal-montant">
+        {{ formatAmount(previewRecu.montant) }}
+        <span class="modal-montant__ccy">XAF</span>
+      </div>
+
+      <div class="modal-rows">
+        <div class="modal-row">
+          <span>Étudiant</span><strong>{{ previewRecu.etudiant }}</strong>
+        </div>
+        <div class="modal-row">
+          <span>Matricule</span><strong>{{ previewRecu.matricule }}</strong>
+        </div>
+        <div class="modal-row">
+          <span>Facture</span><strong>{{ previewRecu.facture }}</strong>
+        </div>
+        <div class="modal-row">
+          <span>Mode</span><strong>{{ getModeLabel(previewRecu.mode) }}</strong>
+        </div>
+        <div class="modal-row">
+          <span>Référence</span><strong>{{ previewRecu.reference }}</strong>
         </div>
       </div>
 
+      <div class="modal-echeances" *ngIf="previewRecu.echeancesSelectionnees?.length">
+        <div class="modal-echeances__title">
+          <i class="bi bi-check2-all"></i> Échéances couvertes
+        </div>
+        <div *ngFor="let e of previewRecu.echeancesSelectionnees" class="modal-echeance-row">
+          <span>
+            <span class="nature-pill nature-pill--{{ e.nature | lowercase }} nature-pill--xs">
+              {{ getNatureLabel(e.nature) }}
+            </span>
+            {{ e.libelle }}
+          </span>
+          <strong>{{ formatAmount(e.montant) }} XAF</strong>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closePreview()">Annuler</button>
+        <button type="button" class="btn-success" (click)="enregistrerPaiement()">
+          <i class="bi bi-check2-circle"></i> Confirmer & Enregistrer
+        </button>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- TOASTS -->
+  <div class="pay-toast-stack">
+    <div *ngFor="let t of toasts"
+         class="pay-toast pay-toast--{{ t.type }}"
+         (click)="dismissToast(t.id)">
+      <i class="bi"
+         [class.bi-check-circle]="t.type === 'success'"
+         [class.bi-x-circle]="t.type === 'error'"
+         [class.bi-info-circle]="t.type === 'info'"
+         [class.bi-exclamation-triangle]="t.type === 'warning'"></i>
+      <span>{{ t.message }}</span>
+      <span class="toast-close">×</span>
+    </div>
+  </div>
+</form>

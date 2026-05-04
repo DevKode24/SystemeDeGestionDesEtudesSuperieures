@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TypeFraisService } from 'src/app/services/type-frais.service';
-import { TypeFrais } from 'src/app/models/type-frais';
+import { TypeFrais, NatureTypeFrais } from 'src/app/models/type-frais';
 
 type Vue = 'table' | 'grid';
-
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface Toast {
@@ -20,7 +19,6 @@ interface Toast {
 })
 export class TypeFraisComponent implements OnInit {
 
-  // ================= DATA =================
   typeFrais: TypeFrais[] = [];
   filteredTypeFrais: TypeFrais[] = [];
 
@@ -30,38 +28,39 @@ export class TypeFraisComponent implements OnInit {
   loading = false;
   vue: Vue = 'table';
 
-  // ================= FILTER + PAGINATION =================
   searchNom = '';
   searchDescription = '';
+  searchNature = '';
 
   page = 1;
   pageSize = 10;
 
-  // ================= TOASTS =================
+  readonly natures: NatureTypeFrais[] = ['INSCRIPTION', 'SCOLARITE', 'ANNEXE', 'AUTRE'];
+
   private _toastId = 0;
   toasts: Toast[] = [];
 
-  // ================= CONSTRUCTEUR =================
   constructor(
     private fb: FormBuilder,
     private service: TypeFraisService
   ) {}
 
-  // ================= HOOKS =================
   ngOnInit(): void {
     this.initForm();
     this.loadData();
   }
 
-  // ================= FORM =================
   initForm(): void {
     this.form = this.fb.group({
-      nom: [''],
-      description: ['']
+      nom: ['', [Validators.required, Validators.minLength(2)]],
+      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
+      nature: ['AUTRE', Validators.required],
+      description: [''],
+      obligatoire: [false],
+      actif: [true]
     });
   }
 
-  // ================= LOAD =================
   loadData(): void {
     this.loading = true;
     this.service.getAllTypesFrais().subscribe({
@@ -78,23 +77,31 @@ export class TypeFraisComponent implements OnInit {
     });
   }
 
-  // ================= FILTER =================
   applyFilter(): void {
     const nom = this.searchNom.toLowerCase().trim();
     const desc = this.searchDescription.toLowerCase().trim();
+    const nature = this.searchNature.trim();
 
     this.filteredTypeFrais = this.typeFrais.filter(t =>
-      (nom === '' || t.nom.toLowerCase().includes(nom)) 
-     
+      (nom === '' || t.nom.toLowerCase().includes(nom)) &&
+      (desc === '' || (t.description || '').toLowerCase().includes(desc)) &&
+      (nature === '' || t.nature === nature)
     );
+
+    this.page = 1;
   }
 
   onSearchChange(): void {
     this.applyFilter();
-    this.page = 1;
   }
 
-  // ================= PAGINATION =================
+  resetFilters(): void {
+    this.searchNom = '';
+    this.searchDescription = '';
+    this.searchNature = '';
+    this.applyFilter();
+  }
+
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.filteredTypeFrais.length / this.pageSize));
   }
@@ -108,7 +115,6 @@ export class TypeFraisComponent implements OnInit {
     this.page = Math.max(1, Math.min(p, this.totalPages));
   }
 
-  // ================= VIEW =================
   isVueTable(): boolean {
     return this.vue === 'table';
   }
@@ -120,15 +126,45 @@ export class TypeFraisComponent implements OnInit {
   setVue(v: Vue): void {
     this.vue = v;
   }
+  normalizeCode(): void {
+  const code = this.form.get('code')?.value;
+  if (!code) return;
 
-  // ================= CRUD =================
+  this.form.patchValue({
+    code: String(code).trim().toUpperCase().replace(/\s+/g, '_')
+  });
+}
+
+suggestCodeFromNom(): void {
+  const nom = this.form.get('nom')?.value;
+  const codeControl = this.form.get('code');
+
+  if (!nom || !codeControl || codeControl.value?.trim()) return;
+
+  const suggested = String(nom)
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  codeControl.patchValue(suggested);
+}
+
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.loading = true;
 
     const payload: TypeFrais = {
-      ...this.form.value
+      ...this.form.value,
+      code: this.form.value.code?.trim()?.toUpperCase(),
+      nom: this.form.value.nom?.trim(),
+      description: this.form.value.description?.trim()
     };
 
     const action$ = this.editingId
@@ -139,7 +175,7 @@ export class TypeFraisComponent implements OnInit {
       next: () => {
         this.resetForm();
         this.loadData();
-        this.toast('success', '✅ Type de frais enregistré');
+        this.toast('success', 'Type de frais enregistre');
       },
       error: err => {
         this.toast('error', err?.error?.message || 'Erreur lors de l’enregistrement');
@@ -152,17 +188,24 @@ export class TypeFraisComponent implements OnInit {
 
   edit(t: TypeFrais): void {
     this.editingId = t.id!;
-    this.form.patchValue(t);
+    this.form.patchValue({
+      nom: t.nom,
+      code: t.code,
+      nature: t.nature,
+      description: t.description || '',
+      obligatoire: t.obligatoire,
+      actif: t.actif ?? true
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   delete(id: number): void {
-    if (!confirm('⚠️ Supprimer ce type de frais ?')) return;
+    if (!confirm('Supprimer ce type de frais ?')) return;
 
     this.service.deleteTypeFrais(id).subscribe({
       next: () => {
         this.loadData();
-        this.toast('info', '🗑️ Type de frais supprimé');
+        this.toast('info', 'Type de frais supprime');
       },
       error: err => {
         this.toast('error', err?.error?.message || 'Erreur lors de la suppression');
@@ -171,11 +214,26 @@ export class TypeFraisComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.form.reset();
+    this.form.reset({
+      nom: '',
+      code: '',
+      nature: 'AUTRE',
+      description: '',
+      obligatoire: false,
+      actif: true
+    });
     this.editingId = null;
   }
 
-  // ================= TOASTS =================
+  natureBadgeClass(nature: NatureTypeFrais): string {
+    switch (nature) {
+      case 'INSCRIPTION': return 'bg-primary';
+      case 'SCOLARITE': return 'bg-success';
+      case 'ANNEXE': return 'bg-warning text-dark';
+      default: return 'bg-secondary';
+    }
+  }
+
   private toast(type: ToastType, message: string): void {
     const id = ++this._toastId;
     this.toasts.push({ id, type, message });
@@ -187,10 +245,6 @@ export class TypeFraisComponent implements OnInit {
   dismissToast(id: number): void {
     this.toasts = this.toasts.filter(t => t.id !== id);
   }
-
-  // ========================================================
-  // UTILITÉS POUR LE TEMPLATE (type-safe, évite TS2367)
-  // ========================================================
 
   getClassForToast(type: ToastType): string {
     switch (type) {

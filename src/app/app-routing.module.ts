@@ -37,7 +37,9 @@ import { AjustementsEtudiantComponent } from './components/facturation/ajustemen
 import { JournalComptableComponent } from './components/facturation/journal-comptable/journal-comptable.component';
 import { SituationFinanciereEtudiantComponent } from './components/facturation/situation-financiere-etudiant/situation-financiere-etudiant.component';
 import { StatistiqueFinanciereEtudiantComponent } from './components/facturation/statistique-financiere-etudiant/statistique-financiere-etudiant.component';
-import { EcheanciersPaiementComponent } from './components/facturation/echeanciers-paiement/echeanciers-paiement.component';
+import { FactureDetailComponent } from './components/facturation/facture-detail/facture-detail.component';
+import { ParametrageTypeFraisComponent } from './components/facturation/parametrage-type-frais/parametrage-type-frais.component';
+import { ModeleEcheancierComponent } from './components/facturation/modele-echeancier/modele-echeancier.component';
 
 const routes: Routes = [
 
@@ -136,17 +138,20 @@ const routes: Routes = [
           // 1. Configuration des frais
           { path: 'type-frais', component: TypeFraisComponent },
           { path: 'frais-academiques', component: FraisAcademiquesComponent }, 
+          { path: 'parametrage-type-frais', component: ParametrageTypeFraisComponent },
+            { path: 'modele-echeancier', component: ModeleEcheancierComponent },
 
           // 2. Facturation, paiements, ajustements, journal
           { path: 'factures', component: FacturesEtudiantComponent }, 
           { path: 'paiements', component: PaiementsEtudiantComponent }, 
           { path: 'ajustements', component: AjustementsEtudiantComponent },
-          { path: 'journal', component: JournalComptableComponent }, 
+          { path: 'journal', component: JournalComptableComponent },
+          {path: 'factures/info/:id',component: FactureDetailComponent} ,
 
           // 3. Situations et statistiques
           { path: 'situation-financiere', component: SituationFinanciereEtudiantComponent }, // situation étudiant
           { path: 'statistiques', component: StatistiqueFinanciereEtudiantComponent }, // stats financières
-          { path: 'echeanciers', component: EcheanciersPaiementComponent }, // echeanciers de paiement
+        //  { path: 'echeanciers', component: EcheanciersPaiementComponent }, // echeanciers de paiement
         ],
       },
 

@@ -1,0 +1,115 @@
+@use 'src/styles' as *;
+
+.page-wrapper {
+  padding: 2rem;
+  background: #f3f4f6;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.facture-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  max-width: 800px;
+  margin: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.facture-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+
+  h2 {
+    margin: 0;
+    color: #111827;
+  }
+
+  h3 {
+  color: #0d6efd;
+}
+}
+
+/* INFOS */
+.facture-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+/* TABLE */
+.facture-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+
+  th, td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  th {
+    text-align: left;
+    background: #f9fafb;
+  }
+}
+
+/* TOTAL */
+.totals {
+  text-align: right;
+  margin-bottom: 2rem;
+
+  p {
+    margin: 0.3rem 0;
+    font-size: 1rem;
+  }
+}
+
+/* QR */
+.qr-section {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+/* SIGNATURE */
+.signature {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+
+  .line {
+    width: 200px;
+    border-bottom: 1px solid #000;
+    margin-top: 2rem;
+  }
+
+  .stamp {
+    border: 2px dashed #000;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: center;
+  }
+}
+
+/* PRINT */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .page-wrapper {
+    background: white;
+    padding: 0;
+  }
+
+  .facture-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+}

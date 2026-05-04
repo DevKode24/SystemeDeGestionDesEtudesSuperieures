@@ -1,1 +1,183 @@
-<p>ajustements-etudiant works!</p>
+<div class="page-wrapper">
+  <div class="factu-shell">
+
+    <!-- TOAST -->
+    <div class="toast-container" *ngIf="toast">
+      <div class="toast" [class.toast--success]="toast.type === 'success'" [class.toast--error]="toast.type === 'error'">
+        <i class="bi" [class.bi-check-circle-fill]="toast.type === 'success'" [class.bi-x-circle-fill]="toast.type === 'error'"></i>
+        {{ toast.message }}
+      </div>
+    </div>
+
+    <!-- CONFIRM DELETE -->
+    <div class="overlay" *ngIf="showConfirmDelete" (click)="annulerSuppression()">
+      <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+        <div class="modal__confirm-icon"><i class="bi bi-trash3"></i></div>
+        <h4 class="modal__confirm-title">Supprimer cet ajustement ?</h4>
+        <p class="modal__confirm-sub">Cette action est irréversible.</p>
+        <div class="modal__actions">
+          <button class="btn btn--ghost" (click)="annulerSuppression()">Annuler</button>
+          <button class="btn btn--danger" (click)="confirmerSuppression()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CRUD -->
+    <div class="overlay" *ngIf="showModal" (click)="fermerModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal__header">
+          <div class="modal__icon"><i class="bi bi-sliders"></i></div>
+          <div>
+            <h5 class="modal__title">{{ selectionne ? 'Modifier' : 'Nouvel' }} ajustement financier</h5>
+            <p class="modal__sub">Remise, majoration, exonération…</p>
+          </div>
+          <button class="modal__close" (click)="fermerModal()">×</button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="sauvegarder()" class="modal__body">
+          <div class="form-grid">
+            <div class="field">
+              <label class="label">ID Étudiant *</label>
+              <input class="input" type="number" formControlName="etudiantId" placeholder="ID de l'étudiant" [class.input--error]="isInvalid('etudiantId')"/>
+              <span class="field-error" *ngIf="isInvalid('etudiantId')">ID étudiant requis</span>
+            </div>
+
+            <div class="field">
+              <label class="label">Type *</label>
+              <select class="input" formControlName="type">
+                <option *ngFor="let t of typesAjustement" [value]="t">{{ t }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="label">Montant (FCFA) *</label>
+              <input class="input" type="number" formControlName="montant" placeholder="0" [class.input--error]="isInvalid('montant')"/>
+              <span class="field-error" *ngIf="isInvalid('montant')">Montant requis et positif</span>
+            </div>
+
+            <div class="field">
+              <label class="label">Date d'effet</label>
+              <input class="input" type="date" formControlName="dateEffet"/>
+            </div>
+
+            <div class="field field--full">
+              <label class="label">Motif *</label>
+              <textarea class="input input--textarea" formControlName="motif" rows="2" placeholder="Motif de l'ajustement…" [class.input--error]="isInvalid('motif')"></textarea>
+              <span class="field-error" *ngIf="isInvalid('motif')">Motif requis (min. 3 caractères)</span>
+            </div>
+
+            <div class="field field--full">
+              <label class="label">Approuvé par</label>
+              <input class="input" formControlName="approuvePar" placeholder="Nom du validateur"/>
+            </div>
+          </div>
+
+          <div class="modal__actions">
+            <button type="button" class="btn btn--ghost" (click)="fermerModal()">Annuler</button>
+            <button type="submit" class="btn btn--primary" [disabled]="form.invalid || saving">
+              <span class="spinner" *ngIf="saving"></span>
+              <i class="bi bi-check-circle" *ngIf="!saving"></i>
+              {{ selectionne ? 'Mettre à jour' : 'Appliquer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero__bg"></div>
+      <div class="hero__content">
+        <div class="hero__badge"><i class="bi bi-sliders"></i> Finances</div>
+        <h1 class="hero__title">Ajustements <span class="hero__accent">Financiers</span></h1>
+        <p class="hero__sub">Remises, majorations, exonérations et crédits</p>
+      </div>
+      <div class="hero__stats">
+        <div class="stat-chip"><span class="stat-chip__val">{{ ajustementsFiltres.length }}</span><span class="stat-chip__lbl">Ajustements</span></div>
+        <div class="stat-chip stat-chip--accent"><span class="stat-chip__val">{{ totalMontant | number }} FCFA</span><span class="stat-chip__lbl">Total ajusté</span></div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="bi bi-search search-icon"></i>
+        <input class="search-input" [(ngModel)]="searchQuery" (input)="filtrer()" placeholder="Rechercher par motif ou ID étudiant…"/>
+        <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''; filtrer()">×</button>
+      </div>
+
+      <select class="input input--filter" [(ngModel)]="filtreType" (change)="filtrer()">
+        <option value="">Tous les types</option>
+        <option *ngFor="let t of typesAjustement" [value]="t">{{ t }}</option>
+      </select>
+
+      <div class="toolbar__actions">
+        <label class="btn btn--ghost btn--sm">
+          <i class="bi bi-upload"></i> Importer
+          <input type="file" accept=".csv,.xlsx" hidden (change)="onImportFile($event)"/>
+        </label>
+        <button class="btn btn--export btn--sm" (click)="exporterCSV()"><i class="bi bi-filetype-csv"></i> CSV</button>
+        <button class="btn btn--export btn--sm" (click)="exporterExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+        <button class="btn btn--export btn--sm" (click)="imprimerPDF()"><i class="bi bi-printer"></i> PDF</button>
+        <button class="btn btn--primary" (click)="ouvrirModalAjout()">
+          <i class="bi bi-plus-circle"></i> Nouvel ajustement
+        </button>
+      </div>
+    </div>
+
+    <!-- LOADER -->
+    <div class="loader-wrap" *ngIf="loading">
+      <div class="loader-ring"></div>
+      <span>Chargement…</span>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card" *ngIf="!loading">
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Étudiant</th>
+              <th>Type</th>
+              <th>Montant</th>
+              <th>Motif</th>
+              <th>Date</th>
+              <th>Approuvé par</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of ajustementsFiltres; trackBy: trackById; let i = index" class="table-row">
+              <td class="text-muted text-sm">{{ i + 1 }}</td>
+              <td><span class="tag-name">Étudiant #{{ a.etudiantId }}</span></td>
+              <td><span class="pill" [ngClass]="typeClass(a.type)">{{ a.type }}</span></td>
+              <td><span class="amount">{{ a.montant | number }} FCFA</span></td>
+              <td class="text-muted text-sm">{{ a.motif || '—' }}</td>
+              <td class="text-muted text-sm">{{ a.dateEffet || '—' }}</td>
+              <td class="text-muted text-sm">{{ a.approuvePar || '—' }}</td>
+              <td class="text-right">
+                <div class="row-actions">
+                  <button class="action-btn action-btn--edit" (click)="ouvrirModalEdit(a)" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="action-btn action-btn--del" (click)="demanderSuppression(a.id!)" title="Supprimer">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="ajustementsFiltres.length === 0">
+              <td colspan="8" class="empty-row">
+                <i class="bi bi-inbox"></i>
+                <span>Aucun ajustement trouvé</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

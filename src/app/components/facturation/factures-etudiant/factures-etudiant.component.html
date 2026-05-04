@@ -12,101 +12,69 @@
 
     <div class="card-body">
 
-      <!-- ================= FORMULAIRE DE SÉLECTION ================= -->
-      <form [formGroup]="form" (submit)="$event.preventDefault(); onSelectEtudiant()" class="modern-form mb-4">
-        <div class="row g-2 align-items-center">
-
-          <div class="col-md-12 d-flex align-items-center gap-2">
-            <div class="flex-grow-1">
-              <select
-                class="form-control"
-                formControlName="etudiantId"
-                (change)="onSelectEtudiant()"
-              >
-                <option [ngValue]="null">-- Choisir un étudiant --</option>
-                <option *ngFor="let e of etudiants" [value]="e.id">
-                  {{ e.nom }} {{ e.prenom }} • {{ e.matricule }}
-                </option>
-              </select>
-            </div>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              (click)="genererFacture()"
-              [disabled]="loading || !selectedEtudiant"
-            >
-              📄 Générer
-            </button>
-          </div>
-
-          <div *ngIf="selectedEtudiant" class="col-12">
-            <div class="alert alert-light p-2 small">
-              <strong>Filière :</strong> {{ selectedEtudiant.filiereId }} •
-              <strong>Niveau :</strong> {{ selectedEtudiant.niveauId }} •
-              <strong>Année :</strong> {{ selectedEtudiant.anneeAcademiqueId }}
-            </div>
-          </div>
+      <!-- LIGNE PRINCIPALE CONTENANT LES 3 BLOCS -->
+<div class="row g-3">
+  
+  <!-- BLOC 1 : FORMULAIRE DE SÉLECTION (33%) -->
+  <div class="col-md-4">
+    <form [formGroup]="form" (submit)="$event.preventDefault(); onSelectEtudiant()" class="modern-form">
+      <div class="d-flex align-items-center gap-2">
+        <div class="flex-grow-1">
+          <select class="form-control" formControlName="etudiantId" (change)="onSelectEtudiant()">
+            <option [ngValue]="null">-- Choisir un étudiant --</option>
+            <option *ngFor="let e of etudiants" [value]="e.id">{{ e.nom }} {{ e.prenom }} • {{ e.matricule }}</option>
+          </select>
         </div>
-      </form>
-
-      <!-- ================= FRAIS APPLICABLES ================= -->
-      <div *ngIf="selectedEtudiant && frais.length > 0" class="card mb-4 border-0 bg-light-subtle">
-        <div class="card-header bg-light border-0 p-2">
-          <h6 class="mb-0">Frais appliqués à cet étudiant</h6>
-        </div>
-        <div class="card-body p-2">
-          <ul class="list-group">
-            <li
-              *ngFor="let f of frais"
-              class="list-group-item d-flex justify-content-between small py-1"
-            >
-              <span>{{ f.typeFrais?.nom }}</span>
-              <strong>{{ formatAmount(f.montant) }} XAF</strong>
-            </li>
-          </ul>
-        </div>
+        <button type="button" class="btn btn-primary" (click)="genererFacture()" [disabled]="loading || !selectedEtudiant">
+          📄 Générer
+        </button>
       </div>
-
-      <!-- ================= HISTORIQUE FACTURES ÉTUDIANT ================= -->
-      <div *ngIf="factures.length > 0" class="card mb-4 border-0">
-        <div class="card-header bg-primary text-white p-2">
-          <h6 class="mb-0">Factures de cet étudiant</h6>
-        </div>
-        <div class="card-body p-0">
-          <table class="table table-sm table-striped m-0">
-            <thead>
-              <tr>
-                <th width="10%">#</th>
-                <th>Numéro</th>
-                <th>Date</th>
-                <th>Montant</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let f of factures">
-                <td>{{ f.id }}</td>
-                <td>{{ f.numeroFacture }}</td>
-                <td>{{ formatDate(f.dateFacture) }}</td>
-                <td class="text-end">{{ formatAmount(f.montantTotal) }} XAF</td>
-                <td>
-                  <span
-                    class="badge text-capitalize"
-                    [ngClass]="{
-                      'bg-success text-white': f.statut === 'PAYEE',
-                      'bg-warning text-dark': f.statut === 'PARTIELLEMENT_PAYEE',
-                      'bg-light text-muted': f.statut === 'NON_PAYEE'
-                    }"
-                  >
-                    {{ f.statut }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      
+      <!-- Info étudiant sous le select -->
+      <div *ngIf="selectedEtudiant" class="alert alert-light p-2 small mt-2">
+        <strong>Filière :</strong> {{ selectedEtudiant.filiereId }} • <strong>Niveau :</strong> {{ selectedEtudiant.niveauId }}
       </div>
+    </form>
+  </div>
+
+  <!-- BLOC 2 : FRAIS APPLICABLES (33%) -->
+  <div class="col-md-4">
+    <div *ngIf="selectedEtudiant && frais.length > 0" class="card border-0 bg-light-subtle h-100">
+      <div class="card-header bg-light border-0 p-2"><h6 class="mb-0">Frais appliqués</h6></div>
+      <div class="card-body p-2">
+        <ul class="list-group list-group-flush">
+          <li *ngFor="let f of frais" class="list-group-item d-flex justify-content-between small bg-transparent">
+            <span>{{ f.typeFraisNom }}</span>
+            <strong>{{ formatAmount(f.montant) }} XAF</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOC 3 : HISTORIQUE FACTURES (33%) -->
+  <div class="col-md-4">
+    <div *ngIf="factures.length > 0" class="card border-0 h-100">
+      <div class="card-header bg-primary text-white p-2"><h6 class="mb-0">Factures étudiant</h6></div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped m-0 small">
+          <tr *ngFor="let f of factures">
+            <td>{{ f.numeroFacture }}</td>
+            <td class="text-end">{{ formatAmount(f.montantTotal) }} XAF</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTES (Affiches en dessous de la ligne) -->
+<div class="row mt-3">
+  <div class="col-12">
+    <div *ngIf="generationResult" class="alert alert-success small">Dernière génération : {{ generationResult.facture?.numeroFacture }}</div>
+    <div *ngIf="(generationResult?.anomalies ?? []).length > 0" class="alert alert-warning small">Anomalies détectées.</div>
+  </div>
+</div>
 
       <!-- ================= ALL FACTURES (MODULE COMPLET) ================= -->
       <div class="card border-0">
@@ -150,10 +118,11 @@
 <button
   class="btn btn-outline-secondary"
   (click)="incrementPage()"
-  [disabled]="page * pageSize >= allFactures.length"
+  [disabled]="page >= totalPages"
 >
   Suivant
 </button>
+
             </div>
           </div>
 
@@ -168,32 +137,59 @@
                   <th>Date</th>
                   <th>Montant</th>
                   <th>Statut</th>
+                  <th width="15%" class="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let f of filteredAllFactures; let i = index">
-                  <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-                  <td>{{ f.numeroFacture }}</td>
-                  <td>
-                    <span class="fw-semibold">
-                      {{ f.etudiant?.nom }} {{ f.etudiant?.prenom }}
-                    </span>
-                  </td>
-                  <td>{{ formatDate(f.dateFacture) }}</td>
-                  <td class="text-end fw-bold">{{ formatAmount(f.montantTotal) }} XAF</td>
-                  <td>
-                    <span
-                      class="badge text-capitalize"
-                      [ngClass]="{
-                        'bg-success text-white': f.statut === 'PAYEE',
-                        'bg-warning text-dark': f.statut === 'PARTIELLEMENT_PAYEE',
-                        'bg-light text-muted': f.statut === 'NON_PAYEE'
-                      }"
-                    >
-                      {{ f.statut }}
-                    </span>
-                  </td>
-                </tr>
+               <tr *ngFor="let f of filteredAllFactures; let i = index">
+  <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+
+  <td>{{ f.numeroFacture }}</td>
+
+  <td>
+    <span class="fw-semibold">
+      {{ f.etudiant?.nom }} {{ f.etudiant?.prenom }}
+    </span>
+  </td>
+
+  <td>{{ formatDate(f.dateFacture) }}</td>
+
+  <td class="text-end fw-bold">
+    {{ formatAmount(f.montantTotal) }} XAF
+  </td>
+
+  <td>
+    <span
+      class="badge text-capitalize"
+      [ngClass]="{
+        'bg-success text-white': f.statut === 'PAYEE',
+        'bg-warning text-dark': f.statut === 'PARTIELLEMENT_PAYEE',
+        'bg-light text-muted': f.statut === 'NON_PAYEE'
+      }"
+    >
+      {{ f.statut }}
+    </span>
+  </td>
+
+  <!-- 🔥 ACTIONS -->
+  <td class="text-center">
+    <button
+      class="btn btn-sm btn-outline-primary me-2"
+      (click)="voirFacture(f.id!)"
+      title="Voir"
+    >
+      👁
+    </button>
+
+    <button
+      class="btn btn-sm btn-outline-dark"
+(click)="imprimerFacture(f.id!)"
+      title="Imprimer"
+    >
+      🖨
+    </button>
+  </td>
+</tr>
 
                 <tr *ngIf="filteredAllFactures.length === 0">
                   <td colspan="6" class="text-center text-muted py-4">

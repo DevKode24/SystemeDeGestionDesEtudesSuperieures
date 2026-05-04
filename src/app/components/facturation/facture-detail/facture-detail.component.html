@@ -1,0 +1,93 @@
+<div class="page-wrapper" *ngIf="facture">
+
+  <!-- ACTIONS -->
+  <div class="actions no-print">
+    <button class="btn btn-primary" (click)="print()">🖨 Imprimer</button>
+    <button class="btn btn-success" (click)="exportPDF()">📄 Export PDF</button>
+  </div>
+
+  <!-- FACTURE -->
+  <div class="facture-container" #factureRef>
+
+    <!-- HEADER -->
+    <div class="facture-header">
+      <div>
+        <h2>COMPLEXE SCOLAIRE</h2>
+        <p>Votre école premium</p>
+      </div>
+
+      <div class="text-end">
+        <h3>FACTURE</h3>
+        <p><strong>N°:</strong> {{ facture.numeroFacture }}</p>
+        <p><strong>Date:</strong> {{ facture.dateFacture | date:'dd/MM/yyyy' }}</p>
+      </div>
+    </div>
+
+    <!-- INFOS -->
+    <div class="facture-info">
+      <div>
+        <h6>Étudiant</h6>
+        <p><strong>{{ facture.etudiant?.nom }} {{ facture.etudiant?.prenom }}</strong></p>
+        <p>Matricule: {{ facture.etudiant?.matricule }}</p>
+      </div>
+
+      <div>
+        <h6>Statut</h6>
+        <span class="badge"
+          [ngClass]="{
+            'bg-success': facture.statut === 'PAYEE',
+            'bg-warning': facture.statut === 'PARTIELLEMENT_PAYEE',
+            'bg-secondary': facture.statut === 'NON_PAYEE'
+          }">
+          {{ facture.statut }}
+        </span>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <table class="facture-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="text-end">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of facture.echeanciers">
+          <td>Échéance du {{ e.dateEcheance | date:'dd/MM/yyyy' }}</td>
+          <td class="text-end">{{ formatAmount(e.montant) }} XAF</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- TOTAL -->
+    <div class="totals">
+      <p>Total: <strong>{{ formatAmount(facture.montantTotal) }} XAF</strong></p>
+      <p>Payé: <strong class="text-success">{{ formatAmount(totalPaye) }} XAF</strong></p>
+      <p>Reste: <strong class="text-danger">{{ formatAmount(reste) }} XAF</strong></p>
+    </div>
+
+<!-- QR CODE -->
+<div class="qr-section">
+  <img *ngIf="qrCodeImage" [src]="qrCodeImage" width="100">
+</div>
+
+<!-- BARCODE -->
+<div class="barcode-section">
+  <img *ngIf="barcodeImage" [src]="barcodeImage">
+</div>
+
+    <!-- SIGNATURE -->
+    <div class="signature">
+      <div>
+        <p>Signature</p>
+        <div class="line"></div>
+      </div>
+      <div>
+        <p>Cachet école</p>
+        <div class="stamp">OFFICIEL</div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -2,7 +2,7 @@ import { Etudiant } from "./etudiant";
 import { EcheancierPaiement } from "./echeancier-paiement";
 
 export interface Facture {
-  id?: number;
+  id: number;
 
   numeroFacture: string;
   montantTotal: number;
@@ -13,6 +13,6 @@ export interface Facture {
 
   echeancierIds?: number[];
   echeanciers?: EcheancierPaiement[];
-
+montantPaye?: number;
   etudiant?: Etudiant;
 }

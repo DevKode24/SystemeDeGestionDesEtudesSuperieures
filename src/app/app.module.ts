@@ -44,7 +44,9 @@ import { AjustementsEtudiantComponent } from './components/facturation/ajustemen
 import { JournalComptableComponent } from './components/facturation/journal-comptable/journal-comptable.component';
 import { SituationFinanciereEtudiantComponent } from './components/facturation/situation-financiere-etudiant/situation-financiere-etudiant.component';
 import { StatistiqueFinanciereEtudiantComponent } from './components/facturation/statistique-financiere-etudiant/statistique-financiere-etudiant.component';
-import { EcheanciersPaiementComponent } from './components/facturation/echeanciers-paiement/echeanciers-paiement.component';
+import { FactureDetailComponent } from './components/facturation/facture-detail/facture-detail.component';
+import { ParametrageTypeFraisComponent } from './components/facturation/parametrage-type-frais/parametrage-type-frais.component';
+import { ModeleEcheancierComponent } from './components/facturation/modele-echeancier/modele-echeancier.component';
 
 
 
@@ -83,7 +85,9 @@ import { EcheanciersPaiementComponent } from './components/facturation/echeancie
     JournalComptableComponent,
     SituationFinanciereEtudiantComponent,
     StatistiqueFinanciereEtudiantComponent,
-    EcheanciersPaiementComponent
+    FactureDetailComponent,
+    ParametrageTypeFraisComponent,
+    ModeleEcheancierComponent
   ],
   imports: [
     BrowserModule,

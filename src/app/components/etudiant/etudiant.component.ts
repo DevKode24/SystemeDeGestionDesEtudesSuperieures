@@ -1,24 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
-
-import { saveAs } from 'file-saver';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 import { EtudiantService } from 'src/app/services/etudiant.service';
 import { ClasseService } from 'src/app/services/classe.service';
-import { FiliereService } from 'src/app/services/filiere.service';
-import { NiveauService } from 'src/app/services/niveau.service';
-
 import { Etudiant } from 'src/app/models/etudiant';
 import { Classe } from 'src/app/models/classe';
+import { AnneeAcademique } from 'src/app/models/annee-academique';
+import { FiliereService } from 'src/app/services/filiere.service';
+import { NiveauService } from 'src/app/services/niveau.service';
 import { Filiere } from 'src/app/models/filiere';
 import { Niveau } from 'src/app/models/niveau';
-import { AnneeAcademique } from 'src/app/models/annee-academique';
-import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service';
+
+
+
 @Component({
   selector: 'app-etudiant',
   templateUrl: './etudiant.component.html',
@@ -27,25 +21,28 @@ import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service
 
 export class EtudiantComponent implements OnInit {
 
-  /* ================= DONNÉES ================= */
+
+  /* ==========================
+     DONNÉES
+  ========================== */
   etudiants: Etudiant[] = [];
   filteredEtudiants: Etudiant[] = [];
+  filieres: Filiere[] = [];
+niveaux: Niveau[] = [];
 
   classes: Classe[] = [];
-  filieres: Filiere[] = [];
-  niveaux: Niveau[] = [];
   anneesAcademiques: AnneeAcademique[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
   loading = false;
 
-  /* ================= FILTRES ================= */
-  searchTerm = '';
+  /* ==========================
+     FILTRE + PAGINATION
+  ========================== */
+  filterNom = '';
   filterClasseId: number | null = null;
-  filterNom = ''; // ✅ correction erreur [(ngModel)]="filterNom"
 
-  /* ================= PAGINATION ================= */
   page = 1;
   pageSize = 5;
 
@@ -54,13 +51,20 @@ export class EtudiantComponent implements OnInit {
     private etudiantService: EtudiantService,
     private classeService: ClasseService,
     private filiereService: FiliereService,
-    private niveauService: NiveauService,
-    private anneeService: AnneeAcademiqueService
+  private niveauService: NiveauService
   ) {}
 
+  /* ==========================
+     INIT
+  ========================== */
   ngOnInit(): void {
-    this.initForm();
-    this.loadAllData();
+      this.initForm();
+  this.loadClasses();
+  this.loadFilieres();
+  this.loadNiveaux();
+  this.loadAnneesAcademiques();
+  this.loadEtudiants();
+  
   }
 
   private initForm(): void {
@@ -84,56 +88,74 @@ export class EtudiantComponent implements OnInit {
     });
   }
 
-  private loadAllData(): void {
-    this.loading = true;
 
-    forkJoin({
-      etudiants: this.etudiantService.getAll(),
-      classes: this.classeService.getAll(),
-      filieres: this.filiereService.getAll(),
-      niveaux: this.niveauService.getAll(),
-      annees: this.anneeService.getAll()
-    }).subscribe({
-      next: res => {
-        this.classes = res.classes;
-        this.filieres = res.filieres;
-        this.niveaux = res.niveaux;
-        this.anneesAcademiques = res.annees;
+  /* ==========================
+     LOADERS
+  ========================== */
+  loadFilieres(): void {
+  this.filiereService.getAll().subscribe(data => {
+    this.filieres = data;
+  });
+}
 
-        // ✅ mapping sécurisé des objets enrichis
-        this.etudiants = res.etudiants.map(e => ({
-          ...e,
-          classe: this.classes.find(c => c.id === e.classeId),
-          filiere: this.filieres.find(f => f.id === e.filiereId),
-          niveau: this.niveaux.find(n => n.id === e.niveauId),
-          anneeAcademique: this.anneesAcademiques.find(a => a.id === e.anneeAcademiqueId)
-        }));
-
-        this.applyFilters();
-      },
-      error: (err: HttpErrorResponse) => console.error(err),
-      complete: () => this.loading = false
+loadNiveaux(): void {
+  this.niveauService.getAll().subscribe(data => {
+    this.niveaux = data;
+  });
+}
+  loadClasses(): void {
+    this.classeService.getAll().subscribe(data => {
+      this.classes = data;
+      this.tryEnrich();
     });
   }
 
+  loadAnneesAcademiques(): void {
+    this.anneesAcademiques = [
+      { id: 1, libelle: '2025-2026' },
+      { id: 2, libelle: '2026-2027' }
+    ];
+    this.tryEnrich();
+  }
+
+  loadEtudiants(): void {
+    this.etudiantService.getAll().subscribe(data => {
+      this.etudiants = data;
+      this.tryEnrich();
+    });
+  }
+
+  /* ==========================
+     ENRICHISSEMENT (ID → OBJET)
+  ========================== */
+  private tryEnrich(): void {
+    if (!this.etudiants.length || !this.classes.length || !this.anneesAcademiques.length) {
+      return;
+    }
+
+    this.etudiants = this.etudiants.map(e => ({
+      ...e,
+      classe: this.classes.find(c => c.id === e.classeId),
+      anneeAcademique: this.anneesAcademiques.find(a => a.id === e.anneeAcademiqueId)
+    }));
+
+    this.applyFilters();
+  }
+
+  /* ==========================
+     FILTRE + PAGINATION
+  ========================== */
   applyFilters(): void {
-    const term = this.searchTerm.toLowerCase().trim();
+    const term = this.filterNom.toLowerCase().trim();
 
     this.filteredEtudiants = this.etudiants.filter(e =>
       (!term ||
-        (e.nom?.toLowerCase() ?? '').includes(term) ||
-        (e.prenom?.toLowerCase() ?? '').includes(term) ||
-        (e.email?.toLowerCase() ?? '').includes(term) ||
-        (e.matricule ?? '').toLowerCase().includes(term)
-      ) &&
+        e.nom.toLowerCase().includes(term) ||
+        e.prenom.toLowerCase().includes(term)) &&
       (!this.filterClasseId || e.classeId === this.filterClasseId)
     );
 
     this.page = 1;
-  }
-
-  onSearchChange(): void {
-    this.applyFilters();
   }
 
   get pagedEtudiants(): Etudiant[] {
@@ -141,41 +163,68 @@ export class EtudiantComponent implements OnInit {
     return this.filteredEtudiants.slice(start, start + this.pageSize);
   }
 
+  /* ==========================
+     CRUD
+  ========================== */
   save(): void {
     if (this.form.invalid) return;
+
     this.loading = true;
 
-    const payload: Etudiant = { ...this.form.value, roles: ['ROLE_ETUDIANT'] };
+ const payload: Etudiant = {
+  nom: this.form.value.nom,
+  prenom: this.form.value.prenom,
+  email: this.form.value.email,
+  password: this.form.value.password,
 
-    const request$ = this.editingId
+  matricule: this.form.value.matricule,
+  dateNaissance: this.form.value.dateNaissance,
+  sexe: this.form.value.sexe,
+  nationalite: this.form.value.nationalite,
+  etatCivil: this.form.value.etatCivil,
+  contactEtudiant: this.form.value.contactEtudiant,
+  lieuNaissance: this.form.value.lieuNaissance,
+  contactUrgence: this.form.value.contactUrgence,
+  filiereId: this.form.value.filiereId,
+  niveauId: this.form.value.niveauId,
+  classeId: this.form.value.classeId,
+  anneeAcademiqueId: this.form.value.anneeAcademiqueId,
+
+  roles: ['ROLE_ETUDIANT']
+};
+
+
+
+    const req$ = this.editingId
       ? this.etudiantService.modifier(this.editingId, payload)
       : this.etudiantService.creer(payload);
 
-    request$.subscribe({
+    req$.subscribe({
       next: () => {
         this.resetForm();
-        this.loadAllData();
+        this.loadEtudiants();
       },
-      error: (err: HttpErrorResponse) => console.error(err),
       complete: () => this.loading = false
     });
   }
 
   edit(e: Etudiant): void {
     this.editingId = e.id!;
-    this.form.patchValue({
-      ...e,
-      classeId: e.classeId ?? e.classe?.id,
-      filiereId: e.filiereId ?? e.filiere?.id,
-      niveauId: e.niveauId ?? e.niveau?.id,
-      anneeAcademiqueId: e.anneeAcademiqueId ?? e.anneeAcademique?.id
-    });
-    window.scroll({ top: 0, behavior: 'smooth' });
-  }
 
-  delete(id: number): void {
-    if (!confirm('Supprimer cet étudiant ?')) return;
-    this.etudiantService.supprimer(id).subscribe(() => this.loadAllData());
+    this.form.patchValue({
+      nom: e.nom,
+      prenom: e.prenom,
+      email: e.email,
+      matricule: e.matricule,
+      dateNaissance: e.dateNaissance,
+      sexe: e.sexe,
+      nationalite: e.nationalite,
+      etatCivil: e.etatCivil,
+      classeId: e.classeId,
+      anneeAcademiqueId: e.anneeAcademiqueId
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   resetForm(): void {
@@ -183,75 +232,30 @@ export class EtudiantComponent implements OnInit {
     this.editingId = null;
     this.loading = false;
   }
+  /* ==========================
+   EXPORTS
+========================== */
 
-  // ✅ EXPORT / IMPORT comme avant
+exportExcel(): void {
+  console.log('Export Excel...');
+  // TODO: brancher avec un vrai service (xlsx)
+}
 
+exportCSV(): void {
+  console.log('Export CSV...');
+  // TODO: génération CSV
+}
 
-  /* ================= EXPORT ================= */
+exportPDF(): void {
+  console.log('Export PDF...');
+  // TODO: appel backend PDF
+}
 
-  exportExcel(): void {
-    const ws = XLSX.utils.json_to_sheet(this.filteredEtudiants.map(e => ({
-      Nom: e.nom,
-      Prénom: e.prenom,
-      Email: e.email,
-      Matricule: e.matricule,
-      Classe: e.classe?.code ?? '',
-Filière: e.filiere?.nom ?? '',
-Niveau: e.niveau?.libelle ?? '',
-Année: e.anneeAcademique?.libelle ?? ''
+importFile(event: any): void {
+  const file = event.target.files[0];
+  if (!file) return;
 
-    })));
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Etudiants');
-    XLSX.writeFile(wb, 'etudiants.xlsx');
-  }
-
-  exportCSV(): void {
-    const ws = XLSX.utils.json_to_sheet(this.filteredEtudiants);
-    const csv = XLSX.utils.sheet_to_csv(ws);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'etudiants.csv');
-  }
-
-  exportPDF(): void {
-    const doc = new jsPDF();
-
-    (doc as any).autoTable({
-      head: [['Nom', 'Prénom', 'Email', 'Matricule', 'Classe', 'Filière', 'Niveau', 'Année']],
-      body: this.filteredEtudiants.map(e => [
-        e.nom,
-        e.prenom,
-        e.email,
-        e.matricule,
-        e.classe?.code ?? '',
-        e.filiere?.nom ?? '',
-        e.niveau?.libelle ?? '',
-        e.anneeAcademique?.libelle ?? ''
-      ])
-    });
-
-    doc.save('etudiants.pdf');
-  }
-
-  /* ================= IMPORT (STRUCTURE PRÊTE) ================= */
-
-  importFile(event: any): void {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = (e: any) => {
-      const workbook = XLSX.read(e.target.result, { type: 'binary' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(sheet);
-
-      console.log('Import Étudiants détecté:', data);
-      alert('Import détecté – mapping backend à brancher');
-    };
-
-    reader.readAsBinaryString(file);
-  }
-
+  console.log('Fichier importé :', file.name);
+  // TODO: envoyer au backend
+}
 }

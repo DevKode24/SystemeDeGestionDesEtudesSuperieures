@@ -1,1 +1,209 @@
-<p>statistique-financiere-etudiant works!</p>
+
+<div class="page-wrapper">
+    <div class="modern-card">
+
+        <!-- TOASTS -->
+        <div class="sf-toast-stack">
+            <div *ngFor="let t of toasts" class="sf-toast sf-toast--{{t.type}}" (click)="dismissToast(t.id)">
+                <span class="sf-toast__msg">{{ t.message }}</span>
+                <span class="sf-toast__close">×</span>
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <div class="card-header">
+            <div class="icon-circle"><i class="bi bi-bar-chart-line"></i></div>
+            <h3 class="fw-bold mt-2">Statistiques financières</h3>
+            <p>Vue d'ensemble et analyse par étudiant</p>
+        </div>
+
+        <div class="card-body">
+
+            <!-- KPI GLOBAUX -->
+            <div class="sf-kpi-grid mb-4">
+                <div class="sf-kpi sf-kpi--blue" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-receipt"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ formatAmount(kpi.totalFacture) }}</div>
+                        <div class="sf-kpi__label">Total facturé (XAF)</div>
+                    </div>
+                </div>
+                <div class="sf-kpi sf-kpi--green" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-check-circle"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ formatAmount(kpi.totalEncaisse) }}</div>
+                        <div class="sf-kpi__label">Encaissé (XAF)</div>
+                    </div>
+                </div>
+                <div class="sf-kpi sf-kpi--red" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-exclamation-circle"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ formatAmount(kpi.totalImpaye) }}</div>
+                        <div class="sf-kpi__label">Reste à percevoir (XAF)</div>
+                    </div>
+                </div>
+                <div class="sf-kpi sf-kpi--purple" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-percent"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ kpi.tauxRecouvrement }}%</div>
+                        <div class="sf-kpi__label">Taux de recouvrement</div>
+                        <div class="sf-kpi__progress-track">
+                            <div class="sf-kpi__progress-bar" [style.width.%]="kpi.tauxRecouvrement"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sf-kpi sf-kpi--teal" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ kpi.nbFactures }}</div>
+                        <div class="sf-kpi__label">Factures émises</div>
+                    </div>
+                </div>
+                <div class="sf-kpi sf-kpi--orange" *ngIf="!loadingKpi">
+                    <div class="sf-kpi__icon"><i class="bi bi-people"></i></div>
+                    <div class="sf-kpi__body">
+                        <div class="sf-kpi__value">{{ kpi.nbEtudiants }}</div>
+                        <div class="sf-kpi__label">Étudiants facturés</div>
+                    </div>
+                </div>
+
+                <!-- Skeleton KPI -->
+                <ng-container *ngIf="loadingKpi">
+                    <div class="sf-kpi sf-kpi--skeleton" *ngFor="let x of [1,2,3,4,5,6]">
+                        <div class="sf-skeleton sf-skeleton--icon"></div>
+                        <div class="sf-skeleton__body">
+                            <div class="sf-skeleton sf-skeleton--value"></div>
+                            <div class="sf-skeleton sf-skeleton--label"></div>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+
+            <!-- SECTION INDIVIDUELLE -->
+            <div class="row g-4">
+
+                <!-- COLONNE GAUCHE : liste étudiants -->
+                <div class="col-12 col-lg-4">
+                    <div class="sf-panel">
+                        <div class="sf-panel__header">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <h6 class="mb-0">Sélectionner un étudiant</h6>
+                        </div>
+                        <div class="sf-panel__search">
+                            <i class="bi bi-search sf-search-icon"></i>
+                            <input type="text" class="sf-search-input" [(ngModel)]="searchEtudiant" (input)="onSearch()"
+                                placeholder="Nom, prénom, matricule…" />
+                        </div>
+                        <ul class="sf-etudiant-list">
+                            <li *ngFor="let e of filteredEtudiants; trackBy: trackById" class="sf-etudiant-item"
+                                [class.sf-etudiant-item--active]="selectedEtudiantId === e.id"
+                                (click)="onSelectEtudiant(e.id!)">
+                                <div class="sf-etudiant-avatar">{{ initiale(e.nom, e.prenom) }}</div>
+                                <div class="sf-etudiant-info">
+                                    <span class="sf-etudiant-nom">{{ e.nom }} {{ e.prenom }}</span>
+                                    <span class="sf-etudiant-mat">{{ e.matricule }}</span>
+                                </div>
+                                <i class="bi bi-chevron-right sf-etudiant-arrow"></i>
+                            </li>
+                            <li class="sf-etudiant-empty" *ngIf="filteredEtudiants.length === 0">
+                                Aucun étudiant trouvé
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- COLONNE DROITE : stats étudiant -->
+                <div class="col-12 col-lg-8">
+
+                    <!-- Loader -->
+                    <div class="sf-loading-box" *ngIf="loadingEtudiant">
+                        <div class="sf-spinner"></div>
+                        <p>Chargement des statistiques…</p>
+                    </div>
+
+                    <!-- Aucune sélection -->
+                    <div class="sf-empty-state" *ngIf="!loadingEtudiant && !statEtudiant">
+                        <div class="sf-empty-state__icon"><i class="bi bi-bar-chart"></i></div>
+                        <h5>Sélectionnez un étudiant</h5>
+                        <p>Cliquez sur un étudiant dans la liste pour afficher ses statistiques financières détaillées.
+                        </p>
+                    </div>
+
+                    <!-- Stats détaillées -->
+                    <div *ngIf="!loadingEtudiant && statEtudiant">
+
+                        <!-- En-tête étudiant -->
+                        <div class="sf-student-header mb-4">
+                            <div class="sf-student-avatar-lg">
+                                {{ initiale(etudiantSelectionne?.nom || '', etudiantSelectionne?.prenom || '') }}
+                            </div>
+                            <div class="sf-student-meta">
+                                <h4 class="sf-student-name">
+                                    {{ etudiantSelectionne?.nom }} {{ etudiantSelectionne?.prenom }}
+                                </h4>
+                                <span class="sf-student-mat">{{ etudiantSelectionne?.matricule }}</span>
+                            </div>
+                            <span class="sf-status" [class]="statutClass(statEtudiant.statut)">
+                                {{ statutLabel(statEtudiant.statut) }}
+                            </span>
+                        </div>
+
+                        <!-- Barres de stat -->
+                        <div class="sf-stat-cards mb-4">
+                            <div class="sf-stat-card">
+                                <div class="sf-stat-card__label">Total facturé</div>
+                                <div class="sf-stat-card__value sf-stat-card__value--blue">
+                                    {{ formatAmount(statEtudiant.totalFacture) }} <span>XAF</span>
+                                </div>
+                            </div>
+                            <div class="sf-stat-card">
+                                <div class="sf-stat-card__label">Total payé</div>
+                                <div class="sf-stat-card__value sf-stat-card__value--green">
+                                    {{ formatAmount(statEtudiant.totalPaiement) }} <span>XAF</span>
+                                </div>
+                            </div>
+                            <div class="sf-stat-card">
+                                <div class="sf-stat-card__label">Ajustements</div>
+                                <div class="sf-stat-card__value sf-stat-card__value--purple">
+                                    {{ formatAmount(statEtudiant.totalAjustement) }} <span>XAF</span>
+                                </div>
+                            </div>
+                            <div class="sf-stat-card">
+                                <div class="sf-stat-card__label">Reste à payer</div>
+                                <div class="sf-stat-card__value"
+                                    [class.sf-stat-card__value--red]="statEtudiant.resteAPayer > 0"
+                                    [class.sf-stat-card__value--green]="statEtudiant.resteAPayer <= 0">
+                                    {{ formatAmount(statEtudiant.resteAPayer) }} <span>XAF</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barre de progression paiement -->
+                        <div class="sf-progress-wrap">
+                            <div class="sf-progress-label">
+                                <span>Progression du paiement</span>
+                                <strong>{{ pourcentagePaye(statEtudiant) }}%</strong>
+                            </div>
+                            <div class="sf-progress-track">
+                                <div class="sf-progress-fill" [style.width.%]="pourcentagePaye(statEtudiant)"
+                                    [class.sf-progress-fill--full]="pourcentagePaye(statEtudiant) === 100"></div>
+                            </div>
+                            <div class="sf-progress-legend">
+                                <span>
+                                    <span class="sf-dot sf-dot--green"></span> Payé :
+                                    {{ formatAmount(statEtudiant.totalPaiement) }} XAF
+                                </span>
+                                <span>
+                                    <span class="sf-dot sf-dot--red"></span> Restant :
+                                    {{ formatAmount(statEtudiant.resteAPayer) }} XAF
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

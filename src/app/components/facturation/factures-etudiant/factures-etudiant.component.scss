@@ -1,157 +1,390 @@
-:root {
-  --modern-primary: #0d6efd;
-  --modern-success: #198754;
-  --modern-warning: #ffc107;
-  --modern-light: #f8f9fa;
-  --modern-dark: #212529;
-  --modern-gray-100: #f8f9fa;
-  --modern-gray-200: #e9ecef;
-  --modern-gray-300: #dee2e6;
-  --modern-border-radius: 0.5rem;
-}
+
+@use 'src/styles' as *;
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
+
+
+/* =========================================================
+   🌌 DESIGN SYSTEM CORE (EXTENDED FINTECH PALETTE)
+========================================================= */
+
+$primary: #3b82f6;
+$secondary: #6366f1;
+$success: #10b981;
+$danger: #ef4444;
+$warning: #f59e0b;
+$info: #06b6d4;
+$purple: #8b5cf6;
+$pink: #ec4899;
+$orange: #f97316;
+
+$bg-1: #f8fafc;
+$bg-2: #eef2ff;
+$ink: #0f172a;
+
+/* =========================================================
+   🌠 GLOBAL DASHBOARD LAYER
+========================================================= */
 
 .page-wrapper {
-  padding: 1rem 0.75rem;
-  font-size: 0.9rem;
+  min-height: 100vh;
+  padding: 2.5rem;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.10), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.06), transparent 50%),
+    linear-gradient(135deg, $bg-1, $bg-2);
 }
+
+/* =========================================================
+   💎 MAIN CONTAINER (FINTECH GLASS CORE)
+========================================================= */
 
 .modern-card {
-  border-radius: 1rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  border-radius: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.7);
+
+  box-shadow:
+    0 40px 120px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  overflow: hidden;
+  animation: dashboardIn 0.6s ease;
 }
 
+/* =========================================================
+   🧠 HERO HEADER (STRIPE-LIKE FINANCE PANEL)
+========================================================= */
+
 .card-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(135deg, $primary, $secondary, $purple);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.25), transparent 40%),
+      radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.15), transparent 50%);
+  }
+
+  h3 {
+    font-weight: 900;
+    letter-spacing: 0.4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  p {
+    opacity: 0.9;
+    font-size: 0.95rem;
+    position: relative;
+    z-index: 2;
+  }
 }
 
 .icon-circle {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #0d6efd;
-  color: #fff;
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 1rem;
+  border-radius: 22px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
-  font-size: 1.25rem;
+
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+
+  i {
+    font-size: 2.2rem;
+  }
 }
 
-.modern-form {
-  background: #f8f9fa;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
+/* =========================================================
+   📊 KPI DASHBOARD GRID (CORE BUSINESS VIEW)
+========================================================= */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 2rem;
 }
 
-.list-group-item {
-  border-left: none;
-  border-right: none;
-  border-radius: 0 !important;
-}
+.kpi-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.4rem;
+  position: relative;
 
-/* Tableau "historique des factures" */
-.table-sm {
-  font-size: 0.85rem;
-}
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.7);
 
-.table td,
-.table th {
-  padding: 0.4rem 0.5rem;
-}
+  transition: all 0.25s ease;
 
-.card-header .mb-0 {
-  margin-bottom: 0 !important;
-}
-
-/* Tableau "toutes les factures" */
-.modern-table {
-  --bs-table-bg: var(--modern-light);
-  font-size: 0.9rem;
-}
-
-.modern-table thead th {
-  border-bottom: 2px solid #dee2e6;
-  font-weight: 500;
-  color: #495057;
-}
-
-.modern-table tbody td {
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.modern-table tbody tr:hover {
-  background-color: #f1f3f5;
-}
-
-/* Pagination et boutons précédent/suivant */
-.page-wrapper .btn-outline-secondary {
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  padding: 0.375rem 0.75rem;
-}
-
-.page-wrapper .btn-outline-secondary:disabled {
-  opacity: 0.6;
-}
-
-/* Badge de statut facture */
-.badge.text-capitalize {
-  text-transform: capitalize;
-  font-size: 0.85rem;
-  padding: 0.25rem 0.5rem;
-}
-
-/* Alert info pour infos étudiant */
-.alert-light {
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
-}
-
-/* Spinner de chargement */
-.spinner-border {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-/* Style global des formulaires select/input */
-.form-control,
-.form-select {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.75rem;
-}
-
-/* Petite marge entre sections */
-.card.mb-4 {
-  margin-bottom: 1.5rem !important;
-}
-
-/* Tableau responsive pour petits écrans */
-.table-container {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Icônes Bootstrap */
-.bi {
-  font-size: 1.1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .page-wrapper {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.10);
   }
 
-  .card-body {
-    padding: 0.5rem 0.5rem 1rem;
+  &__label {
+    font-size: 0.75rem;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
   }
 
-  .modern-table th,
-  .modern-table td {
+  &__value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-top: 0.4rem;
+  }
+
+  &__trend {
+    font-size: 0.75rem;
+    margin-top: 0.3rem;
+  }
+
+  &--revenue {
+    border-left: 4px solid $success;
+  }
+
+  &--due {
+    border-left: 4px solid $danger;
+  }
+
+  &--paid {
+    border-left: 4px solid $primary;
+  }
+
+  &--pending {
+    border-left: 4px solid $warning;
+  }
+}
+
+/* =========================================================
+   📈 CHART ZONE (REVENUE / EVOLUTION / IMPAYÉS)
+========================================================= */
+
+.chart-panel {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+
+  &__title {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: $gray-900;
+  }
+
+  &__placeholder {
+    height: 260px;
+    border-radius: 16px;
+
+    background:
+      linear-gradient(90deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.08)),
+      repeating-linear-gradient(45deg,
+        rgba(0, 0, 0, 0.02),
+        rgba(0, 0, 0, 0.02) 10px,
+        transparent 10px,
+        transparent 20px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: $gray-400;
+    font-weight: 600;
+  }
+}
+
+/* =========================================================
+   🧠 UX INTELLIGENTE (STATUT DYNAMIQUE AUTO)
+========================================================= */
+
+.status {
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+
+  &--paid {
+    background: rgba(16, 185, 129, 0.15);
+    color: $success;
+  }
+
+  &--partial {
+    background: rgba(245, 158, 11, 0.15);
+    color: $warning;
+  }
+
+  &--unpaid {
+    background: rgba(239, 68, 68, 0.12);
+    color: $danger;
+  }
+}
+
+/* =========================================================
+   ⚡ STRIPE-LIKE PAYMENT ANIMATION PANEL
+========================================================= */
+
+.payment-live {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem;
+  border-radius: 16px;
+
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #fff;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $success;
+    animation: pulse 1.2s infinite;
+  }
+
+  &__text {
     font-size: 0.85rem;
-    padding: 0.3rem;
+    font-weight: 600;
+  }
+
+  &__bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  &__fill {
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, $primary, $secondary);
+    animation: loading 2s infinite ease-in-out;
+  }
+}
+
+/* =========================================================
+   🧾 TABLE PREMIUM (ERP STYLE)
+========================================================= */
+
+.table-container {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid $gray-200;
+
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.10);
+}
+
+.table thead {
+  background: linear-gradient(135deg, $ink, $gray-700);
+  color: #fff;
+}
+
+.table tbody tr {
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.03);
+    transform: scale(1.002);
+  }
+}
+
+/* =========================================================
+   🧾 PRINT / PDF MODE (FACTURE PROFESSIONNELLE)
+========================================================= */
+
+@media print {
+  .page-wrapper {
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  .modern-card {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .card-header {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .kpi-grid,
+  .chart-panel,
+  .payment-live {
+    display: none !important;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   ✨ ANIMATIONS
+========================================================= */
+
+@keyframes dashboardIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(30%);
+  }
+
+  100% {
+    transform: translateX(100%);
   }
 }

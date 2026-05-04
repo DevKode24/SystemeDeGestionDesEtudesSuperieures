@@ -1,1 +1,196 @@
-<p>situation-financiere-etudiant works!</p>
+
+<div class="page-wrapper">
+  <div class="modern-card">
+
+    <!-- TOASTS -->
+    <div class="sfe-toast-stack">
+      <div *ngFor="let t of toasts"
+           class="sfe-toast sfe-toast--{{t.type}}"
+           (click)="dismissToast(t.id)">
+        <span>{{ t.message }}</span>
+        <span class="ms-2 opacity-50">×</span>
+      </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-circle"><i class="bi bi-wallet2"></i></div>
+      <h3>Situation financière</h3>
+      <p>Vue complète et intelligente des finances étudiant</p>
+    </div>
+
+    <div class="card-body">
+      <div class="row g-4">
+
+        <!-- GAUCHE -->
+        <div class="col-lg-4">
+
+          <div class="sfe-panel">
+            <div class="sfe-panel__title">
+              <i class="bi bi-people"></i> Étudiants
+            </div>
+
+            <input class="sfe-search"
+                   [(ngModel)]="searchEtudiant"
+                   (input)="onSearch()"
+                   placeholder="Rechercher..." />
+
+            <div *ngIf="!loadingEtudiants">
+
+              <div *ngFor="let e of filteredEtudiants; trackBy: trackById"
+                   class="sfe-etudiant-item"
+                   [class.active]="selectedEtudiant?.id === e.id"
+                   (click)="selectEtudiant(e)">
+
+                <div class="sfe-avatar">
+                  {{ initiale(e.nom, e.prenom) }}
+                </div>
+
+                <div>
+                  <div>{{ e.nom }} {{ e.prenom }}</div>
+                  <small>{{ e.matricule }}</small>
+                </div>
+
+              </div>
+
+              <div *ngIf="filteredEtudiants.length === 0" class="sfe-empty">
+                Aucun résultat
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- DROITE -->
+        <div class="col-lg-8">
+
+          <!-- EMPTY -->
+          <div *ngIf="!selectedEtudiant" class="sfe-empty">
+            <i class="bi bi-person"></i>
+            <p>Sélectionnez un étudiant</p>
+          </div>
+
+          <!-- LOADING -->
+          <div *ngIf="selectedEtudiant && loading" class="sfe-loading">
+            Chargement...
+          </div>
+
+          <!-- CONTENT -->
+          <ng-container *ngIf="selectedEtudiant && !loading">
+
+            <!-- HEADER CARD -->
+            <div class="sfe-identity-card">
+
+              <div class="sfe-avatar-lg">
+                {{ initiale(selectedEtudiant.nom, selectedEtudiant.prenom) }}
+              </div>
+
+              <div>
+                <h4>{{ selectedEtudiant.nom }} {{ selectedEtudiant.prenom }}</h4>
+                <span>{{ selectedEtudiant.matricule }}</span>
+              </div>
+
+              <div class="sfe-solde"
+                   [class.positive]="solde >= 0"
+                   [class.negative]="solde < 0">
+
+                {{ formatAmount(solde) }} XAF
+              </div>
+
+            </div>
+
+            <!-- TABS -->
+            <div class="sfe-tabs">
+              <button (click)="setTab('apercu')" [class.active]="activeTab==='apercu'">Aperçu</button>
+              <button (click)="setTab('factures')" [class.active]="activeTab==='factures'">
+                Factures ({{ factures.length }})
+              </button>
+              <button (click)="setTab('paiements')" [class.active]="activeTab==='paiements'">
+                Paiements ({{ paiements.length }})
+              </button>
+            </div>
+
+            <!-- APERCU -->
+            <div *ngIf="activeTab==='apercu'" class="sfe-apercu">
+
+              <div class="card blue">
+                {{ formatAmount(situation?.totalFacture || 0) }}
+                <span>Total facturé</span>
+              </div>
+
+              <div class="card green">
+                {{ formatAmount(situation?.totalPaiement || 0) }}
+                <span>Total payé</span>
+              </div>
+
+              <div class="card orange">
+                {{ formatAmount(situation?.totalAjustement || 0) }}
+                <span>Ajustements</span>
+              </div>
+
+              <div class="card"
+                   [class.red]="solde < 0"
+                   [class.green]="solde >= 0">
+
+                {{ formatAmount(solde) }}
+                <span>Solde</span>
+              </div>
+
+            </div>
+
+            <!-- FACTURES -->
+            <div *ngIf="activeTab==='factures'">
+
+              <table *ngIf="factures.length" class="sfe-table">
+                <tr *ngFor="let f of factures">
+
+                  <td>{{ f.numeroFacture }}</td>
+
+                  <td>{{ formatAmount(f.montantTotal) }} XAF</td>
+
+                  <td>{{ formatAmount(f.montantPaye || 0) }} XAF</td>
+
+                  <td>{{ statutFactureLabel(f) }}</td>
+
+                  <td>{{ f.dateFacture | date:'dd/MM/yyyy' }}</td>
+
+                </tr>
+              </table>
+
+              <div *ngIf="!factures.length" class="sfe-empty">
+                Aucune facture
+              </div>
+
+            </div>
+
+            <!-- PAIEMENTS -->
+            <div *ngIf="activeTab==='paiements'">
+
+              <div *ngFor="let p of paiements" class="sfe-paiement-item">
+
+                <div>
+                  {{ p.referenceTransaction || p.numeroRecu || '—' }}
+                </div>
+
+                <div>{{ p.modePaiement }}</div>
+
+                <div>{{ formatAmount(p.montant) }} XAF</div>
+
+                <div>{{ p.datePaiement | date:'dd/MM/yyyy' }}</div>
+
+              </div>
+
+              <div *ngIf="!paiements.length" class="sfe-empty">
+                Aucun paiement
+              </div>
+
+            </div>
+
+          </ng-container>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

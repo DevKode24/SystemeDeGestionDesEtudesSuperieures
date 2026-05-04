@@ -1,19 +1,34 @@
 <div class="tf-page">
 
   <!-- ================= HEADER + CARD ================= -->
-  <div class="tf-header-card">
-    <div class="tf-header-card__content">
-      <div class="tf-header-icon mb-3">
-        💳
-      </div>
-      <div>
-        <h1 class="h5 text-dark fw-semibold">Types de frais</h1>
-        <p class="text-muted small">
-          Configuration des types de frais appliqués sur les factures étudiants.
-        </p>
-      </div>
+  <div class="tf-header-card d-flex justify-content-between align-items-center">
+
+  <!-- LEFT -->
+  <div class="tf-header-card__content d-flex align-items-center">
+    <div class="tf-header-icon mb-3 me-3">
+      💳
+    </div>
+    <div>
+      <h1 class="h5 text-dark fw-semibold">Types de frais</h1>
+      <p class="text-muted small mb-0">
+        Configuration des types de frais appliqués sur les factures étudiants.
+      </p>
     </div>
   </div>
+
+  <!-- RIGHT BUTTON -->
+  <div>
+    <button
+      class="btn btn-primary btn-sm d-flex align-items-center gap-2"
+      [routerLink]="['/dashboard/facturation/parametrage-type-frais']"
+    >
+    
+      <i class="bi bi-gear"></i>
+      Paramétrage des frais
+    </button>
+  </div>
+
+</div>
 
   <!-- ================= TOASTS (top right) ================= -->
   <div class="tf-toasts">
@@ -26,6 +41,7 @@
     </div>
   </div>
 
+  
   <div class="row gy-4">
 
     <!-- ================= COLONNE 1 — FORMULAIRE, FILTRES, STATS ================= -->
@@ -42,92 +58,165 @@
         </div>
       </div>
 
-      <!-- FILTRES -->
-      <div class="card mb-4" *ngIf="isVueTable()">
-        <div class="card-header p-3 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 text-secondary"><i class="bi bi-search"></i> Filtres</h6>
-        </div>
-        <div class="card-body p-3">
-          <div class="mb-3">
-            <label class="form-label text-muted small">Nom</label>
-            <input
-              type="text"
-              class="form-control form-control-sm border-muted-2"
-              [(ngModel)]="searchNom"
-              (input)="onSearchChange()"
-              placeholder="Filtrer par nom…"
-            />
-          </div>
-
-          <div class="d-flex justify-content-end mt-2">
-            <button type="button" class="btn btn-sm btn-outline-muted-2" (click)="onSearchChange()">
-              <i class="bi bi-x-circle"></i> Réinitialiser
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- FORMULAIRE AJOUT / MODIFICATION -->
-      <div class="card mb-4" *ngIf="isVueTable()">
-        <div class="card-header p-3 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 text-secondary">
-            <i *ngIf="editingId" class="bi bi-pencil-square"></i>
-            <i *ngIf="!editingId" class="bi bi-plus-circle"></i>
-            {{ editingId ? 'Modifier le type de frais' : 'Nouveau type de frais' }}
-          </h6>
-        </div>
-        <div class="card-body p-3">
-          <form [formGroup]="form" (ngSubmit)="save()">
+     <div class="card mb-4" *ngIf="isVueTable()">
+  <div class="card-header p-3 d-flex justify-content-between align-items-center">
+    <div>
+      <h6 class="mb-1 text-secondary d-flex align-items-center gap-2">
+        <i *ngIf="editingId" class="bi bi-pencil-square"></i>
+        <i *ngIf="!editingId" class="bi bi-plus-circle"></i>
+        {{ editingId ? 'Modifier le type de frais' : 'Nouveau type de frais' }}
+      </h6>
+      <p class="mb-0 small text-muted">
+        Définis la nature métier du frais avant son paramétrage par établissement.
+      </p>
+    </div>
 
-            <div class="mb-3">
-              <label class="form-label text-muted small">Nom du type de frais</label>
+    <span class="badge" [ngClass]="editingId ? 'bg-warning text-dark' : 'bg-primary'">
+      {{ editingId ? 'Modification' : 'Création' }}
+    </span>
+  </div>
+
+  <div class="card-body p-3">
+    <form [formGroup]="form" (ngSubmit)="save()">
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label text-muted small">Nom du type de frais</label>
+          <input
+            type="text"
+            class="form-control form-control-sm border-muted-2"
+            formControlName="nom"
+            placeholder="Ex: Frais d'inscription"
+            (blur)="suggestCodeFromNom()"
+            [class.is-invalid]="form.get('nom')?.invalid && form.get('nom')?.touched"
+          />
+          <div class="invalid-feedback small" *ngIf="form.get('nom')?.invalid && form.get('nom')?.touched">
+            Le nom est obligatoire et doit contenir au moins 2 caractères.
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label text-muted small">Code</label>
+          <input
+            type="text"
+            class="form-control form-control-sm border-muted-2"
+            formControlName="code"
+            placeholder="Ex: INSCRIPTION"
+            (blur)="normalizeCode()"
+            [class.is-invalid]="form.get('code')?.invalid && form.get('code')?.touched"
+          />
+          <div class="form-text small">
+            Code technique unique utilisé par la facturation.
+          </div>
+          <div class="invalid-feedback small" *ngIf="form.get('code')?.invalid && form.get('code')?.touched">
+            Le code est obligatoire.
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label text-muted small">Nature</label>
+          <select
+            class="form-select form-select-sm border-muted-2"
+            formControlName="nature"
+            [class.is-invalid]="form.get('nature')?.invalid && form.get('nature')?.touched"
+          >
+            <option *ngFor="let n of natures" [value]="n">{{ n }}</option>
+          </select>
+          <div class="form-text small">
+            Cette nature servira plus tard pour la génération automatique des plans.
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label text-muted small">Description</label>
+          <textarea
+            class="form-control form-control-sm border-muted-2"
+            formControlName="description"
+            rows="3"
+            placeholder="Ex: Frais payés une seule fois au début de l'année académique"
+          ></textarea>
+        </div>
+
+        <div class="col-12">
+          <div class="rounded border p-3 bg-light-subtle">
+            <div class="form-check form-switch mb-2">
               <input
-                type="text"
-                class="form-control form-control-sm border-muted-2"
-                formControlName="nom"
-                placeholder="Ex: Inscription, Fonds de bibliothèque…"
-                [class.is-invalid]="form.get('nom')?.invalid && form.get('nom')?.touched"
+                class="form-check-input"
+                type="checkbox"
+                formControlName="obligatoire"
+                id="obligatoire"
               />
-              <div
-                class="invalid-feedback small"
-                *ngIf="form.get('nom')?.invalid && form.get('nom')?.touched"
-              >
-                Veuillez saisir un nom.
+              <label class="form-check-label small fw-medium" for="obligatoire">
+                Frais obligatoire
+              </label>
+              <div class="small text-muted">
+                Le frais est appliqué par défaut aux étudiants concernés.
               </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label text-muted small">Description</label>
-              <textarea
-                class="form-control form-control-sm border-muted-2"
-                formControlName="description"
-                placeholder="Décrivez le type de frais (facultatif)"
-                rows="3"
-              ></textarea>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                formControlName="actif"
+                id="actif"
+              />
+              <label class="form-check-label small fw-medium" for="actif">
+                Type de frais actif
+              </label>
+              <div class="small text-muted">
+                Un type inactif reste historisé mais n’est plus proposé pour de nouveaux paramétrages.
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-3">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-muted-2"
-                (click)="resetForm()"
-                [disabled]="loading"
-              >
-                <i class="bi bi-x-circle"></i> Annuler
-              </button>
-              <button
-                type="submit"
-                class="btn btn-sm btn-primary"
-                [disabled]="form.invalid || loading"
-              >
-                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
-                <span *ngIf="!editingId"><i class="bi bi-plus-circle"></i> Ajouter</span>
-                <span *ngIf="editingId"><i class="bi bi-save"></i> Mettre à jour</span>
-              </button>
-            </div>
-          </form>
+        <div class="col-12" *ngIf="form.get('nature')?.value">
+          <div class="alert alert-secondary py-2 px-3 small mb-0">
+            <strong>Nature sélectionnée :</strong> {{ form.get('nature')?.value }}
+            <span *ngIf="form.get('nature')?.value === 'INSCRIPTION'">
+              — généralement payable en une fois.
+            </span>
+            <span *ngIf="form.get('nature')?.value === 'SCOLARITE'">
+              — pourra être fractionnée via le paramétrage par établissement.
+            </span>
+            <span *ngIf="form.get('nature')?.value === 'ANNEXE'">
+              — utile pour bibliothèque, tenue, laboratoire, transport, etc.
+            </span>
+            <span *ngIf="form.get('nature')?.value === 'AUTRE'">
+              — à utiliser pour les cas spécifiques.
+            </span>
+          </div>
         </div>
       </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-muted-2"
+          (click)="resetForm()"
+          [disabled]="loading"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i>
+          Réinitialiser
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-sm btn-primary"
+          [disabled]="form.invalid || loading"
+        >
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+          <i *ngIf="!loading && !editingId" class="bi bi-plus-circle me-1"></i>
+          <i *ngIf="!loading && editingId" class="bi bi-save me-1"></i>
+          {{ editingId ? 'Mettre à jour' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
     </div>
 
     <!-- ================= COLONNE 2 — TABLEAU + PAGINATION ================= -->
@@ -167,35 +256,96 @@
         <p class="text-muted small mt-1">Chargement des types de frais…</p>
       </div>
 
+      <!-- FILTRES -->
+     <!-- FILTRES -->
+<div class="card mb-4" *ngIf="isVueTable()">
+  <div class="card-header p-3 d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 text-secondary"><i class="bi bi-search"></i> Filtres</h6>
+  </div>
+  <div class="card-body p-3">
+    <div class="mb-3">
+      <label class="form-label text-muted small">Nom</label>
+      <input
+        type="text"
+        class="form-control form-control-sm border-muted-2"
+        [(ngModel)]="searchNom"
+        (input)="onSearchChange()"
+        placeholder="Filtrer par nom"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label text-muted small">Description</label>
+      <input
+        type="text"
+        class="form-control form-control-sm border-muted-2"
+        [(ngModel)]="searchDescription"
+        (input)="onSearchChange()"
+        placeholder="Filtrer par description"
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label text-muted small">Nature</label>
+      <select
+        class="form-select form-select-sm border-muted-2"
+        [(ngModel)]="searchNature"
+        (change)="onSearchChange()"
+      >
+        <option value="">Toutes</option>
+        <option *ngFor="let n of natures" [value]="n">{{ n }}</option>
+      </select>
+    </div>
+
+    <div class="d-flex justify-content-end mt-2">
+      <button type="button" class="btn btn-sm btn-outline-muted-2" (click)="resetFilters()">
+        <i class="bi bi-x-circle"></i> Réinitialiser
+      </button>
+    </div>
+  </div>
+</div>
+
       <!-- TABLEAU -->
       <div *ngIf="isVueTable() && !loading" class="card shadow-sm border-0">
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="text-muted small">ID</th>
-                <th class="text-muted small">Nom</th>
-                <th class="text-muted small">Description</th>
-                <th class="text-muted small text-end">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let t of paginated">
-                <td class="small">{{ t.id }}</td>
-                <td class="fw-medium">{{ t.nom }}</td>
-                <td class="small text-muted">
-                  {{ t.description || '—' }}
-                </td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-muted-2 me-1" (click)="edit(t)">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" (click)="delete(t.id!)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+             <thead class="table-light">
+        <tr>
+          <th class="text-muted small">ID</th>
+          <th class="text-muted small">Nom</th>
+          <th class="text-muted small">Code</th>
+          <th class="text-muted small">Nature</th>
+          <th class="text-muted small">Obligatoire</th>
+          <th class="text-muted small">Description</th>
+          <th class="text-muted small text-end">Actions</th>
+        </tr>
+      </thead>
+                 <tbody>
+        <tr *ngFor="let t of paginated">
+          <td class="small">{{ t.id }}</td>
+          <td class="fw-medium">{{ t.nom }}</td>
+          <td class="small">{{ t.code }}</td>
+          <td>
+            <span class="badge" [ngClass]="natureBadgeClass(t.nature)">
+              {{ t.nature }}
+            </span>
+          </td>
+          <td class="small">
+            <span class="badge" [ngClass]="t.obligatoire ? 'bg-success' : 'bg-secondary'">
+              {{ t.obligatoire ? 'Oui' : 'Non' }}
+            </span>
+          </td>
+          <td class="small text-muted">{{ t.description || '—' }}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-muted-2 me-1" (click)="edit(t)">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="delete(t.id!)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
           </table>
         </div>
 

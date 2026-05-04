@@ -1,3 +1,4 @@
+
 import { Facture } from "./facture";
 import { RecuPaiement } from "./recu-paiement";
 import { Etudiant } from "./etudiant";
@@ -14,9 +15,11 @@ export interface Paiement {
   factureId: number;
   recuPaiementId: number;
   etudiantId?: number;
-
+numeroRecu?: string;
   // 🧠 OBJETS ENRICHIS
   facture?: Facture;
   recuPaiement?: RecuPaiement;
   etudiant?: Etudiant;
 }
+
+

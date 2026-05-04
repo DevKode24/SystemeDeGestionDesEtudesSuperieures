@@ -1,0 +1,242 @@
+.tf-header h3 {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tf-card {
+  border-radius: 14px;
+}
+
+.tf-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.tf-form-card {
+  border-left: 4px solid #2563eb;
+}
+/* ================= ROOT ================= */
+.tf-page {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+  padding: 1.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ================= HEADER ================= */
+.tf-header-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+
+  border: 1px solid #e2e8f0;
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.tf-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  font-size: 20px;
+
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+}
+
+/* ================= CARDS ================= */
+.card {
+  border-radius: 14px !important;
+  border: 1px solid #e5e7eb !important;
+
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.03),
+    0 10px 25px rgba(0,0,0,0.04);
+
+  transition: all 0.25s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 4px 10px rgba(0,0,0,0.05),
+      0 20px 40px rgba(0,0,0,0.06);
+  }
+}
+
+/* ================= FORM ================= */
+.form-control {
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f9fafb;
+
+  transition: all 0.2s ease;
+
+  &:focus {
+    background: #ffffff;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+  border-radius: 10px;
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    }
+  }
+
+  &.btn-outline-muted-2 {
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #475569;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+}
+
+/* ================= TABLE ================= */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead {
+    background: #f8fafc;
+
+    th {
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  tbody tr {
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+
+  td, th {
+    padding: 0.75rem 0.75rem;
+    vertical-align: middle;
+  }
+}
+
+/* ================= PAGINATION ================= */
+.card-footer {
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ================= TOAST ================= */
+.tf-toasts {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.tf-toast {
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  font-weight: 500;
+  cursor: pointer;
+
+  animation: slideIn 0.3s ease;
+
+  &.success {
+    background: #16a34a;
+  }
+
+  &.error {
+    background: #dc2626;
+  }
+
+  &.info {
+    background: #2563eb;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ================= LOADER ================= */
+.rna-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+.rna-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================= BADGES VIEW ================= */
+.badge {
+  cursor: pointer;
+  padding: 6px 12px;
+  font-weight: 500;
+
+  &.bg-light {
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+
+  &.bg-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  }
+}

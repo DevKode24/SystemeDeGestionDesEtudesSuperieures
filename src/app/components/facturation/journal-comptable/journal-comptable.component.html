@@ -1,1 +1,166 @@
-<p>journal-comptable works!</p>
+<div class="page-wrapper">
+<div class="factu-shell">
+
+  <div class="toast-container" *ngIf="toast">
+    <div class="toast" [class.toast--success]="toast.type==='success'" [class.toast--error]="toast.type==='error'">
+      <i class="bi" [class.bi-check-circle-fill]="toast.type==='success'" [class.bi-x-circle-fill]="toast.type==='error'"></i>
+      {{ toast.message }}
+    </div>
+  </div>
+
+  <div class="overlay" *ngIf="showConfirm" (click)="annulerSuppression()">
+    <div class="modal modal--confirm" (click)="$event.stopPropagation()">
+      <div class="modal__confirm-icon"><i class="bi bi-trash3"></i></div>
+      <h4 class="modal__confirm-title">Supprimer cette écriture ?</h4>
+      <p class="modal__confirm-sub">Cette opération est irréversible.</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" (click)="annulerSuppression()">Annuler</button>
+        <button class="btn btn--danger" (click)="confirmerSuppression()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" *ngIf="showModal" (click)="fermerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div class="modal__icon"><i class="bi bi-journal-text"></i></div>
+        <div>
+          <h5 class="modal__title">{{ selectionne ? 'Modifier' : 'Nouvelle' }} écriture comptable</h5>
+          <p class="modal__sub">Enregistrer une opération dans le journal</p>
+        </div>
+        <button class="modal__close" (click)="fermerModal()">×</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="sauvegarder()" class="modal__body">
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">Date *</label>
+            <input class="input" type="date" formControlName="date" [class.input--error]="isInvalid('date')"/>
+          </div>
+          <div class="field">
+            <label class="label">Type opération *</label>
+            <select class="input" formControlName="typeOperation">
+              <option *ngFor="let t of typesOperation" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+          <div class="field field--full">
+            <label class="label">Libellé *</label>
+            <input class="input" formControlName="libelle" placeholder="Description de l'opération" [class.input--error]="isInvalid('libelle')"/>
+            <span class="field-error" *ngIf="isInvalid('libelle')">Libellé requis</span>
+          </div>
+          <div class="field">
+            <label class="label">Débit (FCFA)</label>
+            <input class="input" type="number" formControlName="debit" placeholder="0"/>
+          </div>
+          <div class="field">
+            <label class="label">Crédit (FCFA)</label>
+            <input class="input" type="number" formControlName="credit" placeholder="0"/>
+          </div>
+          <div class="field">
+            <label class="label">Compte *</label>
+            <input class="input" formControlName="compte" placeholder="Ex : 411 Clients" [class.input--error]="isInvalid('compte')"/>
+            <span class="field-error" *ngIf="isInvalid('compte')">Compte requis</span>
+          </div>
+          <div class="field">
+            <label class="label">Référence</label>
+            <input class="input" formControlName="reference" placeholder="REF-2025-001"/>
+          </div>
+          <div class="field">
+            <label class="label">Étudiant ID</label>
+            <input class="input" type="number" formControlName="etudiantId" placeholder="ID étudiant"/>
+          </div>
+        </div>
+        <div class="modal__actions">
+          <button type="button" class="btn btn--ghost" (click)="fermerModal()">Annuler</button>
+          <button type="submit" class="btn btn--primary" [disabled]="form.invalid || saving">
+            <span class="spinner" *ngIf="saving"></span>
+            <i class="bi bi-check-circle" *ngIf="!saving"></i>
+            {{ selectionne ? 'Mettre à jour' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero__bg"></div>
+    <div class="hero__content">
+      <div class="hero__badge"><i class="bi bi-journal-text"></i> Comptabilité</div>
+      <h1 class="hero__title">Journal <span class="hero__accent">Comptable</span></h1>
+      <p class="hero__sub">Suivi des écritures et mouvements financiers</p>
+    </div>
+    <div class="hero__stats">
+      <div class="stat-chip"><span class="stat-chip__val">{{ totalDebit | number }}</span><span class="stat-chip__lbl">Total Débit</span></div>
+      <div class="stat-chip stat-chip--accent"><span class="stat-chip__val">{{ totalCredit | number }}</span><span class="stat-chip__lbl">Total Crédit</span></div>
+      <div class="stat-chip" [class.stat-chip--success]="soldeGlobal >= 0" [class.stat-chip--danger]="soldeGlobal < 0">
+        <span class="stat-chip__val">{{ soldeGlobal | number }}</span><span class="stat-chip__lbl">Solde</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="bi bi-search search-icon"></i>
+      <input class="search-input" [(ngModel)]="searchQuery" (input)="filtrer()" placeholder="Rechercher libellé, compte, référence…"/>
+      <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''; filtrer()">×</button>
+    </div>
+    <input class="input input--date" type="date" [(ngModel)]="dateDebut" (change)="filtrer()" title="Depuis"/>
+    <input class="input input--date" type="date" [(ngModel)]="dateFin" (change)="filtrer()" title="Jusqu'à"/>
+    <select class="input input--filter" [(ngModel)]="filtreType" (change)="filtrer()">
+      <option value="">Tous types</option>
+      <option *ngFor="let t of typesOperation" [value]="t">{{ t }}</option>
+    </select>
+    <div class="toolbar__actions">
+      <label class="btn btn--ghost btn--sm"><i class="bi bi-upload"></i> Importer<input type="file" accept=".csv,.xlsx" hidden (change)="onImportFile($event)"/></label>
+      <button class="btn btn--export btn--sm" (click)="exporterCSV()"><i class="bi bi-filetype-csv"></i> CSV</button>
+      <button class="btn btn--export btn--sm" (click)="exporterExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+      <button class="btn btn--export btn--sm" (click)="imprimerPDF()"><i class="bi bi-printer"></i> PDF</button>
+      <button class="btn btn--primary" (click)="ouvrirModalAjout()"><i class="bi bi-plus-circle"></i> Nouvelle écriture</button>
+    </div>
+  </div>
+
+  <div class="loader-wrap" *ngIf="loading"><div class="loader-ring"></div><span>Chargement…</span></div>
+
+  <div class="card" *ngIf="!loading">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Libellé</th><th>Compte</th><th>Débit</th><th>Crédit</th>
+            <th>Type</th><th>Référence</th><th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of ecrituresFiltrees; trackBy: trackById" class="table-row">
+            <td class="text-sm">{{ e.date }}</td>
+            <td><span class="tag-name">{{ e.libelle }}</span></td>
+            <td class="text-muted text-sm">{{ e.compte }}</td>
+            <td><span class="amount amount--red" *ngIf="e.debit > 0">{{ e.debit | number }} F</span><span class="text-muted" *ngIf="!e.debit">—</span></td>
+            <td><span class="amount amount--green" *ngIf="e.credit > 0">{{ e.credit | number }} F</span><span class="text-muted" *ngIf="!e.credit">—</span></td>
+            <td><span class="pill" [ngClass]="typeClass(e.typeOperation)">{{ e.typeOperation }}</span></td>
+            <td class="text-muted text-sm">{{ e.reference || '—' }}</td>
+            <td class="text-right">
+              <div class="row-actions">
+                <button class="action-btn action-btn--edit" (click)="ouvrirModalEdit(e)" title="Modifier"><i class="bi bi-pencil"></i></button>
+                <button class="action-btn action-btn--del" (click)="demanderSuppression(e.id!)" title="Supprimer"><i class="bi bi-trash3"></i></button>
+              </div>
+            </td>
+          </tr>
+          <!-- TOTAL ROW -->
+          <tr class="total-row" *ngIf="ecrituresFiltrees.length > 0">
+            <td colspan="3" class="total-label">TOTAUX</td>
+            <td><strong class="amount amount--red">{{ totalDebit | number }} F</strong></td>
+            <td><strong class="amount amount--green">{{ totalCredit | number }} F</strong></td>
+            <td colspan="3"></td>
+          </tr>
+          <tr *ngIf="ecrituresFiltrees.length === 0">
+            <td colspan="8" class="empty-row"><i class="bi bi-journal-x"></i><span>Aucune écriture trouvée</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>

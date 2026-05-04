@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import { FraisAcademique } from 'src/app/models/frais-academique';
 import { TypeFrais } from 'src/app/models/type-frais';
@@ -20,7 +21,8 @@ import { AnneeAcademiqueService } from 'src/app/services/anneeacademique.service
 })
 export class FraisAcademiquesComponent implements OnInit {
 
-  // ================= DATA =================
+  form!: FormGroup;
+
   fraisList: FraisAcademique[] = [];
   filteredFrais: FraisAcademique[] = [];
 
@@ -29,25 +31,23 @@ export class FraisAcademiquesComponent implements OnInit {
   niveaux: Niveau[] = [];
   annees: AnneeAcademique[] = [];
 
-  form!: FormGroup;
-  editingId: number | null = null;
-
+  editingId?: number;
   loading = false;
+  message = '';
 
-  // ================= FILTER =================
-  selectedTypeFrais?: number;
-  selectedFiliere?: number;
-  selectedNiveau?: number;
-  selectedAnnee?: number;
+  // filtres
+  filterType = '';
+  filterFiliere = '';
+  filterNiveau = '';
+  filterAnnee = '';
 
-  // ================= PAGINATION =================
   page = 1;
   pageSize = 10;
 
   constructor(
     private fb: FormBuilder,
     private service: FraisAcademiqueService,
-    private typeFraisService: TypeFraisService,
+    private typeService: TypeFraisService,
     private filiereService: FiliereService,
     private niveauService: NiveauService,
     private anneeService: AnneeAcademiqueService
@@ -55,120 +55,123 @@ export class FraisAcademiquesComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadAll();
+    this.loadReferentiels();
   }
 
-  // ================= INIT =================
+  /* ================= INIT ================= */
+
   initForm(): void {
     this.form = this.fb.group({
       montant: [null, [Validators.required, Validators.min(0)]],
       typeFraisId: [null, Validators.required],
       filiereId: [null, Validators.required],
       niveauId: [null, Validators.required],
-      anneeAcademiqueId: [null, Validators.required],
+      anneeAcademiqueId: [null, Validators.required]
     });
   }
 
-  // ================= LOAD =================
-  loadAll(): void {
+  /* ================= LOAD ================= */
+
+  loadReferentiels(): void {
     this.loading = true;
 
-    // 🔹 Chargement des frais
-    this.service.getAllFrais().subscribe({
-      next: (data: FraisAcademique[]) => {
-        this.fraisList = data;
-        this.applyFilter();
-      },
-      error: (err) => console.error('Erreur chargement frais', err),
-      complete: () => this.loading = false
-    });
+    forkJoin({
+      types: this.typeService.getAllTypesFrais(),
+      filieres: this.filiereService.getAll(),
+      niveaux: this.niveauService.getAll(),
+      annees: this.anneeService.getAll()
+    }).subscribe(res => {
 
-    // 🔹 Chargement des référentiels (⚠️ adapter aux bons noms de méthodes)
-    this.typeFraisService.getAllTypesFrais().subscribe({
-      next: (d: TypeFrais[]) => this.typesFrais = d,
-      error: (err) => console.error(err)
-    });
+      this.typesFrais = res.types;
+      this.filieres = res.filieres;
+      this.niveaux = res.niveaux;
+      this.annees = res.annees;
 
-    this.filiereService.getAll().subscribe({
-      next: (d: Filiere[]) => this.filieres = d,
-      error: (err) => console.error(err)
-    });
-
-    this.niveauService.getAll().subscribe({
-      next: (d: Niveau[]) => this.niveaux = d,
-      error: (err) => console.error(err)
-    });
-
-    this.anneeService.getAll().subscribe({
-      next: (d: AnneeAcademique[]) => this.annees = d,
-      error: (err) => console.error(err)
+      this.loadFrais();
     });
   }
 
-  // ================= FILTER =================
-  applyFilter(): void {
-    this.filteredFrais = this.fraisList.filter((f: FraisAcademique) =>
-      (!this.selectedTypeFrais || f.typeFraisId === +this.selectedTypeFrais) &&
-      (!this.selectedFiliere || f.filiereId === +this.selectedFiliere) &&
-      (!this.selectedNiveau || f.niveauId === +this.selectedNiveau) &&
-      (!this.selectedAnnee || f.anneeAcademiqueId === +this.selectedAnnee)
+  loadFrais(): void {
+    this.service.getAllFrais().subscribe(data => {
+
+      // 🔥 ENRICHISSEMENT (comme Enseignement)
+      this.fraisList = data.map(f => ({
+        ...f,
+        typeFrais: this.typesFrais.find(t => t.id === f.typeFraisId),
+        filiere: this.filieres.find(fl => fl.id === f.filiereId),
+        niveau: this.niveaux.find(n => n.id === f.niveauId),
+        anneeAcademique: this.annees.find(a => a.id === f.anneeAcademiqueId)
+      }));
+
+      this.filteredFrais = [...this.fraisList];
+      this.loading = false;
+    });
+  }
+
+  /* ================= FILTER ================= */
+
+  applyFilters(): void {
+    this.filteredFrais = this.fraisList.filter(f =>
+      (f.typeFrais?.nom ?? '').toLowerCase().includes(this.filterType.toLowerCase()) &&
+      (f.filiere?.nom ?? '').toLowerCase().includes(this.filterFiliere.toLowerCase()) &&
+      (f.niveau?.libelle ?? '').toLowerCase().includes(this.filterNiveau.toLowerCase()) &&
+      (f.anneeAcademique?.libelle ?? '').toLowerCase().includes(this.filterAnnee.toLowerCase())
     );
 
-    this.page = 1; // reset pagination
+    this.page = 1;
   }
 
-  // ================= PAGINATION =================
-  get paginated(): FraisAcademique[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filteredFrais.slice(start, start + this.pageSize);
+  /* ================= CRUD ================= */
+
+save(): void {
+  if (this.form.invalid) {
+    this.message = "⚠️ Veuillez remplir tous les champs obligatoires.";
+    return;
   }
 
-  // ================= CRUD =================
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+  const payload: FraisAcademique = this.form.value;   // ça marche car les noms correspondent
+
+  const action$ = this.editingId
+    ? this.service.updateFrais(this.editingId, payload)
+    : this.service.createFrais(payload);
+
+  action$.subscribe({
+    next: () => {
+      this.message = "✅ Frais enregistré avec succès.";
+      this.resetForm();
+      this.loadFrais();
+    },
+    error: (err) => {
+      this.message = "❌ Erreur : " + (err.error?.message || err.message || "Erreur inconnue");
+      console.error(err);
     }
-
-    const payload: FraisAcademique = this.form.value;
-
-    const action$ = this.editingId
-      ? this.service.updateFrais(this.editingId, payload)
-      : this.service.createFrais(payload);
-
-    action$.subscribe({
-      next: () => {
-        this.resetForm();
-        this.loadAll();
-      },
-      error: (err) => console.error('Erreur sauvegarde', err)
-    });
-  }
+  });
+}
 
   edit(f: FraisAcademique): void {
-    this.editingId = f.id!;
-    this.form.patchValue({
-      montant: f.montant,
-      typeFraisId: f.typeFraisId,
-      filiereId: f.filiereId,
-      niveauId: f.niveauId,
-      anneeAcademiqueId: f.anneeAcademiqueId
-    });
-
+    this.editingId = f.id;
+    this.form.patchValue(f);
     window.scroll({ top: 0, behavior: 'smooth' });
   }
 
   delete(id: number): void {
-    if (!confirm('Supprimer ce frais ?')) return;
+    if (!confirm("Supprimer ce frais ?")) return;
 
-    this.service.deleteFrais(id).subscribe({
-      next: () => this.loadAll(),
-      error: (err) => console.error('Erreur suppression', err)
+    this.service.deleteFrais(id).subscribe(() => {
+      this.message = "🗑️ Frais supprimé.";
+      this.loadFrais();
     });
   }
 
   resetForm(): void {
     this.form.reset();
-    this.editingId = null;
+    this.editingId = undefined;
+  }
+
+  /* ================= PAGINATION ================= */
+
+  get paginated(): FraisAcademique[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredFrais.slice(start, start + this.pageSize);
   }
 }
